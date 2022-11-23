@@ -3,7 +3,7 @@ import { hideBin } from 'yargs/helpers';
 import fastGlob from 'fast-glob';
 import jscodeshift, { API, FileInfo } from 'jscodeshift';
 import { readFileSync } from 'fs';
-import { buildChangeMessages } from './buildChangeMessages';
+import { buildChangeMessage } from './buildChangeMessages';
 import { FinishMessage, MessageKind } from './messages';
 import { codemods } from './codemods';
 
@@ -52,14 +52,14 @@ argv.then(async ({ pattern }) => {
 
 				const newSource = codemod.transformer(fileInfo, api);
 
-				const changes = buildChangeMessages(
+				const change = buildChangeMessage(
 					String(filePath),
 					oldSource,
 					newSource,
 					codemod.id,
 				);
 
-				for (const change of changes) {
+				if (change) {
 					console.log(JSON.stringify(change));
 				}
 			}
