@@ -3,6 +3,7 @@ lockfileVersion: 5.4
 specifiers:
   '@babel/core': ^7.20.2
   '@babel/preset-env': ^7.20.2
+  '@types/diff': ^5.0.2
   '@types/jscodeshift': ^0.11.5
   '@types/node': ^18.11.9
   '@types/yargs': ^17.0.13
@@ -10,6 +11,7 @@ specifiers:
   '@typescript-eslint/parser': ^5.44.0
   '@vercel/ncc': ^0.34.0
   chai: ^4.3.7
+  diff: ^5.1.0
   eslint: ^8.28.0
   eslint-config-prettier: ^8.5.0
   eslint-plugin-prettier: ^4.2.1
@@ -24,11 +26,13 @@ specifiers:
 dependencies:
   '@babel/core': 7.20.2
   '@babel/preset-env': 7.20.2_@babel+core@7.20.2
+  diff: 5.1.0
   fast-glob: 3.2.12
   jscodeshift: 0.14.0_@babel+preset-env@7.20.2
   yargs: 17.6.2
 
 devDependencies:
+  '@types/diff': 5.0.2
   '@types/jscodeshift': 0.11.5
   '@types/node': 18.11.9
   '@types/yargs': 17.0.13
@@ -1389,6 +1393,10 @@ packages:
     resolution: {integrity: sha512-yOlFc+7UtL/89t2ZhjPvvB/DeAr3r+Dq58IgzsFkOAvVC6NMJXmCGjbptdXdR9qsX7pKcTL+s87FtYREi2dEEQ==}
     dev: true
 
+  /@types/diff/5.0.2:
+    resolution: {integrity: sha512-uw8eYMIReOwstQ0QKF0sICefSy8cNO/v7gOTiIy9SbwuHyEecJUm7qlgueOO5S1udZ5I/irVydHVwMchgzbKTg==}
+    dev: true
+
   /@types/jscodeshift/0.11.5:
     resolution: {integrity: sha512-7JV0qdblTeWFigevmwFUgROXX395F+MQx6v0YqPn8Bx0B4Sng6alEejz9PENzgLYpG+zL0O4tGdBzc4gKZH8XA==}
     dependencies:
@@ -1916,6 +1924,11 @@ packages:
     resolution: {integrity: sha512-/VTCrvm5Z0JGty/BWHljh+BAiw3IK+2j87NGMu8Nwc/f48WoDAC395uomO9ZD117ZOBaHmkX1oyLvkVM/aIT3w==}
     engines: {node: '>=0.3.1'}
     dev: true
+
+  /diff/5.1.0:
+    resolution: {integrity: sha512-D+mk+qE8VC/PAUrlAU34N+VfXev0ghe5ywmpqrawphmVZc1bEfn56uo9qpyGp1p4xpzOHkSW4ztBd6L7Xx4ACw==}
+    engines: {node: '>=0.3.1'}
+    dev: false
 
   /dir-glob/3.0.1:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}

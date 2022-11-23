@@ -3,6 +3,9 @@ import {hideBin} from "yargs/helpers"
 import fastGlob from 'fast-glob';
 import jscodeshift from "jscodeshift";
 import { readFileSync } from "fs";
+import { diffChars } from "diff";
+import transformer from "./codemods/nextJsNewLink";
+import { buildChanges } from "./buildChanges";
 
 const argv = Promise.resolve<{ pattern: string }>(yargs(hideBin(process.argv))
   .option('pattern', {
@@ -17,20 +20,24 @@ const argv = Promise.resolve<{ pattern: string }>(yargs(hideBin(process.argv))
 argv.then(async ({ pattern }) => {
     console.log(pattern);
 
-    const filePaths = await fastGlob(pattern);
+    const stream = fastGlob.stream(pattern);
 
-    for (const filePath of filePaths) {
-        const source = readFileSync(filePath, { encoding: 'utf8' });
+    for await (const filePath of stream) {
+        const oldSource = readFileSync(filePath, { encoding: 'utf8' });
 
         console.log(filePath);
 
         try {
-            const collection = jscodeshift.withParser('tsx')(source)
+            const collection = jscodeshift.withParser('tsx')(oldSource)
+
+            const newSource = transformer(jscodeshift, collection);
+
+            const changes = buildChanges(oldSource, newSource);
+
+            console.log(changes);
         } catch (error) {
             console.log(error);
         }
-
-        
     }
 
     console.log('finish');
