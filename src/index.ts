@@ -3,7 +3,7 @@ import {hideBin} from "yargs/helpers"
 import fastGlob from 'fast-glob';
 import jscodeshift, { API, FileInfo } from "jscodeshift";
 import { readFileSync } from "fs";
-import transformer from "./codemods/nextJsNewLink";
+import {transformer} from "./codemods/nextJsNewLink/transformer";
 import { buildChangeMessages } from "./buildChangeMessages";
 import { FinishMessage, MessageKind } from "./messages";
 
@@ -17,6 +17,13 @@ const argv = Promise.resolve<{ pattern: string }>(yargs(hideBin(process.argv))
   .help()
   .alias('help', 'h').argv);
 
+const api: API = {
+    j: jscodeshift,
+    jscodeshift,
+    stats: () => {},
+    report: () => {},
+}
+
 argv.then(async ({ pattern }) => {
     console.log(pattern);
 
@@ -29,13 +36,6 @@ argv.then(async ({ pattern }) => {
             const fileInfo: FileInfo = {
                 path: String(filePath),
                 source: oldSource,
-            }
-
-            const api: API = {
-                j: jscodeshift,
-                jscodeshift,
-                stats: () => {},
-                report: () => {},
             }
 
             const newSource = transformer(fileInfo, api);
