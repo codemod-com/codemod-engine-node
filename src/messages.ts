@@ -10,8 +10,10 @@ export type ChangeMessage = Readonly<{
     t: string,
 }>;
 
-export type Message = 
-ChangeMessage
-| Readonly<{
+export type FinishMessage = Readonly<{
     k: MessageKind.finish,
 }>;
+
+export type Message = 
+| ChangeMessage
+| FinishMessage;

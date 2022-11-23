@@ -5,6 +5,7 @@ import jscodeshift, { API, FileInfo } from "jscodeshift";
 import { readFileSync } from "fs";
 import transformer from "./codemods/nextJsNewLink";
 import { buildChangeMessages } from "./buildChangeMessages";
+import { FinishMessage, MessageKind } from "./messages";
 
 const argv = Promise.resolve<{ pattern: string }>(yargs(hideBin(process.argv))
   .option('pattern', {
@@ -42,14 +43,16 @@ argv.then(async ({ pattern }) => {
             const changes = buildChangeMessages(String(filePath), oldSource, newSource);
 
             for (const change of changes) {
-                const str = JSON.stringify(change);
-
-                console.log(str);
+                console.log(JSON.stringify(change));
             }
         } catch (error) {
-            console.log(error);
+            console.error(error);
         }
     }
 
-    console.log('finish');
+    const finishMessage: FinishMessage = {
+        k: MessageKind.finish,
+    }
+
+    console.log(JSON.stringify(finishMessage));
 });
