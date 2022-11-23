@@ -4,10 +4,11 @@ export const enum MessageKind {
 }
 
 export type ChangeMessage = Readonly<{
-    k: MessageKind.change,
-    p: string,
-    r: [number, number],
-    t: string,
+    k: MessageKind.change, // kind
+    p: string, // file path
+    r: [number, number], // range
+    t: string, // text
+    c: string, // codemod id
 }>;
 
 export type FinishMessage = Readonly<{

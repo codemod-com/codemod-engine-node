@@ -1,4 +1,5 @@
 import { diffChars } from "diff";
+import { CodemodId } from "./codemods";
 import { ChangeMessage, MessageKind } from "./messages";
 
 const isTextRelevant = (text: string): boolean => {
@@ -11,6 +12,7 @@ export const buildChangeMessages = (
     filePath: string,
     oldSource: string,
     newSource: string,
+    codemodId: CodemodId,
 ): ReadonlyArray<ChangeMessage> => {
     const diffChanges = diffChars(oldSource, newSource);
 
@@ -28,6 +30,7 @@ export const buildChangeMessages = (
                 p: filePath,
                 r: range,
                 t: diffChange.value,
+                c: codemodId,
             });
         } else if (diffChange.removed && isTextRelevant(diffChange.value)) {
             const range: ChangeMessage['r'] = [leftCount, leftCount + count];
@@ -37,6 +40,7 @@ export const buildChangeMessages = (
                 p: filePath,
                 r: range,
                 t: diffChange.value,
+                c: codemodId,
             });
 
             leftCount += count;

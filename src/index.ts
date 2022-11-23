@@ -3,9 +3,9 @@ import {hideBin} from "yargs/helpers"
 import fastGlob from 'fast-glob';
 import jscodeshift, { API, FileInfo } from "jscodeshift";
 import { readFileSync } from "fs";
-import {transformer} from "./codemods/nextJsNewLink/transformer";
 import { buildChangeMessages } from "./buildChangeMessages";
 import { FinishMessage, MessageKind } from "./messages";
+import { codemods } from "./codemods";
 
 const argv = Promise.resolve<{ pattern: string }>(yargs(hideBin(process.argv))
   .option('pattern', {
@@ -33,17 +33,19 @@ argv.then(async ({ pattern }) => {
         const oldSource = readFileSync(filePath, { encoding: 'utf8' });
 
         try {
-            const fileInfo: FileInfo = {
-                path: String(filePath),
-                source: oldSource,
-            }
+            for (const codemod of codemods) {
+                const fileInfo: FileInfo = {
+                    path: String(filePath),
+                    source: oldSource,
+                }
 
-            const newSource = transformer(fileInfo, api);
+                const newSource = codemod.transformer(fileInfo, api);
 
-            const changes = buildChangeMessages(String(filePath), oldSource, newSource);
+                const changes = buildChangeMessages(String(filePath), oldSource, newSource, codemod.id);
 
-            for (const change of changes) {
-                console.log(JSON.stringify(change));
+                for (const change of changes) {
+                    console.log(JSON.stringify(change));
+                }
             }
         } catch (error) {
             console.error(error);

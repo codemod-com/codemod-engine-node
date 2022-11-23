@@ -1,7 +1,7 @@
 // sourced from https://github.com/vercel/next.js/blob/canary/packages/next-codemod/transforms/new-link.ts
 import { API, FileInfo } from 'jscodeshift'
 
-export function transformer(file: FileInfo, api: API) {
+export function transformer(file: FileInfo, api: API): string {
   const j = api.jscodeshift.withParser('tsx');
 
   const $j = j(file.source)
