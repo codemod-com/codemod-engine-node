@@ -38,8 +38,6 @@ const api: API = {
 };
 
 argv.then(async ({ pattern }) => {
-	console.log(pattern);
-
 	const stream = fastGlob.stream(pattern);
 
 	for await (const filePath of stream) {
