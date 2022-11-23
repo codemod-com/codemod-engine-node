@@ -1,8 +1,12 @@
-import { API, Collection, FileInfo, ImportDeclaration, JSCodeshift } from 'jscodeshift'
+import { API, FileInfo } from 'jscodeshift'
 
-export default function transformer(j: JSCodeshift, $j: Collection): string {
-    return $j
-    .find(ImportDeclaration, { source: { value: 'next/link' } })
+export default function transformer(file: FileInfo, api: API) {
+  const j = api.jscodeshift.withParser('tsx');
+
+  const $j = j(file.source)
+
+  return $j
+    .find(j.ImportDeclaration, { source: { value: 'next/link' } })
     .forEach((path) => {
       const defaultImport = j(path).find(j.ImportDefaultSpecifier)
       if (defaultImport.size() === 0) {
@@ -86,7 +90,7 @@ export default function transformer(j: JSCodeshift, $j: Collection): string {
           const linkPropNames = $link
             .get('attributes')
             .value.map((linkProp: any) => linkProp?.name?.name)
-          const uniqueProps: any[] = []
+          const uniqueProps: any = []
 
           props.forEach((anchorProp: any) => {
             if (!linkPropNames.includes(anchorProp?.name?.name)) {
@@ -102,8 +106,7 @@ export default function transformer(j: JSCodeshift, $j: Collection): string {
 
         const childrenProps = $childrenWithA.get('children')
         $childrenWithA.replaceWith(childrenProps.value)
-
       })
     })
-    .toSource();
+    .toSource()
 }

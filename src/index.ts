@@ -1,7 +1,7 @@
 import yargs from "yargs";
 import {hideBin} from "yargs/helpers"
 import fastGlob from 'fast-glob';
-import jscodeshift from "jscodeshift";
+import jscodeshift, { API, FileInfo } from "jscodeshift";
 import { readFileSync } from "fs";
 import { diffChars } from "diff";
 import transformer from "./codemods/nextJsNewLink";
@@ -28,9 +28,19 @@ argv.then(async ({ pattern }) => {
         console.log(filePath);
 
         try {
-            const collection = jscodeshift.withParser('tsx')(oldSource)
+            const fileInfo: FileInfo = {
+                path: String(filePath),
+                source: oldSource,
+            }
 
-            const newSource = transformer(jscodeshift, collection);
+            const api: API = {
+                j: jscodeshift,
+                jscodeshift,
+                stats: () => {},
+                report: () => {},
+            }
+
+            const newSource = transformer(fileInfo, api);
 
             const changes = buildChanges(oldSource, newSource);
 
