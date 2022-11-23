@@ -4,7 +4,17 @@
   "description": "A codemod engine for Node.js libraries (e.g. jscodeshift, TSC utilities)",
   "main": "src/index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "ncc build ./src/index.ts -e express -e body-parser -e pino -m -o build",
+    "lint:eslint": "eslint src --fix --ext ts",
+    "lint:prettier": "prettier --write src",
+    "package": "pkg .",
+    "test": "mocha"
+  },
+  "bin": "./build/index.js",
+  "pkg": {
+    "scripts": "./build/**/*.js",
+    "assets": "./assets/*.*",
+    "outputPath": "./build/"
   },
   "keywords": [],
   "author": "Intuita",
