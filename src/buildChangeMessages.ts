@@ -1,10 +1,5 @@
 import { diffChars } from "diff";
-
-type Change = Readonly<{
-    filePath: string,
-    range: [number, number],
-    text: string,
-}>;
+import { ChangeMessage, MessageKind } from "./messages";
 
 const isTextRelevant = (text: string): boolean => {
     return text.replace(/ /gm, "")
@@ -12,34 +7,36 @@ const isTextRelevant = (text: string): boolean => {
         .length !== 0;
 }
 
-export const buildChanges = (
+export const buildChangeMessages = (
     filePath: string,
     oldSource: string,
     newSource: string,
-): ReadonlyArray<Change> => {
+): ReadonlyArray<ChangeMessage> => {
     const diffChanges = diffChars(oldSource, newSource);
 
-    const changes: Change[] = [];
+    const changes: ChangeMessage[] = [];
     let leftCount = 0;
 
     for(const diffChange of diffChanges) {
         const count = diffChange.count ?? 0;
 
         if(diffChange.added && isTextRelevant(diffChange.value)) {
-            const range: Change['range'] = [leftCount, leftCount];
+            const range: ChangeMessage['r'] = [leftCount, leftCount];
 
             changes.push({
-                filePath,
-                range,
-                text: diffChange.value,
+                k: MessageKind.change,
+                p: filePath,
+                r: range,
+                t: diffChange.value,
             });
         } else if (diffChange.removed && isTextRelevant(diffChange.value)) {
-            const range: Change['range'] = [leftCount, leftCount + count];
+            const range: ChangeMessage['r'] = [leftCount, leftCount + count];
 
             changes.push({
-                filePath,
-                range,
-                text: diffChange.value,
+                k: MessageKind.change,
+                p: filePath,
+                r: range,
+                t: diffChange.value,
             });
 
             leftCount += count;

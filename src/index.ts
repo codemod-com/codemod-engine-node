@@ -4,7 +4,7 @@ import fastGlob from 'fast-glob';
 import jscodeshift, { API, FileInfo } from "jscodeshift";
 import { readFileSync } from "fs";
 import transformer from "./codemods/nextJsNewLink";
-import { buildChanges } from "./buildChanges";
+import { buildChangeMessages } from "./buildChangeMessages";
 
 const argv = Promise.resolve<{ pattern: string }>(yargs(hideBin(process.argv))
   .option('pattern', {
@@ -39,7 +39,7 @@ argv.then(async ({ pattern }) => {
 
             const newSource = transformer(fileInfo, api);
 
-            const changes = buildChanges(String(filePath), oldSource, newSource);
+            const changes = buildChangeMessages(String(filePath), oldSource, newSource);
 
             for (const change of changes) {
                 const str = JSON.stringify(change);
