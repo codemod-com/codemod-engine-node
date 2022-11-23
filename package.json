@@ -4,7 +4,7 @@
   "description": "A codemod engine for Node.js libraries (e.g. jscodeshift, TSC utilities)",
   "main": "src/index.ts",
   "scripts": {
-    "build": "ncc build ./src/index.ts -e express -e body-parser -e pino -m -o build",
+    "build": "ncc build ./src/index.ts -m -o build",
     "lint:eslint": "eslint src --fix --ext ts",
     "lint:prettier": "prettier --write src",
     "package": "pkg .",
