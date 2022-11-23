@@ -3,7 +3,6 @@ import {hideBin} from "yargs/helpers"
 import fastGlob from 'fast-glob';
 import jscodeshift, { API, FileInfo } from "jscodeshift";
 import { readFileSync } from "fs";
-import { diffChars } from "diff";
 import transformer from "./codemods/nextJsNewLink";
 import { buildChanges } from "./buildChanges";
 
@@ -25,8 +24,6 @@ argv.then(async ({ pattern }) => {
     for await (const filePath of stream) {
         const oldSource = readFileSync(filePath, { encoding: 'utf8' });
 
-        console.log(filePath);
-
         try {
             const fileInfo: FileInfo = {
                 path: String(filePath),
@@ -42,9 +39,13 @@ argv.then(async ({ pattern }) => {
 
             const newSource = transformer(fileInfo, api);
 
-            const changes = buildChanges(oldSource, newSource);
+            const changes = buildChanges(String(filePath), oldSource, newSource);
 
-            console.log(changes);
+            for (const change of changes) {
+                const str = JSON.stringify(change);
+
+                console.log(str);
+            }
         } catch (error) {
             console.log(error);
         }
