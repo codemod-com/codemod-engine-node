@@ -39,6 +39,7 @@
 	"dependencies": {
 		"@babel/core": "^7.20.2",
 		"@babel/preset-env": "^7.20.2",
+		"ast-types": "^0.14.2",
 		"diff": "^5.1.0",
 		"fast-glob": "^3.2.12",
 		"jscodeshift": "^0.14.0",

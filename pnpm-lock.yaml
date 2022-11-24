@@ -10,6 +10,7 @@ specifiers:
   '@typescript-eslint/eslint-plugin': ^5.44.0
   '@typescript-eslint/parser': ^5.44.0
   '@vercel/ncc': ^0.34.0
+  ast-types: ^0.14.2
   chai: ^4.3.7
   diff: ^5.1.0
   eslint: ^8.28.0
@@ -26,6 +27,7 @@ specifiers:
 dependencies:
   '@babel/core': 7.20.2
   '@babel/preset-env': 7.20.2_@babel+core@7.20.2
+  ast-types: 0.14.2
   diff: 5.1.0
   fast-glob: 3.2.12
   jscodeshift: 0.14.0_@babel+preset-env@7.20.2
@@ -1640,7 +1642,6 @@ packages:
     engines: {node: '>=4'}
     dependencies:
       tslib: 2.4.1
-    dev: true
 
   /ast-types/0.15.2:
     resolution: {integrity: sha512-c27loCv9QkZinsa5ProX751khO9DJl/AcB5c2KNtA6NRvHKS0PgLfcftz72KVq504vB0Gku5s2kUZzDBvQWvHg==}
