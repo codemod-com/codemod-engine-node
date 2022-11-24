@@ -1,3 +1,4 @@
 build
+build-ncc
 node_modules
 .vscode

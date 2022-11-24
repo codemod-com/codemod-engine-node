@@ -4,15 +4,15 @@
   "description": "A codemod engine for Node.js libraries (e.g. jscodeshift, TSC utilities)",
   "main": "src/index.ts",
   "scripts": {
-    "build": "ncc build ./src/index.ts -m -o build",
+    "build": "ncc build ./src/index.ts -m -o build-ncc",
     "lint:eslint": "eslint src --fix --ext ts",
     "lint:prettier": "prettier --write src",
-    "package": "pkg .",
+    "package": "pkg --compress GZip .",
     "test": "mocha"
   },
-  "bin": "./build/index.js",
+  "bin": "./build-ncc/index.js",
   "pkg": {
-    "scripts": "./build/**/*.js",
+    "scripts": "./build-ncc/**/*.js",
     "assets": "./assets/*.*",
     "outputPath": "./build/"
   },
