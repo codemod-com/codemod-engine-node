@@ -13,6 +13,7 @@ Check if the project has has compile-time errors.
     pnpm tsc --noemit
 
 ## Linting
+
 Use ESLint and Prettier for inspecting code quality and formatting.
 
     pnpm lint:eslint
@@ -25,6 +26,7 @@ Use Vercel's NCC to transpile all the project's TS files and their dependencies 
     pnpm build
 
 ## Packaging
+
 Package the built JS file and Node toolchain into executable files.
 
     pnpm package

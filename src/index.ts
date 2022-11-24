@@ -8,11 +8,11 @@ import { FinishMessage, MessageKind } from './messages';
 import { codemods } from './codemods';
 import { writeFile } from 'fs/promises';
 import { createHash } from 'crypto';
-import { extname, join } from 'path';
+import { join } from 'path';
 import { buildRewriteMessage } from './buildRewriteMessage';
 
 const argv = Promise.resolve<{
-	pattern: string;
+	pattern: ReadonlyArray<string>;
 	group?: ReadonlyArray<string>;
 	outputDirectoryPath?: string;
 }>(
@@ -20,6 +20,7 @@ const argv = Promise.resolve<{
 		.option('pattern', {
 			alias: 'p',
 			describe: 'Pass the glob pattern for file paths',
+			array: true,
 			type: 'string',
 		})
 		.option('group', {
@@ -58,7 +59,7 @@ const api: API = {
 };
 
 argv.then(async ({ pattern, group, outputDirectoryPath }) => {
-	const stream = fastGlob.stream(pattern);
+	const stream = fastGlob.stream(pattern.slice());
 
 	for await (const data of stream) {
 		const filePath = String(data);
@@ -78,14 +79,19 @@ argv.then(async ({ pattern, group, outputDirectoryPath }) => {
 			try {
 				const newSource = codemod.transformer(fileInfo, api);
 
+				if (oldSource === newSource) {
+					continue;
+				}
+
 				if (outputDirectoryPath) {
 					const hash = createHash('md5')
 						.update(filePath)
+						.update(codemod.id)
 						.digest('base64url');
-					const extension = extname(filePath);
+
 					const outputFilePath = join(
 						outputDirectoryPath,
-						`${hash}${extension}`,
+						`${hash}.txt`,
 					);
 
 					await writeFile(outputFilePath, newSource);
@@ -96,7 +102,7 @@ argv.then(async ({ pattern, group, outputDirectoryPath }) => {
 						codemod.id,
 					);
 
-					console.log(rewrite);
+					console.log(JSON.stringify(rewrite));
 				} else {
 					const change = buildChangeMessage(
 						String(filePath),
@@ -105,9 +111,7 @@ argv.then(async ({ pattern, group, outputDirectoryPath }) => {
 						codemod.id,
 					);
 
-					if (change) {
-						console.log(JSON.stringify(change));
-					}
+					console.log(JSON.stringify(change));
 				}
 			} catch (error) {
 				console.error(error);
