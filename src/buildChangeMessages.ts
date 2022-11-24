@@ -6,11 +6,7 @@ export const buildChangeMessage = (
 	oldSource: string,
 	newSource: string,
 	codemodId: CodemodId,
-): ChangeMessage | null => {
-	if (oldSource === newSource) {
-		return null;
-	}
-
+): ChangeMessage => {
 	return {
 		k: MessageKind.change,
 		p: filePath,
