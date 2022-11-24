@@ -1,3 +1,4 @@
+// sourced from https://github.com/vercel/next.js/blob/canary/packages/next-codemod/transforms/add-missing-react-import.ts
 import { API, Collection, FileInfo, JSCodeshift, Options } from 'jscodeshift'
 
 export function transformer(file: FileInfo,api: API) {
