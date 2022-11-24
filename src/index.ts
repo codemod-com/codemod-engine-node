@@ -6,10 +6,15 @@ import { readFileSync } from 'fs';
 import { buildChangeMessage } from './buildChangeMessages';
 import { FinishMessage, MessageKind } from './messages';
 import { codemods } from './codemods';
+import { writeFile } from 'fs/promises';
+import { createHash } from 'crypto';
+import { extname, join } from 'path';
+import { buildRewriteMessage } from './buildRewriteMessage';
 
 const argv = Promise.resolve<{
 	pattern: string;
 	group?: ReadonlyArray<string>;
+	outputDirectoryPath?: string;
 }>(
 	yargs(hideBin(process.argv))
 		.option('pattern', {
@@ -21,6 +26,12 @@ const argv = Promise.resolve<{
 			alias: 'g',
 			describe: 'Pass the group(s) of codemods for execution',
 			array: true,
+			type: 'string',
+		})
+		.option('outputDirectoryPath', {
+			alias: 'o',
+			describe:
+				'Pass the output directory path to save output files within in',
 			type: 'string',
 		})
 		.demandOption(
@@ -46,10 +57,12 @@ const api: API = {
 	},
 };
 
-argv.then(async ({ pattern, group }) => {
+argv.then(async ({ pattern, group, outputDirectoryPath }) => {
 	const stream = fastGlob.stream(pattern);
 
-	for await (const filePath of stream) {
+	for await (const data of stream) {
+		const filePath = String(data);
+
 		const oldSource = readFileSync(filePath, { encoding: 'utf8' });
 
 		for (const codemod of codemods) {
@@ -58,22 +71,43 @@ argv.then(async ({ pattern, group }) => {
 			}
 
 			const fileInfo: FileInfo = {
-				path: String(filePath),
+				path: filePath,
 				source: oldSource,
 			};
 
 			try {
 				const newSource = codemod.transformer(fileInfo, api);
 
-				const change = buildChangeMessage(
-					String(filePath),
-					oldSource,
-					newSource,
-					codemod.id,
-				);
+				if (outputDirectoryPath) {
+					const hash = createHash('md5')
+						.update(filePath)
+						.digest('base64url');
+					const extension = extname(filePath);
+					const outputFilePath = join(
+						outputDirectoryPath,
+						`${hash}${extension}`,
+					);
 
-				if (change) {
-					console.log(JSON.stringify(change));
+					await writeFile(outputFilePath, newSource);
+
+					const rewrite = buildRewriteMessage(
+						filePath,
+						outputFilePath,
+						codemod.id,
+					);
+
+					console.log(rewrite);
+				} else {
+					const change = buildChangeMessage(
+						String(filePath),
+						oldSource,
+						newSource,
+						codemod.id,
+					);
+
+					if (change) {
+						console.log(JSON.stringify(change));
+					}
 				}
 			} catch (error) {
 				console.error(error);
