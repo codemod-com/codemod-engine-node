@@ -9,7 +9,7 @@ import { codemods } from './codemods';
 
 const argv = Promise.resolve<{
 	pattern: string;
-	groups?: ReadonlyArray<string>;
+	group?: ReadonlyArray<string>;
 }>(
 	yargs(hideBin(process.argv))
 		.option('pattern', {
@@ -17,7 +17,7 @@ const argv = Promise.resolve<{
 			describe: 'Pass the glob pattern for file paths',
 			type: 'string',
 		})
-		.option('groups', {
+		.option('group', {
 			alias: 'g',
 			describe: 'Pass the group(s) of codemods for execution',
 			array: true,
@@ -46,14 +46,14 @@ const api: API = {
 	},
 };
 
-argv.then(async ({ pattern, groups }) => {
+argv.then(async ({ pattern, group }) => {
 	const stream = fastGlob.stream(pattern);
 
 	for await (const filePath of stream) {
 		const oldSource = readFileSync(filePath, { encoding: 'utf8' });
 
 		for (const codemod of codemods) {
-			if (groups && !groups.includes(codemod.group)) {
+			if (group && !group.includes(codemod.group)) {
 				continue;
 			}
 
