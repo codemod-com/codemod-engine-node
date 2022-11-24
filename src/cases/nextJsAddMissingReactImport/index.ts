@@ -1,7 +1,7 @@
 import { transformer } from './transformer';
 
-export const nextJsNewLinkCodemod = {
-	id: 'nextJsNewLink' as const,
+export const nextJsAddMissingReactImport = {
+	id: 'nextJsAddMissingReactImport' as const,
 	group: 'nextJs' as const,
 	transformer,
 };

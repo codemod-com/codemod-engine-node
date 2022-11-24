@@ -1,4 +1,4 @@
 build
 build-ncc
 node_modules
-.vscode
+pnpm-lock.yaml
