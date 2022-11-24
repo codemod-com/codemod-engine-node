@@ -1,3 +1,4 @@
+// sourced from https://github.com/vercel/next.js/blob/canary/packages/next-codemod/transforms/next-image-experimental.ts
 import { namedTypes } from 'ast-types'
 import { writeFileSync } from 'fs'
 import type {API,Collection,FileInfo,ImportDefaultSpecifier,JSCodeshift,JSXAttribute,Options,

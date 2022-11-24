@@ -1,7 +1,7 @@
 import { nextJsNewLinkCodemod } from './cases/nextJsNewLink';
-import {nextJsMissingReactCodemod} from "./cases/addMissingReactImport";
+import { nextJsAddMissingReactImport } from './cases/nextJsAddMissingReactImport';
 import { nextImageExperimental } from './cases/nextImageExperimental';
 
-export const codemods = [nextJsNewLinkCodemod,nextJsMissingReactCodemod,nextImageExperimental];
+export const codemods = [nextJsNewLinkCodemod,nextJsAddMissingReactImport,nextImageExperimental];
 
 export type CodemodId = typeof codemods[0]['id'];
