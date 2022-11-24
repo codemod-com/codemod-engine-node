@@ -8,7 +8,7 @@ import { FinishMessage, MessageKind } from './messages';
 import { codemods } from './codemods';
 import { writeFile } from 'fs/promises';
 import { createHash } from 'crypto';
-import { extname, join } from 'path';
+import { join } from 'path';
 import { buildRewriteMessage } from './buildRewriteMessage';
 
 const argv = Promise.resolve<{
@@ -88,10 +88,10 @@ argv.then(async ({ pattern, group, outputDirectoryPath }) => {
 						.update(filePath)
 						.update(codemod.id)
 						.digest('base64url');
-					const extension = extname(filePath);
+
 					const outputFilePath = join(
 						outputDirectoryPath,
-						`${hash}${extension}`,
+						`${hash}.txt`,
 					);
 
 					await writeFile(outputFilePath, newSource);
