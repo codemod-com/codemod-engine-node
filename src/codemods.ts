@@ -1,6 +1,6 @@
 import { nextJsNewLinkCodemod } from './cases/nextJsNewLink';
-import {nextJsAddMissingReactImport} from "./cases/nextJsAddMissingReactImport"
+import { nextJsAddMissingReactImport } from './cases/nextJsAddMissingReactImport';
 
-export const codemods = [nextJsNewLinkCodemod,nextJsAddMissingReactImport];
+export const codemods = [nextJsNewLinkCodemod, nextJsAddMissingReactImport];
 
 export type CodemodId = typeof codemods[0]['id'];

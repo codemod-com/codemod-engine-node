@@ -7,7 +7,10 @@ import { buildChangeMessage } from './buildChangeMessages';
 import { FinishMessage, MessageKind } from './messages';
 import { codemods } from './codemods';
 
-const argv = Promise.resolve<{ pattern: string, groups?: ReadonlyArray<string> }>(
+const argv = Promise.resolve<{
+	pattern: string;
+	groups?: ReadonlyArray<string>;
+}>(
 	yargs(hideBin(process.argv))
 		.option('pattern', {
 			alias: 'p',
@@ -68,7 +71,7 @@ argv.then(async ({ pattern, groups }) => {
 					newSource,
 					codemod.id,
 				);
-	
+
 				if (change) {
 					console.log(JSON.stringify(change));
 				}
