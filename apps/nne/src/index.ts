@@ -5,11 +5,12 @@ import jscodeshift, { API, FileInfo } from 'jscodeshift';
 import { readFileSync } from 'fs';
 import { buildChangeMessage } from './buildChangeMessages';
 import { FinishMessage, MessageKind } from './messages';
-import { codemods } from './codemods';
 import { writeFile } from 'fs/promises';
 import { createHash } from 'crypto';
 import { join } from 'path';
 import { buildRewriteMessage } from './buildRewriteMessage';
+
+import { codemods } from '@nne/codemods';
 
 const argv = Promise.resolve<{
 	pattern: ReadonlyArray<string>;
@@ -43,9 +44,9 @@ const argv = Promise.resolve<{
 		.alias('help', 'h').argv,
 );
 
-const api: API = {
-	j: jscodeshift,
-	jscodeshift,
+const buildApi = (parser: string): API => ({
+	j: jscodeshift.withParser(parser),
+	jscodeshift: jscodeshift.withParser(parser),
 	stats: () => {
 		console.error(
 			'The stats function was called, which is not supported on purpose',
@@ -56,7 +57,7 @@ const api: API = {
 			'The report function was called, which is not supported on purpose',
 		);
 	},
-};
+});
 
 argv.then(async ({ pattern, group, outputDirectoryPath }) => {
 	const stream = fastGlob.stream(pattern.slice());
@@ -77,7 +78,15 @@ argv.then(async ({ pattern, group, outputDirectoryPath }) => {
 			};
 
 			try {
-				const newSource = codemod.transformer(fileInfo, api);
+				const newSource = codemod.transformer(
+					fileInfo,
+					buildApi(codemod.withParser),
+					{},
+				);
+
+				if (!newSource) {
+					continue;
+				}
 
 				if (oldSource === newSource) {
 					continue;
@@ -86,7 +95,7 @@ argv.then(async ({ pattern, group, outputDirectoryPath }) => {
 				if (outputDirectoryPath) {
 					const hash = createHash('md5')
 						.update(filePath)
-						.update(codemod.id)
+						.update(codemod.caseTitle)
 						.digest('base64url');
 
 					const outputFilePath = join(
@@ -99,7 +108,7 @@ argv.then(async ({ pattern, group, outputDirectoryPath }) => {
 					const rewrite = buildRewriteMessage(
 						filePath,
 						outputFilePath,
-						codemod.id,
+						codemod.caseTitle,
 					);
 
 					console.log(JSON.stringify(rewrite));
@@ -108,7 +117,7 @@ argv.then(async ({ pattern, group, outputDirectoryPath }) => {
 						String(filePath),
 						oldSource,
 						newSource,
-						codemod.id,
+						codemod.caseTitle,
 					);
 
 					console.log(JSON.stringify(change));

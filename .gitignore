@@ -2,3 +2,7 @@ build
 build-ncc
 node_modules
 .vscode
+dist
+.turbo
+packages/nne-codemods/src/index.ts
+packages/nne-codemods/src/codemods/*.ts
