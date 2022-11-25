@@ -1,9 +1,8 @@
 {
     "$schema": "https://turbo.build/schema.json",
     "pipeline": {
-      "install": {
-        "dependsOn": ["^install"],
-        "outputs": ["dist/**"]
+      "build": {
+        "outputMode": "full"
       }
     }
   }

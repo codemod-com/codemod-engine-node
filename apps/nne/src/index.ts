@@ -80,6 +80,10 @@ argv.then(async ({ pattern, group, outputDirectoryPath }) => {
 			try {
 				const newSource = codemod.transformer(fileInfo, api, {});
 
+				if (!newSource) {
+					continue;
+				}
+
 				if (oldSource === newSource) {
 					continue;
 				}

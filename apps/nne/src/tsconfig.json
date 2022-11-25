@@ -1,6 +1,9 @@
 {
     "extends": "@nne/tsconfig/tsconfig.json",
     "include": ["."],
-    "exclude": ["./dist", "./build", "./node_modules"]
+    "exclude": ["./dist", "./build", "./node_modules"],
+    "compilerOptions": {
+      "moduleResolution":"Node",
+    }
   }
   
