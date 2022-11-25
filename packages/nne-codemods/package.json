@@ -1,0 +1,11 @@
+{
+    "name": "nne-codemods",
+    "version": "0.0.1",
+    "private": true,
+    "files": [
+      
+    ],
+    "devDependencies": {
+        "nne-tsconfig": "workspace:*"
+      }
+  }
