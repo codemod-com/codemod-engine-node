@@ -1,8 +1,8 @@
 {
     "$schema": "https://turbo.build/schema.json",
     "pipeline": {
-      "build": {
-        "dependsOn": ["nne-codemods"],
+      "install": {
+        "dependsOn": ["^install"],
         "outputs": ["dist/**"]
       }
     }

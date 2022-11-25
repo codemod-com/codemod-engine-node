@@ -4,6 +4,7 @@
 	"description": "A codemod engine for Node.js libraries (e.g. jscodeshift, TSC utilities)",
 	"private": true,
 	"devDependencies": {
+		"typescript": "4.9.3",
 		"turbo": "latest"
 	},
 	"workspaces": [
