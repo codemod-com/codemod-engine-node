@@ -9,7 +9,8 @@
         "declarationMap": false,
         "noImplicitAny": true,
         "strictNullChecks": false,
-        "strict": false
+        "strict": false,
+        "noEmitOnError": false
     }
   }
   

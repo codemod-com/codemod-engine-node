@@ -1,11 +1,10 @@
-import { CodemodId } from './codemods';
 import { ChangeMessage, MessageKind } from './messages';
 
 export const buildChangeMessage = (
 	filePath: string,
 	oldSource: string,
 	newSource: string,
-	codemodId: CodemodId,
+	codemodId: string,
 ): ChangeMessage => {
 	return {
 		k: MessageKind.change,

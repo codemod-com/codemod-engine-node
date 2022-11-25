@@ -3,9 +3,9 @@
     "version": "0.0.1",
     "private": true,
     "files": [],
-    "main": "./dist/index.js",
+    "main": "./dist/src/index.js",
     "scripts": {
-        "postinstall": "ts-node ./src/index.ts"
+        "postinstall": "ts-node ./src/fetchCodemods.ts && (tsc || exit 0)"
     },
     "devDependencies": {
         "@types/axios": "^0.14.0",
