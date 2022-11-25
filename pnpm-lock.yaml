@@ -84,6 +84,21 @@ importers:
       '@types/jscodeshift': 0.11.5
       '@types/node': 18.11.9
 
+  packages/nne-codemods:
+    specifiers:
+      '@nne/tsconfig': workspace:*
+      '@types/jscodeshift': ^0.11.5
+      '@types/node': ^18.11.9
+      jscodeshift: ^0.14.0
+      ts-node: ^10.9.1
+    dependencies:
+      jscodeshift: 0.14.0
+      ts-node: 10.9.1_@types+node@18.11.9
+    devDependencies:
+      '@nne/tsconfig': link:../nne-tsconfig
+      '@types/jscodeshift': 0.11.5
+      '@types/node': 18.11.9
+
   packages/nne-tsconfig:
     specifiers: {}
 
