@@ -41,7 +41,7 @@ export const codemods = [
 	},
 	{
 		group: 'nextJs',
-		caseTitle: '',
+		caseTitle: 'URL to WithRouter',
 		url: 'https://raw.githubusercontent.com/vercel/next.js/canary/packages/next-codemod/transforms/url-to-withrouter.ts',
 		license:
 			'https://raw.githubusercontent.com/vercel/next.js/canary/packages/next-codemod/license.md',
