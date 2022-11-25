@@ -44,9 +44,9 @@ const argv = Promise.resolve<{
 		.alias('help', 'h').argv,
 );
 
-const api: API = {
-	j: jscodeshift,
-	jscodeshift,
+const buildApi = (parser: string): API => ({
+	j: jscodeshift.withParser(parser),
+	jscodeshift: jscodeshift.withParser(parser),
 	stats: () => {
 		console.error(
 			'The stats function was called, which is not supported on purpose',
@@ -57,7 +57,7 @@ const api: API = {
 			'The report function was called, which is not supported on purpose',
 		);
 	},
-};
+});
 
 argv.then(async ({ pattern, group, outputDirectoryPath }) => {
 	const stream = fastGlob.stream(pattern.slice());
@@ -78,7 +78,7 @@ argv.then(async ({ pattern, group, outputDirectoryPath }) => {
 			};
 
 			try {
-				const newSource = codemod.transformer(fileInfo, api, {});
+				const newSource = codemod.transformer(fileInfo, buildApi(codemod.withParser), {});
 
 				if (!newSource) {
 					continue;

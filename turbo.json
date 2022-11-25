@@ -3,6 +3,9 @@
     "pipeline": {
       "build": {
         "outputMode": "full"
+      },
+      "package": {
+        "outputMode": "full"
       }
     }
   }

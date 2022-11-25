@@ -8,6 +8,7 @@ type CodemodObject = Readonly<{
     id: string,
 	group: string,
 	transformer: string,
+    withParser: string,
 }>;
 
 const dirname = join(__dirname, '../../nne-codemods/src/');
@@ -36,14 +37,16 @@ const fetchCodemods = async () => {
             id: hash,
             group: hash,
             transformer: `transformer${hash}`,
+            withParser: codemod.withParser,
         })
     }
 
-    const stringifiedObjects = codemodObjects.map(({ id, group, transformer }) => {
+    const stringifiedObjects = codemodObjects.map(({ id, group, transformer, withParser }) => {
         return '\t{\n' +
             `\t\t"id": "${id}",\n` +
             `\t\t"group": "${group}",\n` +
             `\t\t"transformer": ${transformer},\n` +
+            `\t\t"withParser": "${withParser}",\n` +
         '\t},\n';
     }).join('');
 
