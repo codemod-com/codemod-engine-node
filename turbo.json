@@ -2,14 +2,19 @@
 	"$schema": "https://turbo.build/schema.json",
 	"pipeline": {
 		"lint": {
-			"outputMode": "full"
+			"outputMode": "full",
+			"dependsOn": ["^lint"]
+		},
+		"//#lint": {
+			"dependsOn": [],
+			"outputs": []
 		},
 		"build": {
-			"dependsOn": ["lint"],
+			"dependsOn": ["lint", "//#lint", "^build"],
 			"outputMode": "full"
 		},
 		"package": {
-			"dependsOn": ["build", "lint"],
+			"dependsOn": ["build", "^package"],
 			"outputMode": "full"
 		}
 	}
