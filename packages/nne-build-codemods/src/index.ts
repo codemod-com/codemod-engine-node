@@ -10,8 +10,10 @@ type CodemodObject = Readonly<{
 	transformer: string,
 }>;
 
+const dirname = join(__dirname, '../../nne-codemods/src/');
+
 const fetchCodemods = async () => {
-    const indexFilePath = join(__dirname, '../codemods/index.ts');
+    const indexFilePath = join(dirname, './index.ts');
     const writeStream = createWriteStream(indexFilePath);
 
     const codemodObjects: CodemodObject[] = [];
@@ -22,7 +24,7 @@ const fetchCodemods = async () => {
         const hash = createHash('ripemd160').update(codemod.url).digest('hex');
         const extension = extname(codemod.url);
 
-        const filePath = join(__dirname, `../codemods/${hash}${extension}`);
+        const filePath = join(dirname, `./codemods/${hash}${extension}`);
 
         if(!existsSync(filePath)) {
             response.data.pipe(createWriteStream(filePath));
