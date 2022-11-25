@@ -47,4 +47,44 @@ export const codemods = [
 			'https://raw.githubusercontent.com/vercel/next.js/canary/packages/next-codemod/license.md',
 		withParser: 'tsx',
 	},
+	{
+		group: 'nextJs',
+		caseTitle: 'MUI: adapter-v4',
+		url: 'https://raw.githubusercontent.com/mui/material-ui/master/packages/mui-codemod/src/v5.0.0/adapter-v4.js',
+		license:
+			'https://raw.githubusercontent.com/mui/material-ui/master/LICENSE',
+		withParser: 'tsx',
+	},
+	{
+		group: 'nextJs',
+		caseTitle: 'MUI: avatar-circle-circular',
+		url: 'https://raw.githubusercontent.com/mui/material-ui/master/packages/mui-codemod/src/v5.0.0/avatar-circle-circular.js',
+		license:
+			'https://raw.githubusercontent.com/mui/material-ui/master/LICENSE',
+		withParser: 'tsx',
+	},
+	{
+		group: 'nextJs',
+		caseTitle: 'MUI: badge-overlap-valuer',
+		url: 'https://raw.githubusercontent.com/mui/material-ui/master/packages/mui-codemod/src/v5.0.0/badge-overlap-value.js',
+		license:
+			'https://raw.githubusercontent.com/mui/material-ui/master/LICENSE',
+		withParser: 'tsx',
+	},
+	{
+		group: 'nextJs',
+		caseTitle: 'MUI: base-rename-components-to-slots',
+		url: 'https://raw.githubusercontent.com/mui/material-ui/master/packages/mui-codemod/src/v5.0.0/base-rename-components-to-slots.js',
+		license:
+			'https://raw.githubusercontent.com/mui/material-ui/master/LICENSE',
+		withParser: 'tsx',
+	},
+	{
+		group: 'nextJs',
+		caseTitle: 'MUI: box-borderradius-values',
+		url: 'https://raw.githubusercontent.com/mui/material-ui/master/packages/mui-codemod/src/v5.0.0/box-borderradius-values.js',
+		license:
+			'https://raw.githubusercontent.com/mui/material-ui/master/LICENSE',
+		withParser: 'tsx',
+	},
 ];

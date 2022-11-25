@@ -17,6 +17,6 @@
 		"jscodeshift": "^0.14.0"
 	},
 	"scripts": {
-		"postinstall": "tsc || echo 0"
+		"build": "tsc || echo 0"
 	}
 }
