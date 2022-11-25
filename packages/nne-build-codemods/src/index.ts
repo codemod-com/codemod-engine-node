@@ -30,7 +30,7 @@ const fetchCodemods = async () => {
             response.data.pipe(createWriteStream(filePath));
         }
 
-        writeStream.write(`import transformer${hash} from './${hash}'\n`);
+        writeStream.write(`import transformer${hash} from './codemods/${hash}'\n`);
 
         codemodObjects.push({
             id: hash,

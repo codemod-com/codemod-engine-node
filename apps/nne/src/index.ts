@@ -10,7 +10,7 @@ import { createHash } from 'crypto';
 import { join } from 'path';
 import { buildRewriteMessage } from './buildRewriteMessage';
 
-import { codemods } from '@nne/build-codemods';
+import { codemods } from '@nne/codemods';
 
 const argv = Promise.resolve<{
 	pattern: ReadonlyArray<string>;

@@ -14,7 +14,7 @@ importers:
     specifiers:
       '@babel/core': ^7.20.2
       '@babel/preset-env': ^7.20.2
-      '@nne/build-codemods': workspace:*
+      '@nne/codemods': workspace:*
       '@nne/tsconfig': workspace:*
       '@types/diff': ^5.0.2
       '@types/jscodeshift': ^0.11.5
@@ -40,7 +40,7 @@ importers:
     dependencies:
       '@babel/core': 7.20.2
       '@babel/preset-env': 7.20.2_@babel+core@7.20.2
-      '@nne/build-codemods': link:../../packages/nne-build-codemods
+      '@nne/codemods': link:../../packages/nne-codemods
       '@nne/tsconfig': link:../../packages/nne-tsconfig
       ast-types: 0.14.2
       diff: 5.1.0
