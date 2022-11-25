@@ -95,7 +95,7 @@ argv.then(async ({ pattern, group, outputDirectoryPath }) => {
 				if (outputDirectoryPath) {
 					const hash = createHash('md5')
 						.update(filePath)
-						.update(codemod.id)
+						.update(codemod.caseTitle)
 						.digest('base64url');
 
 					const outputFilePath = join(
@@ -108,7 +108,7 @@ argv.then(async ({ pattern, group, outputDirectoryPath }) => {
 					const rewrite = buildRewriteMessage(
 						filePath,
 						outputFilePath,
-						codemod.id,
+						codemod.caseTitle,
 					);
 
 					console.log(JSON.stringify(rewrite));
@@ -117,7 +117,7 @@ argv.then(async ({ pattern, group, outputDirectoryPath }) => {
 						String(filePath),
 						oldSource,
 						newSource,
-						codemod.id,
+						codemod.caseTitle,
 					);
 
 					console.log(JSON.stringify(change));

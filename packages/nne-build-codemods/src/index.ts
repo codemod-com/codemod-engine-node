@@ -5,8 +5,8 @@ import { extname, join } from 'node:path';
 import { codemods } from './codemods';
 
 type CodemodObject = Readonly<{
-	id: string;
 	group: string;
+	caseTitle: string;
 	transformer: string;
 	withParser: string;
 }>;
@@ -38,18 +38,18 @@ const fetchCodemods = async () => {
 		);
 
 		codemodObjects.push({
-			id: hash,
-			group: hash,
+			caseTitle: codemod.caseTitle,
+			group: codemod.group,
 			transformer: `transformer${hash}`,
 			withParser: codemod.withParser,
 		});
 	}
 
 	const stringifiedObjects = codemodObjects
-		.map(({ id, group, transformer, withParser }) => {
+		.map(({ caseTitle, group, transformer, withParser }) => {
 			return (
 				'\t{\n' +
-				`\t\t"id": "${id}",\n` +
+				`\t\t"caseTitle": "${caseTitle}",\n` +
 				`\t\t"group": "${group}",\n` +
 				`\t\t"transformer": ${transformer},\n` +
 				`\t\t"withParser": "${withParser}",\n` +
