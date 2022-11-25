@@ -6,3 +6,4 @@ dist
 .turbo
 packages/nne-codemods/src/index.ts
 packages/nne-codemods/src/codemods/*.ts
+packages/nne-codemods/src/codemods/*.js
