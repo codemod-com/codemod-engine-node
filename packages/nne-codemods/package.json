@@ -5,6 +5,7 @@
     "files": [
       
     ],
+    "main": "./dist/index.js",
     "scripts": {
         "postinstall": "tsc"
     },
