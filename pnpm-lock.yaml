@@ -14,6 +14,7 @@ importers:
     specifiers:
       '@babel/core': ^7.20.2
       '@babel/preset-env': ^7.20.2
+      '@nne/tsconfig': workspace:*
       '@types/diff': ^5.0.2
       '@types/jscodeshift': ^0.11.5
       '@types/node': ^18.11.9
@@ -31,7 +32,6 @@ importers:
       jscodeshift: ^0.14.0
       mocha: ^10.1.0
       nne-codemods: workspace:*
-      nne-tsconfig: workspace:*
       prettier: ^2.8.0
       ts-node: ^10.9.1
       turbo: latest
@@ -40,12 +40,12 @@ importers:
     dependencies:
       '@babel/core': 7.20.2
       '@babel/preset-env': 7.20.2_@babel+core@7.20.2
+      '@nne/tsconfig': link:../../packages/nne-tsconfig
       ast-types: 0.14.2
       diff: 5.1.0
       fast-glob: 3.2.12
       jscodeshift: 0.14.0_@babel+preset-env@7.20.2
       nne-codemods: link:../../packages/nne-codemods
-      nne-tsconfig: link:../../packages/nne-tsconfig
       yargs: 17.6.2
     devDependencies:
       '@types/diff': 5.0.2
@@ -67,22 +67,22 @@ importers:
 
   packages/nne-codemods:
     specifiers:
+      '@nne/tsconfig': workspace:*
       '@types/axios': ^0.14.0
       '@types/jscodeshift': ^0.11.5
       '@types/node': ^18.11.9
       axios: ^1.2.0
       jscodeshift: ^0.14.0
-      nne-tsconfig: workspace:*
       ts-node: ^10.9.1
     dependencies:
       axios: 1.2.0
       jscodeshift: 0.14.0
       ts-node: 10.9.1_@types+node@18.11.9
     devDependencies:
+      '@nne/tsconfig': link:../nne-tsconfig
       '@types/axios': 0.14.0
       '@types/jscodeshift': 0.11.5
       '@types/node': 18.11.9
-      nne-tsconfig: link:../nne-tsconfig
 
   packages/nne-tsconfig:
     specifiers: {}

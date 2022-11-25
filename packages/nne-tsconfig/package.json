@@ -1,5 +1,5 @@
 {
-    "name": "nne-tsconfig",
+    "name": "@nne/tsconfig",
     "version": "0.0.1",
     "private": true,
     "files": [

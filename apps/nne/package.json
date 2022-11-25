@@ -4,7 +4,7 @@
     "private": true,
     "dependencies": {
       "nne-codemods": "workspace:*",
-      "nne-tsconfig": "workspace:*",
+      "@nne/tsconfig": "workspace:*",
       "@babel/core": "^7.20.2",
     "@babel/preset-env": "^7.20.2",
     "ast-types": "^0.14.2",
