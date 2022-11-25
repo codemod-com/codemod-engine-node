@@ -1,16 +1,15 @@
 {
-    "extends": "@nne/tsconfig/tsconfig.json",
-    "include": ["./src"],
-    "exclude": ["./dist", "./build", "./node_modules"],
-    "compilerOptions": {
-        "allowJs": false,
-        "declaration": true,
-        "outDir": "dist",
-        "declarationMap": false,
-        "noImplicitAny": true,
-        "strictNullChecks": false,
-        "strict": false,
-        "noEmitOnError": false
-    }
+	"extends": "@nne/tsconfig/tsconfig.json",
+	"include": ["./src"],
+	"exclude": ["./dist", "./build", "./node_modules"],
+	"compilerOptions": {
+		"allowJs": false,
+		"declaration": true,
+		"outDir": "dist",
+		"declarationMap": false,
+		"noImplicitAny": true,
+		"strictNullChecks": false,
+		"strict": false,
+		"noEmitOnError": false
+	}
 }
-  

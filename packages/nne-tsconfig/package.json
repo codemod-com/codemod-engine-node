@@ -1,8 +1,8 @@
 {
-    "name": "@nne/tsconfig",
-    "version": "0.0.1",
-    "private": true,
-    "files": [
-      "tsconfig.json"
-    ]
-  }
+	"name": "@nne/tsconfig",
+	"version": "0.0.1",
+	"private": true,
+	"files": [
+		"tsconfig.json"
+	]
+}

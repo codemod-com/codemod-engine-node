@@ -78,7 +78,11 @@ argv.then(async ({ pattern, group, outputDirectoryPath }) => {
 			};
 
 			try {
-				const newSource = codemod.transformer(fileInfo, buildApi(codemod.withParser), {});
+				const newSource = codemod.transformer(
+					fileInfo,
+					buildApi(codemod.withParser),
+					{},
+				);
 
 				if (!newSource) {
 					continue;
