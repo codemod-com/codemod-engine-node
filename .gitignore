@@ -5,3 +5,4 @@ node_modules
 dist
 .turbo
 packages/nne-codemods/codemods/*.ts
+packages/nne-build-codemods/codemods/*.ts
