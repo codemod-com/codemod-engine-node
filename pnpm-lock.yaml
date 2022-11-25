@@ -1,54 +1,76 @@
 lockfileVersion: 5.4
 
-specifiers:
-  '@babel/core': ^7.20.2
-  '@babel/preset-env': ^7.20.2
-  '@types/diff': ^5.0.2
-  '@types/jscodeshift': ^0.11.5
-  '@types/node': ^18.11.9
-  '@types/yargs': ^17.0.13
-  '@typescript-eslint/eslint-plugin': ^5.44.0
-  '@typescript-eslint/parser': ^5.44.0
-  '@vercel/ncc': ^0.34.0
-  ast-types: ^0.14.2
-  chai: ^4.3.7
-  diff: ^5.1.0
-  eslint: ^8.28.0
-  eslint-config-prettier: ^8.5.0
-  eslint-plugin-prettier: ^4.2.1
-  fast-glob: ^3.2.12
-  jscodeshift: ^0.14.0
-  mocha: ^10.1.0
-  prettier: ^2.8.0
-  ts-node: ^10.9.1
-  typescript: ^4.9.3
-  yargs: ^17.6.2
+importers:
 
-dependencies:
-  '@babel/core': 7.20.2
-  '@babel/preset-env': 7.20.2_@babel+core@7.20.2
-  ast-types: 0.14.2
-  diff: 5.1.0
-  fast-glob: 3.2.12
-  jscodeshift: 0.14.0_@babel+preset-env@7.20.2
-  yargs: 17.6.2
+  .:
+    specifiers:
+      turbo: latest
+    devDependencies:
+      turbo: 1.6.3
 
-devDependencies:
-  '@types/diff': 5.0.2
-  '@types/jscodeshift': 0.11.5
-  '@types/node': 18.11.9
-  '@types/yargs': 17.0.13
-  '@typescript-eslint/eslint-plugin': 5.44.0_fnsv2sbzcckq65bwfk7a5xwslu
-  '@typescript-eslint/parser': 5.44.0_hsf322ms6xhhd4b5ne6lb74y4a
-  '@vercel/ncc': 0.34.0
-  chai: 4.3.7
-  eslint: 8.28.0
-  eslint-config-prettier: 8.5.0_eslint@8.28.0
-  eslint-plugin-prettier: 4.2.1_cwlo2dingkvfydnaculr42urve
-  mocha: 10.1.0
-  prettier: 2.8.0
-  ts-node: 10.9.1_wup25etrarvlqkprac7h35hj7u
-  typescript: 4.9.3
+  apps/nne:
+    specifiers:
+      '@babel/core': ^7.20.2
+      '@babel/preset-env': ^7.20.2
+      '@types/diff': ^5.0.2
+      '@types/jscodeshift': ^0.11.5
+      '@types/node': ^18.11.9
+      '@types/yargs': ^17.0.13
+      '@typescript-eslint/eslint-plugin': ^5.44.0
+      '@typescript-eslint/parser': ^5.44.0
+      '@vercel/ncc': ^0.34.0
+      ast-types: ^0.14.2
+      chai: ^4.3.7
+      diff: ^5.1.0
+      eslint: ^8.28.0
+      eslint-config-prettier: ^8.5.0
+      eslint-plugin-prettier: ^4.2.1
+      fast-glob: ^3.2.12
+      jscodeshift: ^0.14.0
+      mocha: ^10.1.0
+      nne-codemods: workspace:*
+      nne-tsconfig: workspace:*
+      prettier: ^2.8.0
+      ts-node: ^10.9.1
+      turbo: latest
+      typescript: ^4.9.3
+      yargs: ^17.6.2
+    dependencies:
+      '@babel/core': 7.20.2
+      '@babel/preset-env': 7.20.2_@babel+core@7.20.2
+      ast-types: 0.14.2
+      diff: 5.1.0
+      fast-glob: 3.2.12
+      jscodeshift: 0.14.0_@babel+preset-env@7.20.2
+      nne-codemods: link:../../packages/nne-codemods
+      nne-tsconfig: link:../../packages/nne-tsconfig
+      yargs: 17.6.2
+    devDependencies:
+      '@types/diff': 5.0.2
+      '@types/jscodeshift': 0.11.5
+      '@types/node': 18.11.9
+      '@types/yargs': 17.0.13
+      '@typescript-eslint/eslint-plugin': 5.44.0_fnsv2sbzcckq65bwfk7a5xwslu
+      '@typescript-eslint/parser': 5.44.0_hsf322ms6xhhd4b5ne6lb74y4a
+      '@vercel/ncc': 0.34.0
+      chai: 4.3.7
+      eslint: 8.28.0
+      eslint-config-prettier: 8.5.0_eslint@8.28.0
+      eslint-plugin-prettier: 4.2.1_cwlo2dingkvfydnaculr42urve
+      mocha: 10.1.0
+      prettier: 2.8.0
+      ts-node: 10.9.1_wup25etrarvlqkprac7h35hj7u
+      turbo: 1.6.3
+      typescript: 4.9.3
+
+  packages/nne-codemods:
+    specifiers:
+      nne-tsconfig: workspace:*
+    devDependencies:
+      nne-tsconfig: link:../nne-tsconfig
+
+  packages/nne-tsconfig:
+    specifiers: {}
 
 packages:
 
@@ -3084,6 +3106,67 @@ packages:
     dependencies:
       tslib: 1.14.1
       typescript: 4.9.3
+    dev: true
+
+  /turbo-darwin-64/1.6.3:
+    resolution: {integrity: sha512-QmDIX0Yh1wYQl0bUS0gGWwNxpJwrzZU2GIAYt3aOKoirWA2ecnyb3R6ludcS1znfNV2MfunP+l8E3ncxUHwtjA==}
+    cpu: [x64]
+    os: [darwin]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /turbo-darwin-arm64/1.6.3:
+    resolution: {integrity: sha512-75DXhFpwE7CinBbtxTxH08EcWrxYSPFow3NaeFwsG8aymkWXF+U2aukYHJA6I12n9/dGqf7yRXzkF0S/9UtdyQ==}
+    cpu: [arm64]
+    os: [darwin]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /turbo-linux-64/1.6.3:
+    resolution: {integrity: sha512-O9uc6J0yoRPWdPg9THRQi69K6E2iZ98cRHNvus05lZbcPzZTxJYkYGb5iagCmCW/pq6fL4T4oLWAd6evg2LGQA==}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /turbo-linux-arm64/1.6.3:
+    resolution: {integrity: sha512-dCy667qqEtZIhulsRTe8hhWQNCJO0i20uHXv7KjLHuFZGCeMbWxB8rsneRoY+blf8+QNqGuXQJxak7ayjHLxiA==}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /turbo-windows-64/1.6.3:
+    resolution: {integrity: sha512-lKRqwL3mrVF09b9KySSaOwetehmGknV9EcQTF7d2dxngGYYX1WXoQLjFP9YYH8ZV07oPm+RUOAKSCQuDuMNhiA==}
+    cpu: [x64]
+    os: [win32]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /turbo-windows-arm64/1.6.3:
+    resolution: {integrity: sha512-BXY1sDPEA1DgPwuENvDCD8B7Hb0toscjus941WpL8CVd10hg9pk/MWn9CNgwDO5Q9ks0mw+liDv2EMnleEjeNA==}
+    cpu: [arm64]
+    os: [win32]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /turbo/1.6.3:
+    resolution: {integrity: sha512-FtfhJLmEEtHveGxW4Ye/QuY85AnZ2ZNVgkTBswoap7UMHB1+oI4diHPNyqrQLG4K1UFtCkjOlVoLsllUh/9QRw==}
+    hasBin: true
+    requiresBuild: true
+    optionalDependencies:
+      turbo-darwin-64: 1.6.3
+      turbo-darwin-arm64: 1.6.3
+      turbo-linux-64: 1.6.3
+      turbo-linux-arm64: 1.6.3
+      turbo-windows-64: 1.6.3
+      turbo-windows-arm64: 1.6.3
     dev: true
 
   /type-check/0.4.0:
