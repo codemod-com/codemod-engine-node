@@ -6,7 +6,10 @@
         "allowJs": false,
         "declaration": true,
         "outDir": "dist",
-        "declarationMap": true
+        "declarationMap": false,
+        "noImplicitAny": true,
+        "strictNullChecks": false,
+        "strict": false
     }
   }
   

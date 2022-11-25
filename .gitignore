@@ -4,3 +4,4 @@ node_modules
 .vscode
 dist
 .turbo
+packages/nne-codemods/codemods/*.ts
