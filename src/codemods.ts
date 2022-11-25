@@ -1,13 +1,14 @@
 import { nextJsNewLinkCodemod } from './cases/nextJsNewLink';
 import { nextJsAddMissingReactImport } from './cases/nextJsAddMissingReactImport';
-import { nextImageExperimental } from './cases/nextJsImageExperimental';
 import { nextJsImageToLegacyImage } from './cases/nextJsImageToLegacyImage';
+import { nextJsImageExperimental } from './cases/nextJsImageExperimental';
+
 
 export const codemods = [
 	nextJsNewLinkCodemod,
 	nextJsAddMissingReactImport,
-	nextImageExperimental,
-	nextJsImageToLegacyImage
+	nextJsImageToLegacyImage,
+	nextJsImageExperimental
 ];
 
 export type CodemodId = typeof codemods[0]['id'];
