@@ -19,6 +19,7 @@ const argv = Promise.resolve<{
 	pattern: ReadonlyArray<string>;
 	group?: ReadonlyArray<string>;
 	outputDirectoryPath?: string;
+	limit?: number,
 }>(
 	yargs(hideBin(process.argv))
 		.option('pattern', {
@@ -32,6 +33,12 @@ const argv = Promise.resolve<{
 			describe: 'Pass the group(s) of codemods for execution',
 			array: true,
 			type: 'string',
+		})
+		.option('limit', {
+			alias: 'l',
+			describe: 'Pass the limit for the number of files to inspect',
+			array: false,
+			type: 'number',
 		})
 		.option('outputDirectoryPath', {
 			alias: 'o',
@@ -62,10 +69,17 @@ const buildApi = (parser: string): API => ({
 	},
 });
 
-argv.then(async ({ pattern, group, outputDirectoryPath }) => {
+argv.then(async ({ pattern, group, outputDirectoryPath, limit }) => {
 	const stream = fastGlob.stream(pattern.slice());
+	let fileCount = 0;
 
 	for await (const data of stream) {
+		if (limit && fileCount === limit) {
+			break;
+		}
+
+		++fileCount;
+
 		const filePath = String(data);
 
 		const oldSource = readFileSync(filePath, { encoding: 'utf8' });
