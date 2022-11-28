@@ -1,8 +1,11 @@
 {
-	"extends": "@nne/tsconfig/tsconfig.json",
+	"extends": "../../../tsconfig.json",
 	"include": ["."],
 	"exclude": ["./dist", "./build", "./node_modules"],
 	"compilerOptions": {
-		"moduleResolution": "Node"
+		"moduleResolution": "Node",
+		"allowJs": true,
+		"checkJs": false,
+		"strict": false
 	}
 }
