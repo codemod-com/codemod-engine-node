@@ -10,7 +10,10 @@ import { createHash } from 'crypto';
 import { join } from 'path';
 import { buildRewriteMessage } from './buildRewriteMessage';
 
-import { codemods } from '@nne/codemods';
+import { codemods as nneCodemods } from '@nne/codemods';
+import { codemods as muiCodemods } from '@nne/mui-codemods';
+
+const codemods = nneCodemods.concat(muiCodemods);
 
 const argv = Promise.resolve<{
 	pattern: ReadonlyArray<string>;
@@ -84,11 +87,7 @@ argv.then(async ({ pattern, group, outputDirectoryPath }) => {
 					{},
 				);
 
-				if (!newSource) {
-					continue;
-				}
-
-				if (oldSource === newSource) {
+				if (!newSource || oldSource === newSource) {
 					continue;
 				}
 
@@ -123,7 +122,13 @@ argv.then(async ({ pattern, group, outputDirectoryPath }) => {
 					console.log(JSON.stringify(change));
 				}
 			} catch (error) {
-				console.error(error);
+				if (error instanceof Error) {
+					console.error(JSON.stringify({
+						message: error.message,
+						caseTitle: codemod.caseTitle,
+						group: codemod.group,
+					}));
+				}
 			}
 		}
 	}

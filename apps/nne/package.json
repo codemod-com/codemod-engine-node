@@ -4,13 +4,15 @@
 	"private": true,
 	"dependencies": {
 		"@nne/codemods": "workspace:*",
-		"@nne/tsconfig": "workspace:*",
+		"@nne/mui-codemods": "workspace:*",
 		"@babel/core": "^7.20.2",
 		"@babel/preset-env": "^7.20.2",
+		"@babel/traverse": "7.20.5",
 		"ast-types": "^0.14.2",
 		"diff": "^5.1.0",
 		"fast-glob": "^3.2.12",
 		"jscodeshift": "^0.14.0",
+		"jscodeshift-add-imports": "1.0.10",
 		"yargs": "^17.6.2"
 	},
 	"main": "./src/index.ts",
