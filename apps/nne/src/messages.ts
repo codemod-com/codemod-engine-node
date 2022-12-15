@@ -2,6 +2,7 @@ export const enum MessageKind {
 	change = 1,
 	finish = 2,
 	rewrite = 3,
+	progress = 6,
 }
 
 export type ChangeMessage = Readonly<{
@@ -21,6 +22,12 @@ export type RewriteMessage = Readonly<{
 
 export type FinishMessage = Readonly<{
 	k: MessageKind.finish;
+}>;
+
+export type ProgressMessage = Readonly<{
+	k: MessageKind.progress;
+	p: number; // number of processed files
+	t: number; // total number of files
 }>;
 
 export type Message = ChangeMessage | FinishMessage;
