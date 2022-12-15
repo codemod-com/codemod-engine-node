@@ -2,9 +2,10 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import fastGlob from 'fast-glob';
 import jscodeshift, { API, FileInfo } from 'jscodeshift';
+import * as readline from 'node:readline';
 import { readFileSync } from 'fs';
 import { buildChangeMessage } from './buildChangeMessages';
-import { FinishMessage, MessageKind } from './messages';
+import { FinishMessage, MessageKind, ProgressMessage } from './messages';
 import { writeFile } from 'fs/promises';
 import { createHash } from 'crypto';
 import { join } from 'path';
@@ -70,17 +71,27 @@ const buildApi = (parser: string): API => ({
 });
 
 argv.then(async ({ pattern, group, outputDirectoryPath, limit }) => {
-	const stream = fastGlob.stream(pattern.slice());
+	const interfase = readline.createInterface(process.stdin);
+
+	interfase.on('line', async (line) => {
+		if (line !== 'shutdown') {
+			return;
+		}
+
+		process.exit(0);
+	});
+
+	const filePaths = await fastGlob(pattern.slice());
 	let fileCount = 0;
 
-	for await (const data of stream) {
-		if (limit && fileCount === limit) {
+	const totalFileCount = Math.max(limit, filePaths.length);
+
+	for (const filePath of filePaths) {
+		if (limit > 0 && fileCount === limit) {
 			break;
 		}
 
 		++fileCount;
-
-		const filePath = String(data);
 
 		const oldSource = readFileSync(filePath, { encoding: 'utf8' });
 
@@ -145,6 +156,14 @@ argv.then(async ({ pattern, group, outputDirectoryPath, limit }) => {
 				}
 			}
 		}
+
+		const progressMessage: ProgressMessage = {
+			k: MessageKind.progress,
+			p: fileCount,
+			t: totalFileCount,
+		};
+
+		console.log(JSON.stringify(progressMessage));
 	}
 
 	const finishMessage: FinishMessage = {
