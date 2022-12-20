@@ -11,11 +11,13 @@ export const executeMainThread = async () => {
     const {
         pattern,
         group,
+        filePath: codemodFilePath,
         outputDirectoryPath,
         limit
     } = await Promise.resolve<{
         pattern: ReadonlyArray<string>;
         group?: ReadonlyArray<string>;
+        filePath?: string;
         outputDirectoryPath?: string;
         limit?: number,
     }>(
@@ -30,6 +32,12 @@ export const executeMainThread = async () => {
                 alias: 'g',
                 describe: 'Pass the group(s) of codemods for execution',
                 array: true,
+                type: 'string',
+            })
+            .option('filePath', {
+                alias: 'f',
+                describe: 'Pass the file path of a single codemod for execution',
+                array: false,
                 type: 'string',
             })
             .option('limit', {
@@ -77,6 +85,7 @@ export const executeMainThread = async () => {
         await new Promise((resolve) => {
             const worker = new Worker(__filename, {
                 workerData: {
+                    codemodFilePath,
                     filePath,
                     group,
                     outputDirectoryPath,
