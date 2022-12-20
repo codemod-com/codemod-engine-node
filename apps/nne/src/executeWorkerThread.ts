@@ -47,7 +47,7 @@ export const executeWorkerThread = () => {
 				withParser: 'tsx',
 			}
 		]
-		: nneCodemods.concat(muiCodemods);
+		: nneCodemods.concat(muiCodemods as any);
 
 	for (const codemod of codemods) {
 		if (group && !group.includes(codemod.group)) {
