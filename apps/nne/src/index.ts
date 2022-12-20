@@ -5,5 +5,9 @@ import { executeWorkerThread } from './executeWorkerThread';
 if (!isMainThread) {
 	executeWorkerThread();
 } else {
-	executeMainThread();
+	executeMainThread()
+		.then(() => {})
+		.catch(error => {
+            console.error(error)
+		});
 }
