@@ -122,9 +122,102 @@ const transformers = {
     withwidth,
 };
 
-export const codemods = Object.keys(transformers).map((name) => ({
-    "caseTitle": name,
-    "group": "mui",
-    "transformer": transformers[name],
-    "withParser": "tsx",
-}))
+type Codemod = {
+    caseTitle: string,
+    group: "mui",
+    transformer: Function,
+    withParser: "tsx",
+};
+
+export const codemods: ReadonlyArray<Codemod> = [
+    {
+        caseTitle: "MUI: adapter v4",
+        transformer: adapterv4,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: button color prop",
+        transformer: buttoncolorprop,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: emotion prepend cache",
+        transformer: emotionprependcache,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: link underline hover",
+        transformer: linkunderlinehover,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: skeleton variant",
+        transformer: skeletonvariant,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: theme provider",
+        transformer: themeprovider,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: autocompleterename close icon",
+        transformer: autocompleterenamecloseicon,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: chip variant prop",
+        transformer: chipvariantprop,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: expansion panel component",
+        transformer: expansionpanelcomponent,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: Material UI styles",
+        transformer: materialuistyles,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: styled engine provider",
+        transformer: styledengineprovider,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: theme spacing",
+        transformer: themespacing,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: autocomplete rename option",
+        transformer: autocompleterenameoption,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: circular progress variant",
+        transformer: circularprogressvariant,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: fab variant",
+        transformer: fabvariant,
+        group: "mui",
+        withParser: "tsx",
+    },
+];
