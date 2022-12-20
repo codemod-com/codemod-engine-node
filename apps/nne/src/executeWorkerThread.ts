@@ -38,17 +38,29 @@ export const executeWorkerThread = () => {
 
 	const oldSource = readFileSync(filePath, { encoding: 'utf8' });
 
-	const codemods = codemodFilePath ?
-		[
+	type Codemod = Readonly<{
+		caseTitle: string;
+		group: string | null;
+		transformer: Function,
+		withParser: string;
+	}>
+
+	const codemods: Codemod[] = [];
+
+	if (codemodFilePath) {
+        codemods.push(
 			{
 				caseTitle: codemodFilePath,
 				group: null,
 				transformer: require(codemodFilePath),
 				withParser: 'tsx',
 			}
-		]
-		: nneCodemods.concat(muiCodemods as any);
-
+		);
+	} else {
+		codemods.push(...nneCodemods);
+		codemods.push(...muiCodemods);
+	}
+	
 	for (const codemod of codemods) {
 		if (group && !group.includes(codemod.group)) {
 			continue;
