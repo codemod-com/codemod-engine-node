@@ -43,7 +43,7 @@ export const executeWorkerThread = () => {
 			{
 				caseTitle: 'unknown',
 				group: 'unknown',
-				transformer: require(codemodFilePath).default,
+				transformer: require(codemodFilePath),
 				withParser: 'tsx',
 			}
 		]
