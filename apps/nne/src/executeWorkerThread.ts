@@ -28,8 +28,9 @@ export const executeWorkerThread = () => {
     });
 
     const {
-		filePath,
+		codemodFilePath,
 		group,
+		filePath,
 		outputDirectoryPath,
 		totalFileCount,
 		fileCount,
@@ -37,7 +38,16 @@ export const executeWorkerThread = () => {
 
 	const oldSource = readFileSync(filePath, { encoding: 'utf8' });
 
-	const codemods = nneCodemods.concat(muiCodemods);
+	const codemods = codemodFilePath ?
+		[
+			{
+				caseTitle: 'unknown',
+				group: 'unknown',
+				transformer: require(codemodFilePath).default,
+				withParser: 'tsx',
+			}
+		]
+		: nneCodemods.concat(muiCodemods);
 
 	for (const codemod of codemods) {
 		if (group && !group.includes(codemod.group)) {
