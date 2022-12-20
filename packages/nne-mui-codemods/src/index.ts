@@ -60,18 +60,6 @@ import themepalettemode from './v5.0.0/theme-palette-mode.js';
 import withwidth from './v5.0.0/with-width.js';
 
 const transformers = {
-    toplevelimports,
-    badgeoverlapvalue,
-    componentrenameprop,
-    gridjustifyjustifycontent,
-    movedlabmodules,
-    textareaminmaxrows,
-    transitions,
-    baserenamecomponentstoslots,
-    corestylesimport,
-    gridlistcomponent,
-    muireplace,
-    themeaugment,
     useautocomplete,
     boxborderradiusvalues,
     createtheme,
@@ -244,5 +232,78 @@ export const codemods: ReadonlyArray<Codemod> = [
         transformer: tabscrollbuttons,
         group: "mui",
         withParser: "tsx",
-    }
+    },
+    {
+        caseTitle: "MUI: top level imports",
+        transformer: toplevelimports,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: badge overlap value",
+        transformer: badgeoverlapvalue,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: component rename prop",
+        transformer: componentrenameprop,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: grid justify justify content",
+        transformer: gridjustifyjustifycontent,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: movedlabmodules",
+        transformer: movedlabmodules,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: text area min max rows",
+        transformer: textareaminmaxrows,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: transitions",
+        transformer: transitions,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: base rename components to slots",
+        transformer: baserenamecomponentstoslots,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: core styles import",
+        transformer: corestylesimport,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: grid list component",
+        transformer: gridlistcomponent,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: replace",
+        transformer: muireplace,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: theme augment",
+        transformer: themeaugment,
+        group: "mui",
+        withParser: "tsx",
+    },
+
 ];
