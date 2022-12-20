@@ -41,8 +41,8 @@ export const executeWorkerThread = () => {
 	const codemods = codemodFilePath ?
 		[
 			{
-				caseTitle: 'unknown',
-				group: 'unknown',
+				caseTitle: codemodFilePath,
+				group: null,
 				transformer: require(codemodFilePath),
 				withParser: 'tsx',
 			}
