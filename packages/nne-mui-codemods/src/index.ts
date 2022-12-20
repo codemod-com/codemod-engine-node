@@ -60,17 +60,6 @@ import themepalettemode from './v5.0.0/theme-palette-mode.js';
 import withwidth from './v5.0.0/with-width.js';
 
 const transformers = {
-    useautocomplete,
-    boxborderradiusvalues,
-    createtheme,
-    hiddendownprops,
-    optimalimports,
-    themebreakpoints,
-    usetransitionprops,
-    boxrenamecss,
-    datepickersmovedtox,
-    iconbuttonsize,
-    paginationroundcircular,
     themebreakpointswidth,
     variantprop,
     boxrenamegap,
@@ -305,5 +294,82 @@ export const codemods: ReadonlyArray<Codemod> = [
         group: "mui",
         withParser: "tsx",
     },
-
+    {
+        caseTitle: "MUI: use auto complete",
+        transformer: useautocomplete,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: box border radius values",
+        transformer: boxborderradiusvalues,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: create theme",
+        transformer: createtheme,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: hidden down props",
+        transformer: hiddendownprops,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: optimal imports",
+        transformer: optimalimports,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: theme breakpoints",
+        transformer: themebreakpoints,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: use transition props",
+        transformer: usetransitionprops,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: boxrenamecss",
+        transformer: boxrenamecss,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: date pickers moved to x",
+        transformer: datepickersmovedtox,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: icon button size",
+        transformer: iconbuttonsize,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: pagination round circular",
+        transformer: paginationroundcircular,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: theme breakpoints width",
+        transformer: themebreakpointswidth,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: variant prop",
+        transformer: variantprop,
+        group: "mui",
+        withParser: "tsx",
+    },
 ];
