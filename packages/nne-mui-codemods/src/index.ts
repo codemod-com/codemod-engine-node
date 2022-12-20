@@ -59,23 +59,6 @@ import rootref from './v5.0.0/root-ref.js';
 import themepalettemode from './v5.0.0/theme-palette-mode.js';
 import withwidth from './v5.0.0/with-width.js';
 
-const transformers = {
-    themebreakpointswidth,
-    variantprop,
-    boxrenamegap,
-    dialogprops,
-    jsstostyled,
-    presetsafe,
-    themeoptions,
-    withmobiledialog,
-    boxsxprop,
-    dialogtitleprops,
-    jsstotssreact,
-    rootref,
-    themepalettemode,
-    withwidth,
-};
-
 type Codemod = {
     caseTitle: string,
     group: "mui",
@@ -369,6 +352,78 @@ export const codemods: ReadonlyArray<Codemod> = [
     {
         caseTitle: "MUI: variant prop",
         transformer: variantprop,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: box rename gap",
+        transformer: boxrenamegap,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: dialog props",
+        transformer: dialogprops,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: jss to styled",
+        transformer: jsstostyled,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: preset safe",
+        transformer: presetsafe,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: theme options",
+        transformer: themeoptions,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: with mobile dialog",
+        transformer: withmobiledialog,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: box sx prop",
+        transformer: boxsxprop,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: dialog title props",
+        transformer: dialogtitleprops,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: jss to tss react",
+        transformer: jsstotssreact,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: root ref",
+        transformer: rootref,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: theme palette mode",
+        transformer: themepalettemode,
+        group: "mui",
+        withParser: "tsx",
+    },
+    {
+        caseTitle: "MUI: with width",
+        transformer: withwidth,
         group: "mui",
         withParser: "tsx",
     },
