@@ -10,6 +10,7 @@ import { join } from 'node:path';
 import { buildRewriteMessage } from './buildRewriteMessage';
 import { buildChangeMessage } from './buildChangeMessages';
 import { MessageKind, ProgressMessage } from './messages';
+import * as ts from "typescript";
 
 export const executeWorkerThread = () => {
     const buildApi = (parser: string): API => ({
@@ -48,14 +49,39 @@ export const executeWorkerThread = () => {
 	const codemods: Codemod[] = [];
 
 	if (codemodFilePath) {
-        codemods.push(
-			{
-				caseTitle: codemodFilePath,
-				group: null,
-				transformer: require(codemodFilePath),
-				withParser: 'tsx',
+		try {
+			if((codemodFilePath as string).endsWith('.ts')) {
+				const requireFromString = require('require-from-string');
+
+				const source = readFileSync(codemodFilePath, { encoding: 'utf8' });
+				const compiledCode = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS }});
+
+				const mod = requireFromString(compiledCode.outputText);
+
+				const transformer = 'default' in mod ? mod.default : mod;
+	
+				codemods.push(
+					{
+						caseTitle: codemodFilePath,
+						group: null,
+						transformer,
+						withParser: 'tsx',
+					}
+				);
+			} else {
+				codemods.push(
+					{
+						caseTitle: codemodFilePath,
+						group: null,
+						transformer: require(codemodFilePath),
+						withParser: 'tsx',
+					}
+				);
 			}
-		);
+			
+		} catch (error) {
+			console.error(error);
+		}
 	} else {
 		codemods.push(...nneCodemods);
 		codemods.push(...muiCodemods);
