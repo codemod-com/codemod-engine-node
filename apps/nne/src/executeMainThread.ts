@@ -5,7 +5,7 @@ import fastGlob from 'fast-glob';
 import * as readline from 'node:readline';
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { FinishMessage, MessageKind } from './messages';
+import { FinishMessage, MessageKind, ProgressMessage } from './messages';
 
 export const executeMainThread = async () => {
     const {
@@ -74,6 +74,14 @@ export const executeMainThread = async () => {
     let fileCount = 0;
 
     const totalFileCount = Math.min(limit, filePaths.length);
+
+    const progressMessage: ProgressMessage = {
+		k: MessageKind.progress,
+		p: 0,
+		t: totalFileCount,
+	};
+
+    console.log(JSON.stringify(progressMessage));
 
     for (const filePath of filePaths) {
         if (limit > 0 && fileCount === limit) {
