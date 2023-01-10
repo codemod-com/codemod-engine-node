@@ -37,6 +37,19 @@ const fetchCodemods = async () => {
 			`import transformer${hash} from './codemods/${hash}'\n`,
 		);
 
+		{
+			// LICENSE
+			const response = await Axios.get(codemod.license, {
+				responseType: 'stream',
+			});
+
+			const filePath = join(dirname, `./codemods/LICENSE_${hash}`);
+
+			if (!existsSync(filePath)) {
+				response.data.pipe(createWriteStream(filePath));
+			}
+		}
+
 		codemodObjects.push({
 			caseTitle: codemod.caseTitle,
 			group: codemod.group,
