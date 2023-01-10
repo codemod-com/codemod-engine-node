@@ -1,6 +1,7 @@
 import Axios from 'axios';
 import { createHash } from 'node:crypto';
 import { createWriteStream, existsSync } from 'node:fs';
+import { mkdir } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import { codemods } from './codemods';
 
@@ -20,17 +21,36 @@ const fetchCodemods = async () => {
 	const codemodObjects: CodemodObject[] = [];
 
 	for (const codemod of codemods) {
-		const response = await Axios.get(codemod.url, {
-			responseType: 'stream',
-		});
-
 		const hash = createHash('ripemd160').update(codemod.url).digest('hex');
 		const extension = extname(codemod.url);
 
-		const filePath = join(dirname, `./codemods/${hash}${extension}`);
+		const codemodDirname = join(dirname, `./codemods/${hash}/`);
 
-		if (!existsSync(filePath)) {
-			response.data.pipe(createWriteStream(filePath));
+		await mkdir(codemodDirname);
+
+		{
+			const response = await Axios.get(codemod.url, {
+				responseType: 'stream',
+			});
+
+			const filePath = join(codemodDirname, `index${extension}`);
+
+			if (!existsSync(filePath)) {
+				response.data.pipe(createWriteStream(filePath));
+			}
+		}
+
+		{
+			// LICENSE
+			const response = await Axios.get(codemod.license, {
+				responseType: 'stream',
+			});
+
+			const filePath = join(codemodDirname, `LICENSE`);
+
+			if (!existsSync(filePath)) {
+				response.data.pipe(createWriteStream(filePath));
+			}
 		}
 
 		writeStream.write(
