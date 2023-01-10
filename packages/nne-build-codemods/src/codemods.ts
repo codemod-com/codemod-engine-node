@@ -47,4 +47,53 @@ export const codemods = [
 			'https://raw.githubusercontent.com/vercel/next.js/canary/packages/next-codemod/license.md',
 		withParser: 'tsx',
 	},
+	{
+		group: 'reactrouterv4',
+		caseTitle: 'React Router v4: Add Exact Prop',
+		url: 'https://raw.githubusercontent.com/rajasegar/react-router-v4-codemods/main/transforms/add-exact-prop/index.js',
+		license: 'https://raw.githubusercontent.com/rajasegar/react-router-v4-codemods/main/LICENSE',
+		withParser: 'tsx',
+	},
+	{
+		group:'reactrouterv4',
+		caseTitle: 'React Router v4: Create Hash History',
+		url: 'https://raw.githubusercontent.com/rajasegar/react-router-v4-codemods/main/transforms/create-hash-history/index.js',
+		license: 'https://raw.githubusercontent.com/rajasegar/react-router-v4-codemods/main/LICENSE',
+		withParser: 'tsx',
+	},
+	{
+		group: 'reactrouterv4',
+		caseTitle: 'React Router v4: Hash Router',
+		url: 'https://raw.githubusercontent.com/rajasegar/react-router-v4-codemods/main/transforms/hash-router/index.js',
+		license: 'https://raw.githubusercontent.com/rajasegar/react-router-v4-codemods/main/LICENSE',
+		withParser: 'tsx',
+	},
+	{
+		group: 'reactrouterv4',
+		caseTitle: 'React Router v4: Index Route',
+		url: 'https://raw.githubusercontent.com/rajasegar/react-router-v4-codemods/main/transforms/index-route/index.js',
+		license: 'https://raw.githubusercontent.com/rajasegar/react-router-v4-codemods/main/LICENSE',
+		withParser: 'tsx',
+	},
+	{
+		group: 'reactrouterv4',
+		caseTitle: 'React Router v4: Remove with Props',
+		url: 'https://raw.githubusercontent.com/rajasegar/react-router-v4-codemods/main/transforms/remove-with-props/index.js',
+		license: 'https://raw.githubusercontent.com/rajasegar/react-router-v4-codemods/main/LICENSE',
+		withParser: 'tsx',
+	},
+	{
+		group: 'reactrouterv4',
+		caseTitle: 'React Router v4: Rename Imports',
+		url: 'https://raw.githubusercontent.com/rajasegar/react-router-v4-codemods/main/transforms/rename-imports/index.js',
+		license: 'https://raw.githubusercontent.com/rajasegar/react-router-v4-codemods/main/LICENSE',
+		withParser: 'tsx',
+	},
+	{
+		group: 'reactrouterv4',
+		caseTitle: 'React Router v4: Wrap with Switch',
+		url: 'https://raw.githubusercontent.com/rajasegar/react-router-v4-codemods/main/transforms/wrap-with-switch/index.js',
+		license: 'https://raw.githubusercontent.com/rajasegar/react-router-v4-codemods/main/LICENSE',
+		withParser: 'tsx',
+	}
 ];
