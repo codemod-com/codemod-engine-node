@@ -60,7 +60,7 @@ const fetchCodemods = async () => {
 			}
 
 			writeStream.write(
-				`import transformer${hash} from './codemods/registry_${hash}'\n`,
+				`import transformer${hash} from './codemods/registry_${hash}';\n`,
 			);
 	
 			codemodObjects.push({
@@ -134,7 +134,7 @@ const fetchCodemods = async () => {
 		})
 		.join('');
 
-	writeStream.write(`\nexport const codemods = [\n${stringifiedObjects}]\n`);
+	writeStream.write(`\nexport const codemods = [\n${stringifiedObjects}];\n`);
 
 	writeStream.end();
 };
