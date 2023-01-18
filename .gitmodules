@@ -1,0 +1,4 @@
+[submodule "packages/registry"]
+	path = packages/registry
+	url = git@github.com:intuita-inc/codemod-registry.git
+	branch = gpp/registryIniti
