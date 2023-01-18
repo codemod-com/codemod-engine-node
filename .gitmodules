@@ -1,4 +1,4 @@
-[submodule "packages/registry"]
-	path = packages/registry
+[submodule "codemod-registry"]
+	path = codemod-registry
 	url = git@github.com:intuita-inc/codemod-registry.git
 	branch = gpp/registryIniti
