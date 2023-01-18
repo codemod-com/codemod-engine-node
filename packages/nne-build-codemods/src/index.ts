@@ -1,7 +1,7 @@
 import Axios from 'axios';
 import { createHash } from 'node:crypto';
-import { createWriteStream, existsSync } from 'node:fs';
-import { mkdir } from 'node:fs/promises';
+import { createReadStream, createWriteStream, existsSync } from 'node:fs';
+import { mkdir, readdir, readFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import { codemods } from './codemods';
 
@@ -20,7 +20,63 @@ const fetchCodemods = async () => {
 
 	const codemodObjects: CodemodObject[] = [];
 
+	/**
+	 * use the codemod registry
+	 */
+
+	const setsDirectoryPath = join(dirname, '../../../codemod-registry/sets');
+
+	const setDirectoryPaths = await readdir(setsDirectoryPath);
+
+	for (const setDirectoryPath of setDirectoryPaths) {
+		const configJsonPath = join(setsDirectoryPath, setDirectoryPath, 'config.json');
+
+		const jsonConfig = await readFile(configJsonPath, { encoding: 'utf8' });
+		const setConfig = JSON.parse(jsonConfig);
+
+		for (const codemod of setConfig.codemods) {
+			const codemodDirectoryPath = join(dirname, '../../../codemod-registry/codemods/', codemod);
+
+			const codemodConfigPath = join(codemodDirectoryPath, 'config.json');
+
+			const jsonConfig = await readFile(codemodConfigPath, { encoding: 'utf8' });
+			const config = JSON.parse(jsonConfig);
+
+			const hash = createHash('ripemd160').update(config.name).digest('hex');
+
+			const codemodDirname = join(dirname, `./codemods/registry_${hash}/`);
+
+			if (!existsSync(codemodDirname)) {
+				await mkdir(codemodDirname);
+			}
+
+			{
+				const readStream = createReadStream(join(codemodDirectoryPath, 'index.ts'));
+				const filePath = join(codemodDirname, `index.ts`);
+	
+				if (!existsSync(filePath)) {
+					readStream.pipe(createWriteStream(filePath));
+				}
+			}
+
+			writeStream.write(
+				`import transformer${hash} from './codemods/registry_${hash}'\n`,
+			);
+	
+			codemodObjects.push({
+				caseTitle: config.name,
+				group: setConfig.name,
+				transformer: `transformer${hash}`,
+				withParser: 'tsx',
+			});
+		}
+	}
+
 	for (const codemod of codemods) {
+		// TODO
+		// drop later
+		continue;
+
 		const hash = createHash('ripemd160').update(codemod.url).digest('hex');
 		const extension = extname(codemod.url);
 
