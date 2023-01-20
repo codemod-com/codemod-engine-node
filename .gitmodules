@@ -1,4 +1,4 @@
 [submodule "codemod-registry"]
 	path = codemod-registry
 	url = git@github.com:intuita-inc/codemod-registry.git
-	branch = main
+	branch = gpp/immutable
