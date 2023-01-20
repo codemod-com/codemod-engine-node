@@ -79,55 +79,6 @@ const fetchCodemods = async () => {
 		}
 	}
 
-	for (const codemod of codemods) {
-		// TODO
-		// drop later
-		continue;
-
-		const hash = createHash('ripemd160').update(codemod.url).digest('hex');
-		const extension = extname(codemod.url);
-
-		const codemodDirname = join(dirname, `./codemods/${hash}/`);
-
-		await mkdir(codemodDirname);
-
-		{
-			const response = await Axios.get(codemod.url, {
-				responseType: 'stream',
-			});
-
-			const filePath = join(codemodDirname, `index${extension}`);
-
-			if (!existsSync(filePath)) {
-				response.data.pipe(createWriteStream(filePath));
-			}
-		}
-
-		{
-			// LICENSE
-			const response = await Axios.get(codemod.license, {
-				responseType: 'stream',
-			});
-
-			const filePath = join(codemodDirname, `LICENSE`);
-
-			if (!existsSync(filePath)) {
-				response.data.pipe(createWriteStream(filePath));
-			}
-		}
-
-		writeStream.write(
-			`import transformer${hash} from './codemods/${hash}'\n`,
-		);
-
-		codemodObjects.push({
-			caseTitle: codemod.caseTitle,
-			group: codemod.group,
-			transformer: `transformer${hash}`,
-			withParser: codemod.withParser,
-		});
-	}
-
 	const stringifiedObjects = codemodObjects
 		.map(({ caseTitle, group, transformer, withParser }) => {
 			return (
