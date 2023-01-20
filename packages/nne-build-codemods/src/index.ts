@@ -44,15 +44,22 @@ const fetchCodemods = async () => {
 
 			const hash = createHash('ripemd160').update(config.name).digest('hex');
 
-			const codemodDirname = join(dirname, `./codemods/registry_${hash}/`);
+			const codemodDirname = join(dirname, `./codemods/${hash}/`);
 
 			if (!existsSync(codemodDirname)) {
 				await mkdir(codemodDirname);
 			}
 
 			{
-				const readStream = createReadStream(join(codemodDirectoryPath, 'index.ts'));
-				const filePath = join(codemodDirname, `index.ts`);
+				const tsPath = join(codemodDirectoryPath, 'index.ts');
+				const jsPath = join(codemodDirectoryPath, 'index.js');
+
+				const path = existsSync(tsPath) ? tsPath : jsPath;
+
+				const ext = extname(path);
+
+				const readStream = createReadStream(path);
+				const filePath = join(codemodDirname, `index${ext}`);
 	
 				if (!existsSync(filePath)) {
 					readStream.pipe(createWriteStream(filePath));
@@ -60,7 +67,7 @@ const fetchCodemods = async () => {
 			}
 
 			writeStream.write(
-				`import transformer${hash} from './codemods/registry_${hash}';\n`,
+				`import transformer${hash} from './codemods/${hash}';\n`,
 			);
 	
 			codemodObjects.push({
