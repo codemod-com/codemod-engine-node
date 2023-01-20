@@ -1,9 +1,7 @@
-import Axios from 'axios';
 import { createHash } from 'node:crypto';
 import { createReadStream, createWriteStream, existsSync } from 'node:fs';
 import { mkdir, readdir, readFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
-import { codemods } from './codemods';
 
 type CodemodObject = Readonly<{
 	group: string;
