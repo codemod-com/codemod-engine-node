@@ -1,9 +1,7 @@
-import Axios from 'axios';
 import { createHash } from 'node:crypto';
-import { createWriteStream, existsSync } from 'node:fs';
-import { mkdir } from 'node:fs/promises';
+import { createReadStream, createWriteStream, existsSync } from 'node:fs';
+import { mkdir, readdir, readFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
-import { codemods } from './codemods';
 
 type CodemodObject = Readonly<{
 	group: string;
@@ -20,49 +18,63 @@ const fetchCodemods = async () => {
 
 	const codemodObjects: CodemodObject[] = [];
 
-	for (const codemod of codemods) {
-		const hash = createHash('ripemd160').update(codemod.url).digest('hex');
-		const extension = extname(codemod.url);
+	/**
+	 * use the codemod registry
+	 */
 
-		const codemodDirname = join(dirname, `./codemods/${hash}/`);
+	const setsDirectoryPath = join(dirname, '../../../codemod-registry/sets');
 
-		await mkdir(codemodDirname);
+	const setDirectoryPaths = await readdir(setsDirectoryPath);
 
-		{
-			const response = await Axios.get(codemod.url, {
-				responseType: 'stream',
-			});
+	for (const setDirectoryPath of setDirectoryPaths) {
+		const configJsonPath = join(setsDirectoryPath, setDirectoryPath, 'config.json');
 
-			const filePath = join(codemodDirname, `index${extension}`);
+		const jsonConfig = await readFile(configJsonPath, { encoding: 'utf8' });
+		const setConfig = JSON.parse(jsonConfig);
 
-			if (!existsSync(filePath)) {
-				response.data.pipe(createWriteStream(filePath));
+		for (const codemod of setConfig.codemods) {
+			const codemodDirectoryPath = join(dirname, '../../../codemod-registry/codemods/', codemod);
+
+			const codemodConfigPath = join(codemodDirectoryPath, 'config.json');
+
+			const jsonConfig = await readFile(codemodConfigPath, { encoding: 'utf8' });
+			const config = JSON.parse(jsonConfig);
+
+			const hash = createHash('ripemd160').update(config.name).digest('hex');
+
+			const codemodDirname = join(dirname, `./codemods/${hash}/`);
+
+			if (!existsSync(codemodDirname)) {
+				await mkdir(codemodDirname);
 			}
-		}
 
-		{
-			// LICENSE
-			const response = await Axios.get(codemod.license, {
-				responseType: 'stream',
-			});
+			{
+				const tsPath = join(codemodDirectoryPath, 'index.ts');
+				const jsPath = join(codemodDirectoryPath, 'index.js');
 
-			const filePath = join(codemodDirname, `LICENSE`);
+				const path = existsSync(tsPath) ? tsPath : jsPath;
 
-			if (!existsSync(filePath)) {
-				response.data.pipe(createWriteStream(filePath));
+				const ext = extname(path);
+
+				const readStream = createReadStream(path);
+				const filePath = join(codemodDirname, `index${ext}`);
+	
+				if (!existsSync(filePath)) {
+					readStream.pipe(createWriteStream(filePath));
+				}
 			}
+
+			writeStream.write(
+				`import transformer${hash} from './codemods/${hash}';\n`,
+			);
+	
+			codemodObjects.push({
+				caseTitle: config.name,
+				group: setConfig.name,
+				transformer: `transformer${hash}`,
+				withParser: 'tsx',
+			});
 		}
-
-		writeStream.write(
-			`import transformer${hash} from './codemods/${hash}'\n`,
-		);
-
-		codemodObjects.push({
-			caseTitle: codemod.caseTitle,
-			group: codemod.group,
-			transformer: `transformer${hash}`,
-			withParser: codemod.withParser,
-		});
 	}
 
 	const stringifiedObjects = codemodObjects
@@ -78,7 +90,7 @@ const fetchCodemods = async () => {
 		})
 		.join('');
 
-	writeStream.write(`\nexport const codemods = [\n${stringifiedObjects}]\n`);
+	writeStream.write(`\nexport const codemods = [\n${stringifiedObjects}];\n`);
 
 	writeStream.end();
 };
