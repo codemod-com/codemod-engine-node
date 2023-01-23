@@ -6,6 +6,42 @@ import * as readline from 'node:readline';
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { FinishMessage, MessageKind, ProgressMessage } from './messages';
+import { NewGroup, oldGroupCodec, newGroupCodec } from './groups';
+
+const buildNewGroups = (groups: ReadonlyArray<string> | null): ReadonlyArray<NewGroup> => {
+    if(!groups) {
+        return [];
+    }
+
+    return groups.map((group): NewGroup => {
+        const isOldGroup = oldGroupCodec.is(group);
+
+        if (isOldGroup) {
+            switch(group) {
+                case "nextJs":
+                    return 'next_13'
+                case "mui":
+                    return 'mui';
+                case "reactrouterv4":
+                    return "react-router_4";
+                case "reactrouterv6":
+                    return "react-router_6";
+                case "immutablejsv4":
+                    return "immutable_4";
+                case "immutablejsv0":
+                    return "immutable_0";
+            }
+        }
+
+        const isNewGroup = newGroupCodec.is(group);
+
+        if (isNewGroup) {
+            return group;
+        }
+
+        throw new Error(`The group "${group}" is neither the old group nor the new group`);
+    });
+}
 
 export const executeMainThread = async () => {
     const {
@@ -59,6 +95,8 @@ export const executeMainThread = async () => {
             .help()
             .alias('help', 'h').argv,
     );
+
+    const newGroups = buildNewGroups(group ?? null);
     
     const interfase = readline.createInterface(process.stdin);
     
@@ -73,7 +111,7 @@ export const executeMainThread = async () => {
     const filePaths = await fastGlob(pattern.slice());
     let fileCount = 0;
 
-    const totalFileCount = Math.min(limit, filePaths.length);
+    const totalFileCount = Math.min(limit ?? 0, filePaths.length);
 
     const progressMessage: ProgressMessage = {
 		k: MessageKind.progress,
@@ -84,7 +122,7 @@ export const executeMainThread = async () => {
     console.log(JSON.stringify(progressMessage));
 
     for (const filePath of filePaths) {
-        if (limit > 0 && fileCount === limit) {
+        if ((limit ?? 0) > 0 && fileCount === limit) {
             break;
         }
 
@@ -95,7 +133,7 @@ export const executeMainThread = async () => {
                 workerData: {
                     codemodFilePath,
                     filePath,
-                    group,
+                    newGroups,
                     outputDirectoryPath,
                     totalFileCount,
                     fileCount,
