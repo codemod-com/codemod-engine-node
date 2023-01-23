@@ -11,6 +11,7 @@ import { buildRewriteMessage } from './buildRewriteMessage';
 import { buildChangeMessage } from './buildChangeMessages';
 import { MessageKind, ProgressMessage } from './messages';
 import * as ts from "typescript";
+import { NewGroup } from './groups';
 
 export const executeWorkerThread = () => {
     const buildApi = (parser: string): API => ({
@@ -30,12 +31,14 @@ export const executeWorkerThread = () => {
 
     const {
 		codemodFilePath,
-		group,
+		newGroups,
 		filePath,
 		outputDirectoryPath,
 		totalFileCount,
 		fileCount,
 	} = workerData;
+
+	newGroups satisfies ReadonlyArray<NewGroup>;
 
 	const oldSource = readFileSync(filePath, { encoding: 'utf8' });
 
@@ -88,7 +91,7 @@ export const executeWorkerThread = () => {
 	}
 	
 	for (const codemod of codemods) {
-		if (group && !group.includes(codemod.group)) {
+		if (newGroups.length > 0 && !newGroups.includes(codemod.group)) {
 			continue;
 		}
 

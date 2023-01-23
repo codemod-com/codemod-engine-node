@@ -39,6 +39,8 @@ importers:
       ast-types: ^0.14.2
       diff: ^5.1.0
       fast-glob: ^3.2.12
+      fp-ts: ^2.13.1
+      io-ts: ^2.2.20
       jscodeshift: ^0.14.0
       jscodeshift-add-imports: 1.0.10
       require-from-string: 2.0.2
@@ -52,6 +54,8 @@ importers:
       ast-types: 0.14.2
       diff: 5.1.0
       fast-glob: 3.2.12
+      fp-ts: 2.13.1
+      io-ts: 2.2.20_fp-ts@2.13.1
       jscodeshift: 0.14.0_@babel+preset-env@7.20.2
       jscodeshift-add-imports: 1.0.10_jscodeshift@0.14.0
       require-from-string: 2.0.2
@@ -3186,6 +3190,10 @@ packages:
       combined-stream: 1.0.8
       mime-types: 2.1.35
 
+  /fp-ts/2.13.1:
+    resolution: {integrity: sha512-0eu5ULPS2c/jsa1lGFneEFFEdTbembJv8e4QKXeVJ3lm/5hyve06dlKZrpxmMwJt6rYen7sxmHHK2CLaXvWuWQ==}
+    dev: false
+
   /fs.realpath/1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
 
@@ -3320,6 +3328,14 @@ packages:
 
   /inherits/2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
+
+  /io-ts/2.2.20_fp-ts@2.13.1:
+    resolution: {integrity: sha512-Rq2BsYmtwS5vVttie4rqrOCIfHCS9TgpRLFpKQCM1wZBBRY9nWVGmEvm2FnDbSE2un1UE39DvFpTR5UL47YDcA==}
+    peerDependencies:
+      fp-ts: ^2.5.0
+    dependencies:
+      fp-ts: 2.13.1
+    dev: false
 
   /is-binary-path/2.1.0:
     resolution: {integrity: sha512-ZMERYes6pDydyuGidse7OsHxtbI7WVeUEozgR/g7rd0xUimYNlvZRE/K2MgZTjWy725IfelLeVcEM97mmtRGXw==}
