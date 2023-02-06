@@ -19,7 +19,9 @@ import {
 	handleCommand,
 	handleCreateFileCommand,
 	handleUpdateFileCommand,
+	ModCommand,
 } from './modCommands';
+import { CompositeMod, runCompositeMod } from './compositeModRunner';
 
 export const executeWorkerThread = async () => {
 	const {
@@ -35,7 +37,7 @@ export const executeWorkerThread = async () => {
 
 	const oldSource = readFileSync(filePath, { encoding: 'utf8' });
 
-	const mods: (Codemod | Filemod)[] = [];
+	const mods: (Codemod | Filemod | CompositeMod)[] = [];
 
 	if (codemodFilePath) {
 		try {
@@ -83,12 +85,7 @@ export const executeWorkerThread = async () => {
 			continue;
 		}
 
-		const messages: (
-			| CreateMessage
-			| RewriteMessage
-			| MoveMessage
-			| DeleteMessage
-		)[] = [];
+		let commands: ModCommand[];
 
 		try {
 			if (
@@ -97,40 +94,39 @@ export const executeWorkerThread = async () => {
 				mod.transformer &&
 				mod.withParser
 			) {
-				const commands = await runCodemod(
+				commands = await runCodemod(
 					// outputDirectoryPath,
 					filePath,
 					oldSource,
 					mod as any, // TODO fixme
 				);
-
-				for (const command of commands) {
-					messages.push(
-						await handleCommand(
-							outputDirectoryPath,
-							mod.caseTitle,
-							command,
-						),
-					);
-				}
 			} else if (
 				mod.engine === 'filemod-engine' &&
 				mod.transformer &&
 				typeof mod.transformer === 'string'
 			) {
-				const commands = await runFilemod(mod as any, filePath);
-
-				for (const command of commands) {
-					messages.push(
-						await handleCommand(
-							outputDirectoryPath,
-							mod.caseTitle,
-							command,
-						),
-					);
-				}
+				commands = await runFilemod(mod as any, filePath);
+			} else if (mod.engine === 'composite-mod-engine') {
+				commands = await runCompositeMod(mod, filePath, oldSource);
 			} else {
 				throw new Error();
+			}
+
+			const messages: (
+				| CreateMessage
+				| RewriteMessage
+				| MoveMessage
+				| DeleteMessage
+			)[] = [];
+
+			for (const command of commands) {
+				messages.push(
+					await handleCommand(
+						outputDirectoryPath,
+						mod.caseTitle,
+						command,
+					),
+				);
 			}
 
 			for (const message of messages) {

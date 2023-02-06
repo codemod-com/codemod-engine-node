@@ -29,7 +29,7 @@ export const runCodemod = async (
 	oldPath: string,
 	oldSource: string,
 	codemod: Codemod,
-): Promise<ReadonlyArray<ModCommand>> => {
+): Promise<ModCommand[]> => {
 	const commands: ModCommand[] = [];
 
 	const createFile = (newPath: string, newData: string): void => {

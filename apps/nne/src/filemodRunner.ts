@@ -15,7 +15,7 @@ export type Filemod = Readonly<{
 export const runFilemod = async (
 	filemod: Filemod,
 	filePath: string,
-): Promise<ReadonlyArray<ModCommand>> => {
+): Promise<ModCommand[]> => {
 	const modCommands: ModCommand[] = [];
 
 	const buffer = Buffer.from(filemod.transformer, 'base64url');

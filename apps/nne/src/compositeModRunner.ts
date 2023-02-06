@@ -21,7 +21,7 @@ export const runCompositeMod = async (
 	compositeMod: CompositeMod,
 	path: string,
 	data: string,
-) => {
+): Promise<ModCommand[]> => {
 	let files: File[] = [
 		{
 			path,
@@ -110,7 +110,36 @@ export const runCompositeMod = async (
 		}
 	}
 
+	const commands: ModCommand[] = [];
+
 	for (const file of files) {
-		
+		if (file.deleted) {
+			commands.push({
+				kind: 'deleteFile',
+				oldPath: file.path,
+			});
+
+			continue;
+		}
+
+		if (file.updated) {
+			commands.push({
+				kind: 'updateFile',
+				oldPath: file.path,
+				newData: file.data,
+			});
+
+			continue;
+		}
+
+		if (file.created) {
+			commands.push({
+				kind: 'createFile',
+				newPath: file.path,
+				newData: file.data,
+			});
+		}
 	}
+
+	return commands;
 };
