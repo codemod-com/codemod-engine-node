@@ -5,7 +5,6 @@ import { codemods as muiCodemods } from '@nne/mui-codemods';
 import { MessageKind, ProgressMessage } from './messages';
 import * as ts from 'typescript';
 import { NewGroup } from './groups';
-
 import { Codemod, runCodemod } from './codemodRunner';
 import { Filemod, runFilemod } from './filemodRunner';
 import { handleCommand, ModCommand } from './modCommands';
@@ -64,7 +63,7 @@ export const executeWorkerThread = async () => {
 			console.error(error);
 		}
 	} else {
-		mods.push(...(nneCodemods as any));
+		mods.push(...nneCodemods as any);
 		mods.push(...muiCodemods);
 	}
 
@@ -95,6 +94,8 @@ export const executeWorkerThread = async () => {
 			) {
 				commands = await runFilemod(mod as any, filePath);
 			} else if (mod.engine === 'composite-mod-engine') {
+				
+
 				commands = await runCompositeMod(mod, filePath, oldSource);
 			} else {
 				throw new Error();
