@@ -1,19 +1,11 @@
 export const enum MessageKind {
-	change = 1,
 	finish = 2,
 	rewrite = 3,
 	progress = 6,
 	delete = 7,
 	move = 8,
+	create = 9,
 }
-
-export type ChangeMessage = Readonly<{
-	k: MessageKind.change; // kind
-	p: string; // file path
-	r: [number, number]; // range
-	t: string; // text
-	c: string; // codemod id
-}>;
 
 export type RewriteMessage = Readonly<{
 	k: MessageKind.rewrite; // kind
@@ -45,4 +37,9 @@ export type MoveMessage = Readonly<{
 	modId: string;
 }>;
 
-export type Message = ChangeMessage | FinishMessage;
+export type CreateMessage = Readonly<{
+	k: MessageKind.create;
+	newFilePath: string;
+	newContentPath: string;
+	modId: string;
+}>;

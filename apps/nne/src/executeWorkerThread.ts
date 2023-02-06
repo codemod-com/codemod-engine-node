@@ -1,43 +1,17 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { workerData } from 'node:worker_threads';
 import { codemods as nneCodemods } from '@nne/codemods';
 import { codemods as muiCodemods } from '@nne/mui-codemods';
-import jscodeshift, { API, FileInfo } from 'jscodeshift';
-import { createHash } from 'node:crypto';
-import { dirname, join } from 'node:path';
-import { buildRewriteMessage } from './buildRewriteMessage';
-import { buildChangeMessage } from './buildChangeMessages';
-import {
-	DeleteMessage,
-	Message,
-	MessageKind,
-	MoveMessage,
-	ProgressMessage,
-} from './messages';
+import { MessageKind, ProgressMessage } from './messages';
 import * as ts from 'typescript';
 import { NewGroup } from './groups';
-import {
-	buildDeclarativeFilemod,
-	buildDeclarativeTransform,
-	buildFilePathTransformApi,
-} from '@intuita-inc/filemod-engine';
+
+import { Codemod, runCodemod } from './codemodRunner';
+import { Filemod, runFilemod } from './filemodRunner';
+import { handleCommand, ModCommand } from './modCommands';
+import { CompositeMod, runCompositeMod } from './compositeModRunner';
 
 export const executeWorkerThread = async () => {
-	const buildApi = (parser: string): API => ({
-		j: jscodeshift.withParser(parser),
-		jscodeshift: jscodeshift.withParser(parser),
-		stats: () => {
-			console.error(
-				'The stats function was called, which is not supported on purpose',
-			);
-		},
-		report: () => {
-			console.error(
-				'The report function was called, which is not supported on purpose',
-			);
-		},
-	});
-
 	const {
 		codemodFilePath,
 		newGroups,
@@ -51,16 +25,7 @@ export const executeWorkerThread = async () => {
 
 	const oldSource = readFileSync(filePath, { encoding: 'utf8' });
 
-	type Codemod = Readonly<{
-		engine: string;
-		caseTitle: string;
-		group: string | null;
-		// eslint-disable-next-line @typescript-eslint/ban-types
-		transformer?: Function | string;
-		withParser?: string;
-	}>;
-
-	const codemods: Codemod[] = [];
+	const mods: (Codemod | Filemod | CompositeMod)[] = [];
 
 	if (codemodFilePath) {
 		try {
@@ -79,7 +44,7 @@ export const executeWorkerThread = async () => {
 
 				const transformer = 'default' in mod ? mod.default : mod;
 
-				codemods.push({
+				mods.push({
 					engine: 'jscodeshift',
 					caseTitle: codemodFilePath,
 					group: null,
@@ -87,7 +52,7 @@ export const executeWorkerThread = async () => {
 					withParser: 'tsx',
 				});
 			} else {
-				codemods.push({
+				mods.push({
 					engine: 'jscodeshift',
 					caseTitle: codemodFilePath,
 					group: null,
@@ -99,131 +64,58 @@ export const executeWorkerThread = async () => {
 			console.error(error);
 		}
 	} else {
-		codemods.push(...nneCodemods);
-		codemods.push(...muiCodemods);
+		mods.push(...(nneCodemods as any));
+		mods.push(...muiCodemods);
 	}
 
-	for (const codemod of codemods) {
-		if (newGroups.length > 0 && !newGroups.includes(codemod.group)) {
+	for (const mod of mods) {
+		if (newGroups.length > 0 && !newGroups.includes(mod.group)) {
 			continue;
 		}
 
-		const fileInfo: FileInfo = {
-			path: filePath,
-			source: oldSource,
-		};
+		let commands: ModCommand[];
 
 		try {
 			if (
-				codemod.engine === 'jscodeshift' &&
-				codemod.transformer &&
-				typeof codemod.transformer === 'function' &&
-				codemod.withParser
+				mod.engine === 'jscodeshift' &&
+				typeof mod.transformer === 'function' &&
+				mod.transformer &&
+				mod.withParser
 			) {
-				const newSource = codemod.transformer(
-					fileInfo,
-					buildApi(codemod.withParser),
-					{},
+				commands = await runCodemod(
+					// outputDirectoryPath,
+					filePath,
+					oldSource,
+					mod as any, // TODO fixme
 				);
-
-				if (!newSource || oldSource === newSource) {
-					continue;
-				}
-
-				if (outputDirectoryPath) {
-					const hash = createHash('md5')
-						.update(filePath)
-						.update(codemod.caseTitle)
-						.digest('base64url');
-
-					const outputFilePath = join(
-						outputDirectoryPath,
-						`${hash}.txt`,
-					);
-
-					writeFileSync(outputFilePath, newSource);
-
-					const rewrite = buildRewriteMessage(
-						filePath,
-						outputFilePath,
-						codemod.caseTitle,
-					);
-
-					console.log(JSON.stringify(rewrite));
-				} else {
-					const change = buildChangeMessage(
-						String(filePath),
-						oldSource,
-						newSource,
-						codemod.caseTitle,
-					);
-
-					console.log(JSON.stringify(change));
-				}
+			} else if (
+				mod.engine === 'filemod-engine' &&
+				mod.transformer &&
+				typeof mod.transformer === 'string'
+			) {
+				commands = await runFilemod(mod as any, filePath);
+			} else if (mod.engine === 'composite-mod-engine') {
+				commands = await runCompositeMod(mod, filePath, oldSource);
+			} else {
+				throw new Error();
 			}
 
-			if (
-				codemod.engine === 'filemod-engine' &&
-				codemod.transformer &&
-				typeof codemod.transformer === 'string'
-			) {
-				const buffer = Buffer.from(
-					codemod.transformer ?? '',
-					'base64url',
+			for (const command of commands) {
+				const message = await handleCommand(
+					outputDirectoryPath,
+					mod.caseTitle,
+					command,
 				);
 
-				const rootDirectoryPath = '/';
-
-				// TODO verify if this works?
-				const transformApi = buildFilePathTransformApi(
-					rootDirectoryPath,
-					filePath,
-				);
-
-				const declarativeFilemod = await buildDeclarativeFilemod({
-					buffer,
-				});
-
-				const declarativeTransform =
-					buildDeclarativeTransform(declarativeFilemod);
-
-				const commands = await declarativeTransform(
-					rootDirectoryPath,
-					transformApi,
-				);
-
-				for (const command of commands) {
-					console.log(command);
-
-					if (command.kind === 'delete') {
-						const message: DeleteMessage = {
-							k: MessageKind.delete,
-							oldFilePath: command.path,
-							modId: codemod.caseTitle,
-						};
-
-						console.log(JSON.stringify(message));
-					}
-
-					if (command.kind === 'move') {
-						const message: MoveMessage = {
-							k: MessageKind.move,
-							oldFilePath: command.fromPath,
-							newFilePath: command.toPath,
-							modId: codemod.caseTitle,
-						};
-
-						console.log(JSON.stringify(message));
-					}
-				}
+				console.log(JSON.stringify(message));
 			}
 		} catch (error) {
 			if (error instanceof Error) {
 				console.error(
 					JSON.stringify({
 						message: error.message,
-						caseTitle: codemod.caseTitle,
-						group: codemod.group,
+						caseTitle: mod.caseTitle,
+						group: mod.group,
 					}),
 				);
 			}
