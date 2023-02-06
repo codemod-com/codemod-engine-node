@@ -7,7 +7,13 @@ import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { buildRewriteMessage } from './buildRewriteMessage';
 import { buildChangeMessage } from './buildChangeMessages';
-import { MessageKind, ProgressMessage } from './messages';
+import {
+	DeleteMessage,
+	Message,
+	MessageKind,
+	MoveMessage,
+	ProgressMessage,
+} from './messages';
 import * as ts from 'typescript';
 import { NewGroup } from './groups';
 import {
@@ -185,6 +191,29 @@ export const executeWorkerThread = async () => {
 					rootDirectoryPath,
 					transformApi,
 				);
+
+				for (const command of commands) {
+					if (command.kind === 'delete') {
+						const message: DeleteMessage = {
+							k: MessageKind.delete,
+							oldFilePath: command.path,
+							modId: codemod.caseTitle,
+						};
+
+						console.log(JSON.stringify(message));
+					}
+
+					if (command.kind === 'move') {
+						const message: MoveMessage = {
+							k: MessageKind.move,
+							oldFilePath: command.fromPath,
+							newFilePath: command.toPath,
+							modId: codemod.caseTitle,
+						};
+
+						console.log(JSON.stringify(message));
+					}
+				}
 			}
 		} catch (error) {
 			if (error instanceof Error) {
