@@ -13,8 +13,8 @@ import {
 import * as ts from 'typescript';
 import { NewGroup } from './groups';
 
-import { runCodemod } from './codemodRunner';
-import { runFilemod } from './filemodRunner';
+import { Codemod, runCodemod } from './codemodRunner';
+import { Filemod, runFilemod } from './filemodRunner';
 
 export const executeWorkerThread = async () => {
 	const {
@@ -30,16 +30,7 @@ export const executeWorkerThread = async () => {
 
 	const oldSource = readFileSync(filePath, { encoding: 'utf8' });
 
-	type Codemod = Readonly<{
-		engine: string;
-		caseTitle: string;
-		group: string | null;
-		// eslint-disable-next-line @typescript-eslint/ban-types
-		transformer?: Function | string;
-		withParser?: string;
-	}>;
-
-	const codemods: Codemod[] = [];
+	const mods: (Codemod | Filemod)[] = [];
 
 	if (codemodFilePath) {
 		try {
@@ -58,7 +49,7 @@ export const executeWorkerThread = async () => {
 
 				const transformer = 'default' in mod ? mod.default : mod;
 
-				codemods.push({
+				mods.push({
 					engine: 'jscodeshift',
 					caseTitle: codemodFilePath,
 					group: null,
@@ -66,7 +57,7 @@ export const executeWorkerThread = async () => {
 					withParser: 'tsx',
 				});
 			} else {
-				codemods.push({
+				mods.push({
 					engine: 'jscodeshift',
 					caseTitle: codemodFilePath,
 					group: null,
@@ -78,11 +69,11 @@ export const executeWorkerThread = async () => {
 			console.error(error);
 		}
 	} else {
-		codemods.push(...nneCodemods);
-		codemods.push(...muiCodemods);
+		mods.push(...(nneCodemods as any));
+		mods.push(...muiCodemods);
 	}
 
-	for (const codemod of codemods) {
+	for (const codemod of mods) {
 		if (newGroups.length > 0 && !newGroups.includes(codemod.group)) {
 			continue;
 		}

@@ -4,9 +4,8 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { CreateMessage, MessageKind, RewriteMessage } from './messages';
 
-// TODO fix types
-type Codemod = Readonly<{
-	engine: string;
+export type Codemod = Readonly<{
+	engine: 'jscodeshift';
 	caseTitle: string;
 	group: string | null;
 	// eslint-disable-next-line @typescript-eslint/ban-types

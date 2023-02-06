@@ -5,12 +5,10 @@ import {
 } from '@intuita-inc/filemod-engine';
 import { DeleteMessage, MessageKind, MoveMessage } from './messages';
 
-// TODO fix types
-type Filemod = Readonly<{
+export type Filemod = Readonly<{
 	engine: 'filemod-engine';
 	caseTitle: string;
 	group: string | null;
-	// eslint-disable-next-line @typescript-eslint/ban-types
 	transformer: string;
 }>;
 
