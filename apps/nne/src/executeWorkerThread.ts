@@ -172,7 +172,7 @@ export const executeWorkerThread = async () => {
 					'base64url',
 				);
 
-				const rootDirectoryPath = dirname(filePath);
+				const rootDirectoryPath = '/';
 
 				// TODO verify if this works?
 				const transformApi = buildFilePathTransformApi(
@@ -193,6 +193,8 @@ export const executeWorkerThread = async () => {
 				);
 
 				for (const command of commands) {
+					console.log(command);
+
 					if (command.kind === 'delete') {
 						const message: DeleteMessage = {
 							k: MessageKind.delete,
