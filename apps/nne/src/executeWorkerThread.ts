@@ -73,8 +73,8 @@ export const executeWorkerThread = async () => {
 		mods.push(...muiCodemods);
 	}
 
-	for (const codemod of mods) {
-		if (newGroups.length > 0 && !newGroups.includes(codemod.group)) {
+	for (const mod of mods) {
+		if (newGroups.length > 0 && !newGroups.includes(mod.group)) {
 			continue;
 		}
 
@@ -84,23 +84,23 @@ export const executeWorkerThread = async () => {
 
 		try {
 			if (
-				codemod.engine === 'jscodeshift' &&
-				typeof codemod.transformer === 'function' &&
-				codemod.transformer &&
-				codemod.withParser
+				mod.engine === 'jscodeshift' &&
+				typeof mod.transformer === 'function' &&
+				mod.transformer &&
+				mod.withParser
 			) {
 				messages = await runCodemod(
 					outputDirectoryPath,
 					filePath,
 					oldSource,
-					codemod as any, // TODO fixme
+					mod as any, // TODO fixme
 				);
 			} else if (
-				codemod.engine === 'filemod-engine' &&
-				codemod.transformer &&
-				typeof codemod.transformer === 'string'
+				mod.engine === 'filemod-engine' &&
+				mod.transformer &&
+				typeof mod.transformer === 'string'
 			) {
-				messages = await runFilemod(codemod as any, filePath);
+				messages = await runFilemod(mod as any, filePath);
 			} else {
 				throw new Error();
 			}
@@ -113,8 +113,8 @@ export const executeWorkerThread = async () => {
 				console.error(
 					JSON.stringify({
 						message: error.message,
-						caseTitle: codemod.caseTitle,
-						group: codemod.group,
+						caseTitle: mod.caseTitle,
+						group: mod.group,
 					}),
 				);
 			}
