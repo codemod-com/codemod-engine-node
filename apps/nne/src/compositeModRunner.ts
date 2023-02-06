@@ -38,8 +38,10 @@ const handleModCommands = (
 			files = files.map((file) => {
 				return {
 					...file,
+					created: false,
 					deleted:
 						file.path === modCommand.oldPath ? true : file.deleted,
+					updated: false,
 				};
 			});
 		}
@@ -52,12 +54,12 @@ const handleModCommands = (
 			files = files.map((file) => {
 				return {
 					...file,
+					created: false,
 					deleted:
 						file.path === modCommand.oldPath ? true : file.deleted,
+					updated: false,
 				};
 			});
-
-			console.error('HERE', modCommand);
 
 			files.push({
 				path: modCommand.newPath,
@@ -72,7 +74,7 @@ const handleModCommands = (
 			files = files.map((file) => {
 				return {
 					path: file.path,
-					created: false,
+					created: file.created,
 					deleted: false,
 					data:
 						file.path === modCommand.oldPath
