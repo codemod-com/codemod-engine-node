@@ -124,8 +124,8 @@ const fetchCodemods = async () => {
 						codemodObjects.push({
 							engine: 'filemod-engine',
 							caseTitle: config.name,
-							group: `"${setConfig.name}"`,
-							transformer: buffer,
+							group: setConfig.name,
+							transformer: `"` + buffer + `"`,
 						});
 
 						resolve();

@@ -45,7 +45,7 @@ export const executeWorkerThread = () => {
 		caseTitle: string;
 		group: string | null;
 		// eslint-disable-next-line @typescript-eslint/ban-types
-		transformer?: Function;
+		transformer?: Function | string;
 		withParser?: string;
 	}>;
 
@@ -106,6 +106,7 @@ export const executeWorkerThread = () => {
 			if (
 				codemod.engine === 'jscodeshift' &&
 				codemod.transformer &&
+				typeof codemod.transformer === 'function' &&
 				codemod.withParser
 			) {
 				const newSource = codemod.transformer(
@@ -148,6 +149,14 @@ export const executeWorkerThread = () => {
 
 					console.log(JSON.stringify(change));
 				}
+			}
+
+			if (
+				codemod.engine === 'filemod-engine' &&
+				codemod.transformer &&
+				typeof codemod.transformer === 'string'
+			) {
+				// console.log()
 			}
 		} catch (error) {
 			if (error instanceof Error) {
