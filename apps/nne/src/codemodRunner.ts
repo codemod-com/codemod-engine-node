@@ -1,8 +1,4 @@
 import jscodeshift, { API, FileInfo } from 'jscodeshift';
-import { createHash } from 'node:crypto';
-import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { CreateMessage, MessageKind, RewriteMessage } from './messages';
 import { ModCommand } from './modCommands';
 
 export type Codemod = Readonly<{
@@ -30,12 +26,10 @@ const buildApi = (parser: string): API => ({
 });
 
 export const runCodemod = async (
-	// outputDirectoryPath: string,
 	oldPath: string,
 	oldSource: string,
 	codemod: Codemod,
 ): Promise<ReadonlyArray<ModCommand>> => {
-	// const messages: (CreateMessage | RewriteMessage)[] = [];
 	const commands: ModCommand[] = [];
 
 	const createFile = (newPath: string, newData: string): void => {
@@ -44,21 +38,6 @@ export const runCodemod = async (
 			newPath,
 			newData,
 		});
-		// const hash = createHash('md5')
-		// 	.update(filePath)
-		// 	.update(codemod.caseTitle)
-		// 	.update(path)
-		// 	.digest('base64url');
-
-		// const newContentPath = join(outputDirectoryPath, `${hash}.txt`);
-
-		// writeFileSync(newContentPath, data);
-
-		// messages.push({
-		// 	k: MessageKind.create,
-		// 	newFilePath: path,
-		// 	newContentPath,
-		// });
 	};
 
 	const fileInfo: FileInfo = {
@@ -75,20 +54,6 @@ export const runCodemod = async (
 	);
 
 	if (newSource && oldSource !== newSource) {
-		// const hash = createHash('md5')
-		// 	.update(filePath)
-		// 	.update(codemod.caseTitle)
-		// 	.digest('base64url');
-		// const outputFilePath = join(outputDirectoryPath, `${hash}.txt`);
-		// writeFileSync(outputFilePath, newSource);
-		// const rewrite: RewriteMessage = {
-		// 	k: MessageKind.rewrite,
-		// 	i: filePath,
-		// 	o: outputFilePath,
-		// 	c: codemod.caseTitle,
-		// };
-		// messages.push(rewrite);
-
 		commands.push({
 			kind: 'updateFile',
 			oldPath: oldPath,

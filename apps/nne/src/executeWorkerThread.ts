@@ -15,6 +15,7 @@ import { NewGroup } from './groups';
 
 import { Codemod, runCodemod } from './codemodRunner';
 import { Filemod, runFilemod } from './filemodRunner';
+import { handleCreateFileCommand } from './modCommands';
 
 export const executeWorkerThread = async () => {
 	const {
@@ -89,12 +90,24 @@ export const executeWorkerThread = async () => {
 				mod.transformer &&
 				mod.withParser
 			) {
-				commands = await runCodemod(
+				const commands = await runCodemod(
 					// outputDirectoryPath,
 					filePath,
 					oldSource,
 					mod as any, // TODO fixme
 				);
+
+				commands.forEach((command) => {
+					if (command.kind === 'createFile') {
+						const createMessage = await handleCreateFileCommand(
+							outputDirectoryPath,
+							mod.caseTitle,
+							command,
+						);
+
+						messages.push(createMessage);
+					}
+				});
 			} else if (
 				mod.engine === 'filemod-engine' &&
 				mod.transformer &&

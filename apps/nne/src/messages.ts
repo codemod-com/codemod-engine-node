@@ -41,4 +41,5 @@ export type CreateMessage = Readonly<{
 	k: MessageKind.create;
 	newFilePath: string;
 	newContentPath: string;
+	modId: string;
 }>;
