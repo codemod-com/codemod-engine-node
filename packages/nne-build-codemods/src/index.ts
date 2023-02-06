@@ -15,7 +15,7 @@ type CodemodObject =
 			engine: 'filemod-engine';
 			group: string;
 			caseTitle: string;
-			transformerPath: string;
+			transformer: string;
 	  };
 
 const dirname = join(__dirname, '../../nne-codemods/src/');
@@ -93,18 +93,6 @@ const fetchCodemods = async () => {
 			}
 
 			if (config.engine === 'filemod-engine') {
-				console.log(config);
-
-				const hash = createHash('ripemd160')
-					.update(config.name)
-					.digest('hex');
-
-				const codemodDirname = join(dirname, `./codemods/${hash}/`);
-
-				if (!existsSync(codemodDirname)) {
-					await mkdir(codemodDirname);
-				}
-
 				const transformYmlPath = join(
 					codemodDirectoryPath,
 					'transform.yml',
@@ -114,19 +102,36 @@ const fetchCodemods = async () => {
 					throw new Error(`${transformYmlPath} does not exists`);
 				}
 
-				const readStream = createReadStream(transformYmlPath);
+				const readStream = createReadStream(transformYmlPath, {
+					encoding: 'utf8',
+				});
 
-				const filePath = join(codemodDirname, `transform.yml`);
+				const buffers: Buffer[] = [];
 
-				if (!existsSync(filePath)) {
-					readStream.pipe(createWriteStream(filePath));
-				}
+				await new Promise<void>((resolve, reject) => {
+					readStream.on('data', function (chunk) {
+						buffers.push(
+							typeof chunk === 'string'
+								? Buffer.from(chunk)
+								: chunk,
+						);
+					});
 
-				codemodObjects.push({
-					engine: 'filemod-engine',
-					caseTitle: config.name,
-					group: setConfig.name,
-					transformerPath: `./${hash}/transform.yml`,
+					readStream.on('end', function () {
+						const buffer =
+							Buffer.concat(buffers).toString('base64url');
+
+						codemodObjects.push({
+							engine: 'filemod-engine',
+							caseTitle: config.name,
+							group: setConfig.name,
+							transformer: buffer,
+						});
+
+						resolve();
+					});
+
+					readStream.on('error', (error) => reject(error));
 				});
 			}
 		}
