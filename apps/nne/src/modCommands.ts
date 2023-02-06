@@ -1,7 +1,13 @@
 import { createHash } from 'node:crypto';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { CreateMessage, MessageKind, RewriteMessage } from './messages';
+import {
+	CreateMessage,
+	DeleteMessage,
+	MessageKind,
+	MoveMessage,
+	RewriteMessage,
+} from './messages';
 
 export type CreateFileCommand = Readonly<{
 	kind: 'createFile';
@@ -15,7 +21,22 @@ export type UpdateFileCommand = Readonly<{
 	newData: string;
 }>;
 
-export type ModCommand = CreateFileCommand | UpdateFileCommand;
+export type DeleteFileCommand = Readonly<{
+	kind: 'deleteFile';
+	oldPath: string;
+}>;
+
+export type MoveFileCommand = Readonly<{
+	kind: 'moveFile';
+	oldPath: string;
+	newPath: string;
+}>;
+
+export type ModCommand =
+	| CreateFileCommand
+	| UpdateFileCommand
+	| DeleteFileCommand
+	| MoveFileCommand;
 
 export const handleCreateFileCommand = async (
 	outputDirectoryPath: string,
@@ -61,4 +82,46 @@ export const handleUpdateFileCommand = async (
 		o: newDataPath,
 		c: modId,
 	};
+};
+
+export const handleDeleteFileCommmand = async (
+	outputDirectoryPath: string,
+	modId: string,
+	command: DeleteFileCommand,
+): Promise<DeleteMessage> => {
+	return {
+		k: MessageKind.delete,
+		oldFilePath: command.oldPath,
+		modId,
+	};
+};
+
+export const handleMoveFileCommmand = async (
+	outputDirectoryPath: string,
+	modId: string,
+	command: MoveFileCommand,
+): Promise<MoveMessage> => {
+	return {
+		k: MessageKind.move,
+		oldFilePath: command.oldPath,
+		newFilePath: command.newPath,
+		modId,
+	};
+};
+
+export const handleCommand = (
+	outputDirectoryPath: string,
+	modId: string,
+	command: ModCommand,
+) => {
+	switch (command.kind) {
+		case 'createFile':
+			return handleCreateFileCommand(outputDirectoryPath, modId, command);
+		case 'deleteFile':
+			return handleDeleteFileCommmand(
+				outputDirectoryPath,
+				modId,
+				command,
+			);
+	}
 };
