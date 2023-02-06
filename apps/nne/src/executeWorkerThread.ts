@@ -8,6 +8,7 @@ import { dirname, join } from 'node:path';
 import { buildRewriteMessage } from './buildRewriteMessage';
 import { buildChangeMessage } from './buildChangeMessages';
 import {
+	CreateMessage,
 	DeleteMessage,
 	Message,
 	MessageKind,
@@ -120,10 +121,39 @@ export const executeWorkerThread = async () => {
 				typeof codemod.transformer === 'function' &&
 				codemod.withParser
 			) {
+				const createFileCommands: CreateMessage[] = [];
+
+				const createFile = (path: string, data: string) => {
+					if (!outputDirectoryPath) {
+						return;
+					}
+
+					const hash = createHash('md5')
+						.update(filePath)
+						.update(codemod.caseTitle)
+						.update(path)
+						.digest('base64url');
+
+					const newContentPath = join(
+						outputDirectoryPath,
+						`${hash}.txt`,
+					);
+
+					writeFileSync(newContentPath, data);
+
+					createFileCommands.push({
+						k: MessageKind.create,
+						newFilePath: path,
+						newContentPath,
+					});
+				};
+
 				const newSource = codemod.transformer(
 					fileInfo,
 					buildApi(codemod.withParser),
-					{},
+					{
+						createFile,
+					},
 				);
 
 				if (!newSource || oldSource === newSource) {
@@ -159,6 +189,10 @@ export const executeWorkerThread = async () => {
 					);
 
 					console.log(JSON.stringify(change));
+				}
+
+				for (const createFileCommand of createFileCommands) {
+					console.log(JSON.stringify(createFileCommand));
 				}
 			}
 

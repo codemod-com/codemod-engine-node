@@ -5,6 +5,7 @@ export const enum MessageKind {
 	progress = 6,
 	delete = 7,
 	move = 8,
+	create = 9,
 }
 
 export type ChangeMessage = Readonly<{
@@ -43,6 +44,12 @@ export type MoveMessage = Readonly<{
 	oldFilePath: string;
 	newFilePath: string;
 	modId: string;
+}>;
+
+export type CreateMessage = Readonly<{
+	k: MessageKind.create;
+	newFilePath: string;
+	newContentPath: string;
 }>;
 
 export type Message = ChangeMessage | FinishMessage;
