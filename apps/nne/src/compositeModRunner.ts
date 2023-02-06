@@ -1,6 +1,6 @@
 import { Codemod, runCodemod } from './codemodRunner';
 import { Filemod, runFilemod } from './filemodRunner';
-import { MessageKind } from './messages';
+import { ModCommand } from './modCommands';
 
 export type CompositeMod = Readonly<{
 	engine: 'composite-mod-engine';
@@ -32,76 +32,85 @@ export const runCompositeMod = async (
 		},
 	];
 
+	const handleModCommands = (modCommands: ReadonlyArray<ModCommand>) => {
+		for (const modCommand of modCommands) {
+			if (modCommand.kind === 'createFile') {
+				files.push({
+					path: modCommand.newPath,
+					data: modCommand.newData,
+					created: true,
+					deleted: false,
+					updated: false,
+				});
+			}
+
+			if (modCommand.kind === 'deleteFile') {
+				files = files.map((file) => {
+					return {
+						...file,
+						deleted: file.path === modCommand.oldPath,
+					};
+				});
+			}
+
+			if (modCommand.kind === 'moveFile') {
+				const oldData =
+					files.find((file) => file.path === modCommand.oldPath)
+						?.data ?? '';
+
+				files = files.map((file) => {
+					return {
+						...file,
+						deleted: file.path === modCommand.oldPath,
+					};
+				});
+
+				files.push({
+					path: modCommand.newPath,
+					data: oldData,
+					created: true,
+					deleted: false,
+					updated: false,
+				});
+			}
+
+			if (modCommand.kind === 'updateFile') {
+				files = files.map((file) => {
+					return {
+						...file,
+						data:
+							file.path === modCommand.oldPath
+								? modCommand.newData
+								: file.data,
+						updated:
+							file.path === modCommand.oldPath
+								? true
+								: file.updated,
+					};
+				});
+			}
+		}
+	};
+
 	for (const mod of compositeMod.mods) {
 		if (mod.engine === 'filemod-engine') {
 			for (const file of files) {
 				const modCommands = await runFilemod(mod, file.path);
 
-				for (const modCommand of modCommands) {
-					if (modCommand.kind === 'createFile') {
-						files.push({
-							path: modCommand.newPath,
-							data: modCommand.newData,
-							created: true,
-							deleted: false,
-							updated: false,
-						});
-					}
-
-					if (modCommand.kind === 'deleteFile') {
-						files = files.map((file) => {
-							return {
-								...file,
-								deleted: file.path === modCommand.oldPath,
-							};
-						});
-					}
-
-					if (modCommand.kind === 'moveFile') {
-						const oldData =
-							files.find(
-								(file) => file.path === modCommand.oldPath,
-							)?.data ?? '';
-
-						files = files.map((file) => {
-							return {
-								...file,
-								deleted: file.path === modCommand.oldPath,
-							};
-						});
-
-						files.push({
-							path: modCommand.newPath,
-							data: oldData,
-							created: true,
-							deleted: false,
-							updated: false,
-						});
-					}
-
-					if (modCommand.kind === 'updateFile') {
-						files = files.map((file) => {
-							return {
-								...file,
-								data:
-									file.path === modCommand.oldPath
-										? modCommand.newData
-										: file.data,
-								updated:
-									file.path === modCommand.oldPath
-										? true
-										: file.updated,
-							};
-						});
-					}
-				}
+				handleModCommands(modCommands);
 			}
 		}
 
-		// if (mod.engine === 'jscodeshift') {
-		// 	for (const filePath of filePaths) {
-		// 		const messages = await runCodemod(filePath);
-		// 	}
-		// }
+		if (mod.engine === 'jscodeshift') {
+			for (const file of files) {
+				const modCommand = await runCodemod(file.path, file.data, mod);
+
+				handleModCommands(modCommand);
+			}
+		}
+	}
+
+	for (const file of files) {
+		
 	}
 };
