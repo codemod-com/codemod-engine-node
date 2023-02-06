@@ -15,12 +15,7 @@ import { NewGroup } from './groups';
 
 import { Codemod, runCodemod } from './codemodRunner';
 import { Filemod, runFilemod } from './filemodRunner';
-import {
-	handleCommand,
-	handleCreateFileCommand,
-	handleUpdateFileCommand,
-	ModCommand,
-} from './modCommands';
+import { handleCommand, ModCommand } from './modCommands';
 import { CompositeMod, runCompositeMod } from './compositeModRunner';
 
 export const executeWorkerThread = async () => {
