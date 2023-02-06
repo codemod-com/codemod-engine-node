@@ -96,7 +96,7 @@ export const handleDeleteFileCommmand = async (
 	};
 };
 
-export const handleMoveFileCommmand = async (
+export const handleMoveFileCommand = async (
 	outputDirectoryPath: string,
 	modId: string,
 	command: MoveFileCommand,
@@ -109,16 +109,32 @@ export const handleMoveFileCommmand = async (
 	};
 };
 
-export const handleCommand = (
+export const handleCommand = async (
 	outputDirectoryPath: string,
 	modId: string,
 	command: ModCommand,
 ) => {
 	switch (command.kind) {
 		case 'createFile':
-			return handleCreateFileCommand(outputDirectoryPath, modId, command);
+			return await handleCreateFileCommand(
+				outputDirectoryPath,
+				modId,
+				command,
+			);
 		case 'deleteFile':
-			return handleDeleteFileCommmand(
+			return await handleDeleteFileCommmand(
+				outputDirectoryPath,
+				modId,
+				command,
+			);
+		case 'moveFile':
+			return await handleMoveFileCommand(
+				outputDirectoryPath,
+				modId,
+				command,
+			);
+		case 'updateFile':
+			return await handleUpdateFileCommand(
 				outputDirectoryPath,
 				modId,
 				command,

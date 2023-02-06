@@ -3,7 +3,7 @@ import {
 	buildDeclarativeTransform,
 	buildFilePathTransformApi,
 } from '@intuita-inc/filemod-engine';
-import { DeleteMessage, MessageKind, MoveMessage } from './messages';
+import { ModCommand } from './modCommands';
 
 export type Filemod = Readonly<{
 	engine: 'filemod-engine';
@@ -15,8 +15,8 @@ export type Filemod = Readonly<{
 export const runFilemod = async (
 	filemod: Filemod,
 	filePath: string,
-): Promise<ReadonlyArray<DeleteMessage | MoveMessage>> => {
-	const messages: (DeleteMessage | MoveMessage)[] = [];
+): Promise<ReadonlyArray<ModCommand>> => {
+	const modCommands: ModCommand[] = [];
 
 	const buffer = Buffer.from(filemod.transformer, 'base64url');
 
@@ -31,35 +31,27 @@ export const runFilemod = async (
 
 	const declarativeTransform = buildDeclarativeTransform(declarativeFilemod);
 
-	const commands = await declarativeTransform(
+	const filemodCommands = await declarativeTransform(
 		rootDirectoryPath,
 		transformApi,
 	);
 
-	for (const command of commands) {
-		console.log(command);
-
+	for (const command of filemodCommands) {
 		if (command.kind === 'delete') {
-			const message: DeleteMessage = {
-				k: MessageKind.delete,
-				oldFilePath: command.path,
-				modId: filemod.caseTitle,
-			};
-
-			messages.push(message);
+			modCommands.push({
+				kind: 'deleteFile',
+				oldPath: command.path,
+			});
 		}
 
 		if (command.kind === 'move') {
-			const message: MoveMessage = {
-				k: MessageKind.move,
-				oldFilePath: command.fromPath,
-				newFilePath: command.toPath,
-				modId: filemod.caseTitle,
-			};
-
-			messages.push(message);
+			modCommands.push({
+				kind: 'moveFile',
+				oldPath: command.fromPath,
+				newPath: command.toPath,
+			});
 		}
 	}
 
-	return messages;
+	return modCommands;
 };

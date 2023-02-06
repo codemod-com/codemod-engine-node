@@ -16,6 +16,7 @@ import { NewGroup } from './groups';
 import { Codemod, runCodemod } from './codemodRunner';
 import { Filemod, runFilemod } from './filemodRunner';
 import {
+	handleCommand,
 	handleCreateFileCommand,
 	handleUpdateFileCommand,
 } from './modCommands';
@@ -104,25 +105,13 @@ export const executeWorkerThread = async () => {
 				);
 
 				for (const command of commands) {
-					if (command.kind === 'createFile') {
-						const createMessage = await handleCreateFileCommand(
+					messages.push(
+						await handleCommand(
 							outputDirectoryPath,
 							mod.caseTitle,
 							command,
-						);
-
-						messages.push(createMessage);
-					}
-
-					if (command.kind === 'updateFile') {
-						const updateMessage = await handleUpdateFileCommand(
-							outputDirectoryPath,
-							mod.caseTitle,
-							command,
-						);
-
-						messages.push(updateMessage);
-					}
+						),
+					);
 				}
 			} else if (
 				mod.engine === 'filemod-engine' &&
