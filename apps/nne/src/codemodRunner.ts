@@ -2,7 +2,6 @@ import jscodeshift, { API, FileInfo } from 'jscodeshift';
 import { createHash } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildChangeMessage } from './buildChangeMessages';
 import { buildRewriteMessage } from './buildRewriteMessage';
 import { CreateMessage, MessageKind } from './messages';
 
@@ -37,7 +36,7 @@ export const runCodemod = async (
 	oldSource: string,
 	codemod: Codemod,
 ) => {
-	const createFileCommands: CreateMessage[] = [];
+	const messages: CreateMessage[] = [];
 
 	const createFile = (path: string, data: string) => {
 		const hash = createHash('md5')
@@ -50,7 +49,7 @@ export const runCodemod = async (
 
 		writeFileSync(newContentPath, data);
 
-		createFileCommands.push({
+		messages.push({
 			k: MessageKind.create,
 			newFilePath: path,
 			newContentPath,
@@ -70,28 +69,26 @@ export const runCodemod = async (
 		},
 	);
 
-	if (!newSource || oldSource === newSource) {
-		return;
+	if (newSource && oldSource !== newSource) {
+		const hash = createHash('md5')
+			.update(filePath)
+			.update(codemod.caseTitle)
+			.digest('base64url');
+
+		const outputFilePath = join(outputDirectoryPath, `${hash}.txt`);
+
+		writeFileSync(outputFilePath, newSource);
+
+		const rewrite = buildRewriteMessage(
+			filePath,
+			outputFilePath,
+			codemod.caseTitle,
+		);
+
+		console.log(JSON.stringify(rewrite));
 	}
 
-	const hash = createHash('md5')
-		.update(filePath)
-		.update(codemod.caseTitle)
-		.digest('base64url');
-
-	const outputFilePath = join(outputDirectoryPath, `${hash}.txt`);
-
-	writeFileSync(outputFilePath, newSource);
-
-	const rewrite = buildRewriteMessage(
-		filePath,
-		outputFilePath,
-		codemod.caseTitle,
-	);
-
-	console.log(JSON.stringify(rewrite));
-
-	for (const createFileCommand of createFileCommands) {
+	for (const createFileCommand of messages) {
 		console.log(JSON.stringify(createFileCommand));
 	}
 };
