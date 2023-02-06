@@ -19,7 +19,7 @@ const buildNewGroups = (
 		if (isOldGroup) {
 			switch (group) {
 				case 'nextJs':
-					return 'next_13_composite';
+					return 'next_13';
 				case 'mui':
 					return 'mui';
 				case 'reactrouterv4':

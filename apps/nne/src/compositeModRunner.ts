@@ -17,13 +17,82 @@ type File = {
 	updated: boolean;
 };
 
+const handleModCommands = (
+	_files: ReadonlyArray<File>,
+	modCommands: ReadonlyArray<ModCommand>,
+): ReadonlyArray<File> => {
+	let files = _files.slice();
+
+	for (const modCommand of modCommands) {
+		if (modCommand.kind === 'createFile') {
+			files.push({
+				path: modCommand.newPath,
+				data: modCommand.newData,
+				created: true,
+				deleted: false,
+				updated: false,
+			});
+		}
+
+		if (modCommand.kind === 'deleteFile') {
+			files = files.map((file) => {
+				return {
+					...file,
+					deleted:
+						file.path === modCommand.oldPath ? true : file.deleted,
+				};
+			});
+		}
+
+		if (modCommand.kind === 'moveFile') {
+			const oldData =
+				files.find((file) => file.path === modCommand.oldPath)?.data ??
+				'';
+
+			files = files.map((file) => {
+				return {
+					...file,
+					deleted:
+						file.path === modCommand.oldPath ? true : file.deleted,
+				};
+			});
+
+			console.error('HERE', modCommand);
+
+			files.push({
+				path: modCommand.newPath,
+				data: oldData,
+				created: true,
+				deleted: false,
+				updated: false,
+			});
+		}
+
+		if (modCommand.kind === 'updateFile') {
+			files = files.map((file) => {
+				return {
+					path: file.path,
+					created: false,
+					deleted: false,
+					data:
+						file.path === modCommand.oldPath
+							? modCommand.newData
+							: file.data,
+					updated:
+						file.path === modCommand.oldPath ? true : file.updated,
+				};
+			});
+		}
+	}
+
+	return files;
+};
+
 export const runCompositeMod = async (
 	compositeMod: CompositeMod,
 	path: string,
 	data: string,
 ): Promise<ModCommand[]> => {
-	console.error(compositeMod);
-
 	let files: File[] = [
 		{
 			path,
@@ -34,87 +103,37 @@ export const runCompositeMod = async (
 		},
 	];
 
-	const handleModCommands = (modCommands: ReadonlyArray<ModCommand>) => {
-		for (const modCommand of modCommands) {
-			if (modCommand.kind === 'createFile') {
-				files.push({
-					path: modCommand.newPath,
-					data: modCommand.newData,
-					created: true,
-					deleted: false,
-					updated: false,
-				});
-			}
-
-			if (modCommand.kind === 'deleteFile') {
-				files = files.map((file) => {
-					return {
-						...file,
-						deleted: file.path === modCommand.oldPath,
-					};
-				});
-			}
-
-			if (modCommand.kind === 'moveFile') {
-				const oldData =
-					files.find((file) => file.path === modCommand.oldPath)
-						?.data ?? '';
-
-				files = files.map((file) => {
-					return {
-						...file,
-						deleted: file.path === modCommand.oldPath,
-					};
-				});
-
-				files.push({
-					path: modCommand.newPath,
-					data: oldData,
-					created: true,
-					deleted: false,
-					updated: false,
-				});
-			}
-
-			if (modCommand.kind === 'updateFile') {
-				files = files.map((file) => {
-					return {
-						...file,
-						data:
-							file.path === modCommand.oldPath
-								? modCommand.newData
-								: file.data,
-						updated:
-							file.path === modCommand.oldPath
-								? true
-								: file.updated,
-					};
-				});
-			}
-		}
-	};
-
 	for (const mod of compositeMod.mods) {
 		if (mod.engine === 'filemod-engine') {
-			for (const file of files) {
+			const currentFiles = files.slice();
+
+			for (const file of currentFiles) {
+				if (file.deleted) {
+					continue;
+				}
+
 				const modCommands = await runFilemod(mod, file.path);
 
-				handleModCommands(modCommands);
+				files = handleModCommands(files, modCommands).slice();
 			}
 		}
 
 		if (mod.engine === 'jscodeshift') {
-			for (const file of files) {
+			const currentFiles = files.slice();
+
+			for (const file of currentFiles) {
+				if (file.deleted) {
+					continue;
+				}
+
 				const modCommand = await runCodemod(file.path, file.data, mod);
 
-				handleModCommands(modCommand);
+				files = handleModCommands(files, modCommand).slice();
 			}
 		}
 	}
 
 	const commands: ModCommand[] = [];
-
-	console.error(files);
 
 	for (const file of files) {
 		if (file.deleted) {
