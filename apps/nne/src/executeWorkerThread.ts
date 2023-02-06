@@ -89,8 +89,8 @@ export const executeWorkerThread = async () => {
 				mod.transformer &&
 				mod.withParser
 			) {
-				messages = await runCodemod(
-					outputDirectoryPath,
+				commands = await runCodemod(
+					// outputDirectoryPath,
 					filePath,
 					oldSource,
 					mod as any, // TODO fixme

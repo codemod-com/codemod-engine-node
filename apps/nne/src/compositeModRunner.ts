@@ -30,7 +30,7 @@ export const runCompositeMod = async (
 
 		if (mod.engine === 'jscodeshift') {
 			for (const filePath of filePaths) {
-				const messages = await runCodemod();
+				// const messages = await runCodemod();
 			}
 		}
 	}
