@@ -70,6 +70,7 @@ export const executeWorkerThread = () => {
 				const transformer = 'default' in mod ? mod.default : mod;
 
 				codemods.push({
+					engine: 'jscodeshift',
 					caseTitle: codemodFilePath,
 					group: null,
 					transformer,
@@ -77,6 +78,7 @@ export const executeWorkerThread = () => {
 				});
 			} else {
 				codemods.push({
+					engine: 'jscodeshift',
 					caseTitle: codemodFilePath,
 					group: null,
 					transformer: require(codemodFilePath),
