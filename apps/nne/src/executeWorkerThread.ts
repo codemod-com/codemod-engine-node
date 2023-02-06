@@ -3,19 +3,18 @@ import { workerData } from 'node:worker_threads';
 import { codemods as nneCodemods } from '@nne/codemods';
 import { codemods as muiCodemods } from '@nne/mui-codemods';
 import {
+	CreateMessage,
 	DeleteMessage,
 	MessageKind,
 	MoveMessage,
 	ProgressMessage,
+	RewriteMessage,
 } from './messages';
 import * as ts from 'typescript';
 import { NewGroup } from './groups';
-import {
-	buildDeclarativeFilemod,
-	buildDeclarativeTransform,
-	buildFilePathTransformApi,
-} from '@intuita-inc/filemod-engine';
+
 import { runCodemod } from './codemodRunner';
+import { runFilemod } from './filemodRunner';
 
 export const executeWorkerThread = async () => {
 	const {
@@ -88,6 +87,10 @@ export const executeWorkerThread = async () => {
 			continue;
 		}
 
+		let messages: ReadonlyArray<
+			CreateMessage | RewriteMessage | MoveMessage | DeleteMessage
+		>;
+
 		try {
 			if (
 				codemod.engine === 'jscodeshift' &&
@@ -95,68 +98,24 @@ export const executeWorkerThread = async () => {
 				codemod.transformer &&
 				codemod.withParser
 			) {
-				await runCodemod(
+				messages = await runCodemod(
 					outputDirectoryPath,
 					filePath,
 					oldSource,
 					codemod as any, // TODO fixme
 				);
-			}
-
-			if (
+			} else if (
 				codemod.engine === 'filemod-engine' &&
 				codemod.transformer &&
 				typeof codemod.transformer === 'string'
 			) {
-				const buffer = Buffer.from(
-					codemod.transformer ?? '',
-					'base64url',
-				);
+				messages = await runFilemod(codemod as any, filePath);
+			} else {
+				throw new Error();
+			}
 
-				const rootDirectoryPath = '/';
-
-				// TODO verify if this works?
-				const transformApi = buildFilePathTransformApi(
-					rootDirectoryPath,
-					filePath,
-				);
-
-				const declarativeFilemod = await buildDeclarativeFilemod({
-					buffer,
-				});
-
-				const declarativeTransform =
-					buildDeclarativeTransform(declarativeFilemod);
-
-				const commands = await declarativeTransform(
-					rootDirectoryPath,
-					transformApi,
-				);
-
-				for (const command of commands) {
-					console.log(command);
-
-					if (command.kind === 'delete') {
-						const message: DeleteMessage = {
-							k: MessageKind.delete,
-							oldFilePath: command.path,
-							modId: codemod.caseTitle,
-						};
-
-						console.log(JSON.stringify(message));
-					}
-
-					if (command.kind === 'move') {
-						const message: MoveMessage = {
-							k: MessageKind.move,
-							oldFilePath: command.fromPath,
-							newFilePath: command.toPath,
-							modId: codemod.caseTitle,
-						};
-
-						console.log(JSON.stringify(message));
-					}
-				}
+			for (const message of messages) {
+				console.log(message);
 			}
 		} catch (error) {
 			if (error instanceof Error) {

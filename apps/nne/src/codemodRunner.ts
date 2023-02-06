@@ -2,8 +2,7 @@ import jscodeshift, { API, FileInfo } from 'jscodeshift';
 import { createHash } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildRewriteMessage } from './buildRewriteMessage';
-import { CreateMessage, MessageKind } from './messages';
+import { CreateMessage, MessageKind, RewriteMessage } from './messages';
 
 // TODO fix types
 type Codemod = Readonly<{
@@ -35,10 +34,10 @@ export const runCodemod = async (
 	filePath: string,
 	oldSource: string,
 	codemod: Codemod,
-) => {
-	const messages: CreateMessage[] = [];
+): Promise<ReadonlyArray<CreateMessage | RewriteMessage>> => {
+	const messages: (CreateMessage | RewriteMessage)[] = [];
 
-	const createFile = (path: string, data: string) => {
+	const createFile = (path: string, data: string): void => {
 		const hash = createHash('md5')
 			.update(filePath)
 			.update(codemod.caseTitle)
@@ -79,16 +78,15 @@ export const runCodemod = async (
 
 		writeFileSync(outputFilePath, newSource);
 
-		const rewrite = buildRewriteMessage(
-			filePath,
-			outputFilePath,
-			codemod.caseTitle,
-		);
+		const rewrite: RewriteMessage = {
+			k: MessageKind.rewrite,
+			i: filePath,
+			o: outputFilePath,
+			c: codemod.caseTitle,
+		};
 
-		console.log(JSON.stringify(rewrite));
+		messages.push(rewrite);
 	}
 
-	for (const createFileCommand of messages) {
-		console.log(JSON.stringify(createFileCommand));
-	}
+	return messages;
 };
