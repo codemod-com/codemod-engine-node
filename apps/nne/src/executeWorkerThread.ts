@@ -4,14 +4,19 @@ import { codemods as nneCodemods } from '@nne/codemods';
 import { codemods as muiCodemods } from '@nne/mui-codemods';
 import jscodeshift, { API, FileInfo } from 'jscodeshift';
 import { createHash } from 'node:crypto';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { buildRewriteMessage } from './buildRewriteMessage';
 import { buildChangeMessage } from './buildChangeMessages';
 import { MessageKind, ProgressMessage } from './messages';
 import * as ts from 'typescript';
 import { NewGroup } from './groups';
+import {
+	buildDeclarativeFilemod,
+	buildDeclarativeTransform,
+	buildFilePathTransformApi,
+} from '@intuita-inc/filemod-engine';
 
-export const executeWorkerThread = () => {
+export const executeWorkerThread = async () => {
 	const buildApi = (parser: string): API => ({
 		j: jscodeshift.withParser(parser),
 		jscodeshift: jscodeshift.withParser(parser),
@@ -156,7 +161,30 @@ export const executeWorkerThread = () => {
 				codemod.transformer &&
 				typeof codemod.transformer === 'string'
 			) {
-				// console.log()
+				const buffer = Buffer.from(
+					codemod.transformer ?? '',
+					'base64url',
+				);
+
+				const rootDirectoryPath = dirname(filePath);
+
+				// TODO verify if this works?
+				const transformApi = buildFilePathTransformApi(
+					rootDirectoryPath,
+					filePath,
+				);
+
+				const declarativeFilemod = await buildDeclarativeFilemod({
+					buffer,
+				});
+
+				const declarativeTransform =
+					buildDeclarativeTransform(declarativeFilemod);
+
+				const commands = await declarativeTransform(
+					rootDirectoryPath,
+					transformApi,
+				);
 			}
 		} catch (error) {
 			if (error instanceof Error) {
