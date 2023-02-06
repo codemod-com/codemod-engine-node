@@ -15,7 +15,10 @@ import { NewGroup } from './groups';
 
 import { Codemod, runCodemod } from './codemodRunner';
 import { Filemod, runFilemod } from './filemodRunner';
-import { handleCreateFileCommand } from './modCommands';
+import {
+	handleCreateFileCommand,
+	handleUpdateFileCommand,
+} from './modCommands';
 
 export const executeWorkerThread = async () => {
 	const {
@@ -79,9 +82,12 @@ export const executeWorkerThread = async () => {
 			continue;
 		}
 
-		let messages: ReadonlyArray<
-			CreateMessage | RewriteMessage | MoveMessage | DeleteMessage
-		>;
+		const messages: (
+			| CreateMessage
+			| RewriteMessage
+			| MoveMessage
+			| DeleteMessage
+		)[] = [];
 
 		try {
 			if (
@@ -97,7 +103,7 @@ export const executeWorkerThread = async () => {
 					mod as any, // TODO fixme
 				);
 
-				commands.forEach((command) => {
+				for (const command of commands) {
 					if (command.kind === 'createFile') {
 						const createMessage = await handleCreateFileCommand(
 							outputDirectoryPath,
@@ -107,7 +113,17 @@ export const executeWorkerThread = async () => {
 
 						messages.push(createMessage);
 					}
-				});
+
+					if (command.kind === 'updateFile') {
+						const updateMessage = await handleUpdateFileCommand(
+							outputDirectoryPath,
+							mod.caseTitle,
+							command,
+						);
+
+						messages.push(updateMessage);
+					}
+				}
 			} else if (
 				mod.engine === 'filemod-engine' &&
 				mod.transformer &&
