@@ -22,23 +22,9 @@ import {
 	buildDeclarativeTransform,
 	buildFilePathTransformApi,
 } from '@intuita-inc/filemod-engine';
+import { runCodemod } from './codemodRunner';
 
 export const executeWorkerThread = async () => {
-	const buildApi = (parser: string): API => ({
-		j: jscodeshift.withParser(parser),
-		jscodeshift: jscodeshift.withParser(parser),
-		stats: () => {
-			console.error(
-				'The stats function was called, which is not supported on purpose',
-			);
-		},
-		report: () => {
-			console.error(
-				'The report function was called, which is not supported on purpose',
-			);
-		},
-	});
-
 	const {
 		codemodFilePath,
 		newGroups,
@@ -109,91 +95,19 @@ export const executeWorkerThread = async () => {
 			continue;
 		}
 
-		const fileInfo: FileInfo = {
-			path: filePath,
-			source: oldSource,
-		};
-
 		try {
 			if (
 				codemod.engine === 'jscodeshift' &&
-				codemod.transformer &&
 				typeof codemod.transformer === 'function' &&
+				codemod.transformer &&
 				codemod.withParser
 			) {
-				const createFileCommands: CreateMessage[] = [];
-
-				const createFile = (path: string, data: string) => {
-					if (!outputDirectoryPath) {
-						return;
-					}
-
-					const hash = createHash('md5')
-						.update(filePath)
-						.update(codemod.caseTitle)
-						.update(path)
-						.digest('base64url');
-
-					const newContentPath = join(
-						outputDirectoryPath,
-						`${hash}.txt`,
-					);
-
-					writeFileSync(newContentPath, data);
-
-					createFileCommands.push({
-						k: MessageKind.create,
-						newFilePath: path,
-						newContentPath,
-					});
-				};
-
-				const newSource = codemod.transformer(
-					fileInfo,
-					buildApi(codemod.withParser),
-					{
-						createFile,
-					},
+				await runCodemod(
+					outputDirectoryPath,
+					filePath,
+					oldSource,
+					codemod as any, // TODO fixme
 				);
-
-				if (!newSource || oldSource === newSource) {
-					continue;
-				}
-
-				if (outputDirectoryPath) {
-					const hash = createHash('md5')
-						.update(filePath)
-						.update(codemod.caseTitle)
-						.digest('base64url');
-
-					const outputFilePath = join(
-						outputDirectoryPath,
-						`${hash}.txt`,
-					);
-
-					writeFileSync(outputFilePath, newSource);
-
-					const rewrite = buildRewriteMessage(
-						filePath,
-						outputFilePath,
-						codemod.caseTitle,
-					);
-
-					console.log(JSON.stringify(rewrite));
-				} else {
-					const change = buildChangeMessage(
-						String(filePath),
-						oldSource,
-						newSource,
-						codemod.caseTitle,
-					);
-
-					console.log(JSON.stringify(change));
-				}
-
-				for (const createFileCommand of createFileCommands) {
-					console.log(JSON.stringify(createFileCommand));
-				}
 			}
 
 			if (
