@@ -118,7 +118,17 @@ export const executeWorkerThread = async () => {
 				mod.transformer &&
 				typeof mod.transformer === 'string'
 			) {
-				messages = await runFilemod(mod as any, filePath);
+				const commands = await runFilemod(mod as any, filePath);
+
+				for (const command of commands) {
+					messages.push(
+						await handleCommand(
+							outputDirectoryPath,
+							mod.caseTitle,
+							command,
+						),
+					);
+				}
 			} else {
 				throw new Error();
 			}
