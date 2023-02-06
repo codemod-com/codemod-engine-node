@@ -2,14 +2,7 @@ import { readFileSync } from 'node:fs';
 import { workerData } from 'node:worker_threads';
 import { codemods as nneCodemods } from '@nne/codemods';
 import { codemods as muiCodemods } from '@nne/mui-codemods';
-import {
-	CreateMessage,
-	DeleteMessage,
-	MessageKind,
-	MoveMessage,
-	ProgressMessage,
-	RewriteMessage,
-} from './messages';
+import { MessageKind, ProgressMessage } from './messages';
 import * as ts from 'typescript';
 import { NewGroup } from './groups';
 
@@ -107,25 +100,14 @@ export const executeWorkerThread = async () => {
 				throw new Error();
 			}
 
-			const messages: (
-				| CreateMessage
-				| RewriteMessage
-				| MoveMessage
-				| DeleteMessage
-			)[] = [];
-
 			for (const command of commands) {
-				messages.push(
-					await handleCommand(
-						outputDirectoryPath,
-						mod.caseTitle,
-						command,
-					),
+				const message = await handleCommand(
+					outputDirectoryPath,
+					mod.caseTitle,
+					command,
 				);
-			}
 
-			for (const message of messages) {
-				console.log(message);
+				console.log(JSON.stringify(message));
 			}
 		} catch (error) {
 			if (error instanceof Error) {
