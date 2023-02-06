@@ -45,6 +45,7 @@ export const executeWorkerThread = () => {
 	type Codemod = Readonly<{
 		caseTitle: string;
 		group: string | null;
+		// eslint-disable-next-line @typescript-eslint/ban-types
 		transformer: Function,
 		withParser: string;
 	}>
@@ -54,6 +55,7 @@ export const executeWorkerThread = () => {
 	if (codemodFilePath) {
 		try {
 			if((codemodFilePath as string).endsWith('.ts')) {
+				// eslint-disable-next-line @typescript-eslint/no-var-requires
 				const requireFromString = require('require-from-string');
 
 				const source = readFileSync(codemodFilePath, { encoding: 'utf8' });

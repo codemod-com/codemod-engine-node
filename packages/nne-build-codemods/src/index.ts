@@ -27,53 +27,67 @@ const fetchCodemods = async () => {
 	const setDirectoryPaths = await readdir(setsDirectoryPath);
 
 	for (const setDirectoryPath of setDirectoryPaths) {
-		const configJsonPath = join(setsDirectoryPath, setDirectoryPath, 'config.json');
+		const configJsonPath = join(
+			setsDirectoryPath,
+			setDirectoryPath,
+			'config.json',
+		);
 
 		const jsonConfig = await readFile(configJsonPath, { encoding: 'utf8' });
 		const setConfig = JSON.parse(jsonConfig);
 
 		for (const codemod of setConfig.codemods) {
-			const codemodDirectoryPath = join(dirname, '../../../codemod-registry/codemods/', codemod);
+			const codemodDirectoryPath = join(
+				dirname,
+				'../../../codemod-registry/codemods/',
+				codemod,
+			);
 
 			const codemodConfigPath = join(codemodDirectoryPath, 'config.json');
 
-			const jsonConfig = await readFile(codemodConfigPath, { encoding: 'utf8' });
+			const jsonConfig = await readFile(codemodConfigPath, {
+				encoding: 'utf8',
+			});
 			const config = JSON.parse(jsonConfig);
 
-			const hash = createHash('ripemd160').update(config.name).digest('hex');
+			if (config.engine === 'jscodeshift') {
+				const hash = createHash('ripemd160')
+					.update(config.name)
+					.digest('hex');
 
-			const codemodDirname = join(dirname, `./codemods/${hash}/`);
+				const codemodDirname = join(dirname, `./codemods/${hash}/`);
 
-			if (!existsSync(codemodDirname)) {
-				await mkdir(codemodDirname);
-			}
-
-			{
-				const tsPath = join(codemodDirectoryPath, 'index.ts');
-				const jsPath = join(codemodDirectoryPath, 'index.js');
-
-				const path = existsSync(tsPath) ? tsPath : jsPath;
-
-				const ext = extname(path);
-
-				const readStream = createReadStream(path);
-				const filePath = join(codemodDirname, `index${ext}`);
-	
-				if (!existsSync(filePath)) {
-					readStream.pipe(createWriteStream(filePath));
+				if (!existsSync(codemodDirname)) {
+					await mkdir(codemodDirname);
 				}
-			}
 
-			writeStream.write(
-				`import transformer${hash} from './codemods/${hash}';\n`,
-			);
-	
-			codemodObjects.push({
-				caseTitle: config.name,
-				group: setConfig.name,
-				transformer: `transformer${hash}`,
-				withParser: 'tsx',
-			});
+				{
+					const tsPath = join(codemodDirectoryPath, 'index.ts');
+					const jsPath = join(codemodDirectoryPath, 'index.js');
+
+					const path = existsSync(tsPath) ? tsPath : jsPath;
+
+					const ext = extname(path);
+
+					const readStream = createReadStream(path);
+					const filePath = join(codemodDirname, `index${ext}`);
+
+					if (!existsSync(filePath)) {
+						readStream.pipe(createWriteStream(filePath));
+					}
+				}
+
+				writeStream.write(
+					`import transformer${hash} from './codemods/${hash}';\n`,
+				);
+
+				codemodObjects.push({
+					caseTitle: config.name,
+					group: setConfig.name,
+					transformer: `transformer${hash}`,
+					withParser: 'tsx',
+				});
+			}
 		}
 	}
 

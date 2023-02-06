@@ -6,8 +6,9 @@ if (!isMainThread) {
 	executeWorkerThread();
 } else {
 	executeMainThread()
+		// eslint-disable-next-line @typescript-eslint/no-empty-function
 		.then(() => {})
-		.catch(error => {
-            console.error(error)
+		.catch((error) => {
+			console.error(error);
 		});
 }
