@@ -11,12 +11,18 @@ type CodemodObject =
 			transformer: string;
 			withParser: string;
 	  }>
-	| {
+	| Readonly<{
 			engine: 'filemod-engine';
 			group: string;
 			caseTitle: string;
 			transformer: string;
-	  };
+	  }>
+	| Readonly<{
+			engine: 'composite-mod-engine';
+			group: string;
+			caseTitle: string;
+			mods: ReadonlyArray<string>;
+	  }>;
 
 const dirname = join(__dirname, '../../nne-codemods/src/');
 
@@ -62,10 +68,13 @@ const fetchCodemods = async () => {
 				const hash = createHash('ripemd160')
 					.update(config.name)
 					.digest('hex');
+
 				const codemodDirname = join(dirname, `./codemods/${hash}/`);
+
 				if (!existsSync(codemodDirname)) {
 					await mkdir(codemodDirname);
 				}
+
 				{
 					const tsPath = join(codemodDirectoryPath, 'index.ts');
 					const jsPath = join(codemodDirectoryPath, 'index.js');
@@ -134,6 +143,15 @@ const fetchCodemods = async () => {
 					readStream.on('error', (error) => reject(error));
 				});
 			}
+
+			if (config.engine === 'composite-mod-engine') {
+				codemodObjects.push({
+					engine: 'composite-mod-engine',
+					caseTitle: config.name,
+					group: setConfig.name,
+					mods: config.mods,
+				});
+			}
 		}
 	}
 
@@ -149,6 +167,11 @@ const fetchCodemods = async () => {
 					: '') +
 				('withParser' in codemodObject
 					? `\t\t"withParser": "${codemodObject.withParser}",\n`
+					: '') +
+				('mods' in codemodObject
+					? `\t\t"mods": [${codemodObject.mods
+							.map((mod) => `"${mod}"`)
+							.join(', ')}],\n`
 					: '') +
 				'\t},\n'
 			);

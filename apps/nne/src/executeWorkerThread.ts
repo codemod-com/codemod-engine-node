@@ -5,11 +5,14 @@ import { codemods as muiCodemods } from '@nne/mui-codemods';
 import { MessageKind, ProgressMessage } from './messages';
 import * as ts from 'typescript';
 import { NewGroup } from './groups';
-
 import { Codemod, runCodemod } from './codemodRunner';
 import { Filemod, runFilemod } from './filemodRunner';
 import { handleCommand, ModCommand } from './modCommands';
 import { CompositeMod, runCompositeMod } from './compositeModRunner';
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export const filterNeitherNullNorUndefined = <T>(value: T): value is T & {} =>
+	value !== undefined && value !== null;
 
 export const executeWorkerThread = async () => {
 	const {
@@ -95,7 +98,19 @@ export const executeWorkerThread = async () => {
 			) {
 				commands = await runFilemod(mod as any, filePath);
 			} else if (mod.engine === 'composite-mod-engine') {
-				commands = await runCompositeMod(mod, filePath, oldSource);
+				const subMods = (mod.mods as unknown as string[])
+					.map((caseTitle) =>
+						mods.find((m) => caseTitle.endsWith(m.caseTitle)),
+					)
+					.filter(filterNeitherNullNorUndefined);
+
+				const newMod = { ...mod, mods: subMods };
+
+				commands = await runCompositeMod(
+					newMod as any,
+					filePath,
+					oldSource,
+				);
 			} else {
 				throw new Error();
 			}
