@@ -124,7 +124,7 @@ const fetchCodemods = async () => {
 						codemodObjects.push({
 							engine: 'filemod-engine',
 							caseTitle: config.name,
-							group: setConfig.name,
+							group: `"${setConfig.name}"`,
 							transformer: buffer,
 						});
 
@@ -149,9 +149,6 @@ const fetchCodemods = async () => {
 					: '') +
 				('withParser' in codemodObject
 					? `\t\t"withParser": "${codemodObject.withParser}",\n`
-					: '') +
-				('transformerPath' in codemodObject
-					? `\t\t"transformerPath": "${codemodObject.transformerPath}",\n`
 					: '') +
 				'\t},\n'
 			);

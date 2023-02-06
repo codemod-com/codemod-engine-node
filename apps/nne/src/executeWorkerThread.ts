@@ -46,7 +46,6 @@ export const executeWorkerThread = () => {
 		group: string | null;
 		// eslint-disable-next-line @typescript-eslint/ban-types
 		transformer?: Function;
-		transformerPath?: string;
 		withParser?: string;
 	}>;
 
