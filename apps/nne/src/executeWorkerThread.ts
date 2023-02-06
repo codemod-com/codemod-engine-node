@@ -10,6 +10,10 @@ import { Filemod, runFilemod } from './filemodRunner';
 import { handleCommand, ModCommand } from './modCommands';
 import { CompositeMod, runCompositeMod } from './compositeModRunner';
 
+// eslint-disable-next-line @typescript-eslint/ban-types
+export const filterNeitherNullNorUndefined = <T>(value: T): value is T & {} =>
+	value !== undefined && value !== null;
+
 export const executeWorkerThread = async () => {
 	const {
 		codemodFilePath,
@@ -63,7 +67,7 @@ export const executeWorkerThread = async () => {
 			console.error(error);
 		}
 	} else {
-		mods.push(...nneCodemods as any);
+		mods.push(...(nneCodemods as any));
 		mods.push(...muiCodemods);
 	}
 
@@ -94,9 +98,19 @@ export const executeWorkerThread = async () => {
 			) {
 				commands = await runFilemod(mod as any, filePath);
 			} else if (mod.engine === 'composite-mod-engine') {
-				
+				const subMods = (mod.mods as unknown as string[])
+					.map((caseTitle) =>
+						mods.find((m) => caseTitle.endsWith(m.caseTitle)),
+					)
+					.filter(filterNeitherNullNorUndefined);
 
-				commands = await runCompositeMod(mod, filePath, oldSource);
+				const newMod = { ...mod, mods: subMods };
+
+				commands = await runCompositeMod(
+					newMod as any,
+					filePath,
+					oldSource,
+				);
 			} else {
 				throw new Error();
 			}
