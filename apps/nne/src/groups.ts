@@ -14,6 +14,7 @@ export const newGroupCodec = t.union([
 	t.literal('immutable_4'),
 	t.literal('next_13'),
 	t.literal('next_13_composite'),
+	t.literal('react-redux_0'),
 	t.literal('react-router_4'),
 	t.literal('react-router_6'),
 	t.literal('redwoodjs_core_4'),
