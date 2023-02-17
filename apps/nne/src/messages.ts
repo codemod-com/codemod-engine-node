@@ -5,6 +5,7 @@ export const enum MessageKind {
 	delete = 7,
 	move = 8,
 	create = 9,
+	copy = 10,
 }
 
 export type RewriteMessage = Readonly<{
@@ -41,5 +42,12 @@ export type CreateMessage = Readonly<{
 	k: MessageKind.create;
 	newFilePath: string;
 	newContentPath: string;
+	modId: string;
+}>;
+
+export type CopyMessage = Readonly<{
+	k: MessageKind.copy;
+	oldFilePath: string;
+	newFilePath: string;
 	modId: string;
 }>;

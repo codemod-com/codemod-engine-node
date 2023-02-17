@@ -6,7 +6,7 @@
 		"@babel/core": "^7.20.2",
 		"@babel/preset-env": "^7.20.2",
 		"@babel/traverse": "7.20.5",
-		"@intuita-inc/filemod-engine": "1.1.0-rc.3",
+		"@intuita-inc/filemod-engine": "1.2.0",
 		"@nne/codemods": "workspace:*",
 		"@nne/mui-codemods": "workspace:*",
 		"ast-types": "^0.14.2",

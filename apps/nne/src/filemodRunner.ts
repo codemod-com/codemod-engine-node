@@ -51,6 +51,14 @@ export const runFilemod = async (
 				newPath: command.toPath,
 			});
 		}
+
+		if (command.kind === 'copy') {
+			modCommands.push({
+				kind: 'copyFile',
+				oldPath: command.fromPath,
+				newPath: command.toPath,
+			});
+		}
 	}
 
 	return modCommands;
