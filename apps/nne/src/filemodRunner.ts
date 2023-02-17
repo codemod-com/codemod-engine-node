@@ -53,8 +53,6 @@ export const runFilemod = async (
 		}
 
 		if (command.kind === 'copy') {
-			console.error('HERE', command);
-
 			modCommands.push({
 				kind: 'copyFile',
 				oldPath: command.fromPath,
