@@ -34,6 +34,18 @@ const handleModCommands = (
 			});
 		}
 
+		if (modCommand.kind === 'copyFile') {
+			files.push({
+				path: modCommand.newPath,
+				data:
+					files.find((file) => file.path === modCommand.oldPath)
+						?.data ?? '',
+				created: true,
+				deleted: false,
+				updated: false,
+			});
+		}
+
 		if (modCommand.kind === 'deleteFile') {
 			files = files.map((file) => {
 				return {
