@@ -120,7 +120,7 @@ export const handleMoveFileCommand = async (
 export const handleCopyFileCommand = async (
 	_: string,
 	modId: string,
-	command: MoveFileCommand,
+	command: CopyFileCommand,
 ): Promise<CopyMessage> => {
 	return {
 		k: MessageKind.copy,
@@ -156,6 +156,12 @@ export const handleCommand = async (
 			);
 		case 'updateFile':
 			return await handleUpdateFileCommand(
+				outputDirectoryPath,
+				modId,
+				command,
+			);
+		case 'copyFile':
+			return await handleCopyFileCommand(
 				outputDirectoryPath,
 				modId,
 				command,
