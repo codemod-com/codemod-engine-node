@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
+	CopyMessage,
 	CreateMessage,
 	DeleteMessage,
 	MessageKind,
@@ -32,11 +33,18 @@ export type MoveFileCommand = Readonly<{
 	newPath: string;
 }>;
 
+export type CopyFileCommand = Readonly<{
+	kind: 'copyFile';
+	oldPath: string;
+	newPath: string;
+}>;
+
 export type ModCommand =
 	| CreateFileCommand
 	| UpdateFileCommand
 	| DeleteFileCommand
-	| MoveFileCommand;
+	| MoveFileCommand
+	| CopyFileCommand;
 
 export const handleCreateFileCommand = async (
 	outputDirectoryPath: string,
@@ -85,7 +93,7 @@ export const handleUpdateFileCommand = async (
 };
 
 export const handleDeleteFileCommmand = async (
-	outputDirectoryPath: string,
+	_: string,
 	modId: string,
 	command: DeleteFileCommand,
 ): Promise<DeleteMessage> => {
@@ -97,12 +105,25 @@ export const handleDeleteFileCommmand = async (
 };
 
 export const handleMoveFileCommand = async (
-	outputDirectoryPath: string,
+	_: string,
 	modId: string,
 	command: MoveFileCommand,
 ): Promise<MoveMessage> => {
 	return {
 		k: MessageKind.move,
+		oldFilePath: command.oldPath,
+		newFilePath: command.newPath,
+		modId,
+	};
+};
+
+export const handleCopyFileCommand = async (
+	_: string,
+	modId: string,
+	command: MoveFileCommand,
+): Promise<CopyMessage> => {
+	return {
+		k: MessageKind.copy,
 		oldFilePath: command.oldPath,
 		newFilePath: command.newPath,
 		modId,
