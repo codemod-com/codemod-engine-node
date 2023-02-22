@@ -112,7 +112,7 @@ export const executeWorkerThread = async () => {
 					oldSource,
 				);
 			} else {
-				throw new Error();
+				throw new Error(`Unrecognized mod ${mod}`);
 			}
 
 			for (const command of commands) {
