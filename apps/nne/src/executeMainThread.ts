@@ -127,27 +127,36 @@ export const executeMainThread = async () => {
 
 	const workers: Worker[] = [];
 
-	const idleWorkerIds = Array.from({ length: WORKER_COUNT }, (v, i) => i);
+	const idleWorkerIds = Array.from({ length: WORKER_COUNT }, (_, i) => i);
 
-	const work = () => {
-		console.error('A', filePaths.length, idleWorkerIds);
+	let finished = false;
+
+	const finish = async (): Promise<never> => {
+		for (const worker of workers) {
+			await worker.terminate();
+		}
+
+		// the client should not rely on the finish message
+		const finishMessage: FinishMessage = {
+			k: MessageKind.finish,
+		};
+		console.log(JSON.stringify(finishMessage));
+		process.exit(0);
+	};
+
+	const work = (): void => {
+		if (finished) {
+			return;
+		}
 
 		const filePath = filePaths.pop();
 
-		if (filePath === undefined && idleWorkerIds.length === WORKER_COUNT) {
-			workers.forEach((worker) => {
-				worker.terminate();
-			});
+		if (filePath === undefined) {
+			if (idleWorkerIds.length === WORKER_COUNT) {
+				finished = true;
+				finish();
+			}
 
-			// the client should not rely on the finish message
-			const finishMessage: FinishMessage = {
-				k: MessageKind.finish,
-			};
-
-			console.log(JSON.stringify(finishMessage));
-
-			process.exit(0);
-		} else if (filePath === undefined) {
 			return;
 		}
 
