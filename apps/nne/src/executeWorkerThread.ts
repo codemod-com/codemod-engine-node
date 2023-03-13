@@ -33,13 +33,13 @@ export const executeWorkerThread = () => {
 
 		const mods: (Codemod | Filemod | CompositeMod)[] = [];
 
-		if (codemodFilePath._tag === 'Some') {
+		if (codemodFilePath != null) {
 			try {
-				if (codemodFilePath.value.endsWith('.ts')) {
+				if (codemodFilePath.endsWith('.ts')) {
 					// eslint-disable-next-line @typescript-eslint/no-var-requires
 					const requireFromString = require('require-from-string');
 
-					const source = readFileSync(codemodFilePath.value, {
+					const source = readFileSync(codemodFilePath, {
 						encoding: 'utf8',
 					});
 					const compiledCode = ts.transpileModule(source, {
@@ -52,7 +52,7 @@ export const executeWorkerThread = () => {
 
 					mods.push({
 						engine: 'jscodeshift',
-						caseTitle: codemodFilePath.value,
+						caseTitle: codemodFilePath,
 						group: null,
 						transformer,
 						withParser: 'tsx',
@@ -60,9 +60,9 @@ export const executeWorkerThread = () => {
 				} else {
 					mods.push({
 						engine: 'jscodeshift',
-						caseTitle: codemodFilePath.value,
+						caseTitle: codemodFilePath,
 						group: null,
-						transformer: require(codemodFilePath.value),
+						transformer: require(codemodFilePath),
 						withParser: 'tsx',
 					});
 				}

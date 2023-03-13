@@ -1,5 +1,6 @@
 import * as readline from 'node:readline';
 import { Worker } from 'node:worker_threads';
+import { NewGroup } from './groups';
 import { FinishMessage, MessageKind, ProgressMessage } from './messages';
 import { decodeWorkerThreadMessage } from './workerThreadMessages';
 
@@ -23,7 +24,7 @@ export class WorkerThreadManager {
 		private readonly __workerCount: number,
 		private readonly __filePaths: string[],
 		private readonly __codemodFilePath: string | undefined,
-		private readonly __newGroups: ReadonlyArray<any>,
+		private readonly __newGroups: ReadonlyArray<NewGroup>,
 		private readonly __outputDirectoryPath: string | undefined,
 	) {
 		this.__interface.on('line', this.__lineHandler);

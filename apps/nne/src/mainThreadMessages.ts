@@ -6,7 +6,7 @@ const mainThreadMessageSchema = S.union(
 	}),
 	S.struct({
 		kind: S.literal('recipe'),
-		codemodFilePath: S.option(S.string),
+		codemodFilePath: S.union(S.string, S.null),
 		filePath: S.string,
 		newGroups: S.array(S.any),
 		outputDirectoryPath: S.string,
