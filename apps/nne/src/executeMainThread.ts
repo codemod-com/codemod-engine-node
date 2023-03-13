@@ -112,7 +112,7 @@ export const executeMainThread = async () => {
 
 	const interfase = readline.createInterface(process.stdin);
 
-	const lineHandler = async (line: string) => {
+	const lineHandler = (line: string) => {
 		if (line !== 'shutdown') {
 			return;
 		}

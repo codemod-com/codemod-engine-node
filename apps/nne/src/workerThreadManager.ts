@@ -1,9 +1,21 @@
+import * as readline from 'node:readline';
 import { Worker } from 'node:worker_threads';
+import { FinishMessage, MessageKind } from './messages';
 
 export class WorkerThreadManager {
 	private __finished = false;
 	private __idleWorkerIds: number[] = [];
 	private __workers: Worker[] = [];
+
+	private __interface = readline.createInterface(process.stdin);
+
+	private __lineHandler = (line: string): void => {
+		if (line !== 'shutdown') {
+			return;
+		}
+
+		process.exit(0);
+	};
 
 	public constructor(
 		private readonly __workerCount: number,
@@ -13,7 +25,7 @@ export class WorkerThreadManager {
 		private readonly __outputDirectoryPath: string,
 	) {}
 
-	public work() {
+	public work(): void {
 		if (this.__finished) {
 			return;
 		}
@@ -23,7 +35,8 @@ export class WorkerThreadManager {
 		if (filePath === undefined) {
 			if (this.__idleWorkerIds.length === this.__workerCount) {
 				this.__finished = true;
-				finish();
+
+				this.__finish();
 			}
 
 			return;
@@ -43,5 +56,18 @@ export class WorkerThreadManager {
 		});
 
 		this.work();
+	}
+
+	private __finish(): void {
+		for (const worker of this.__workers) {
+			worker.postMessage('exit');
+		}
+
+		this.__interface.off('line', this.__lineHandler);
+
+		const finishMessage: FinishMessage = {
+			k: MessageKind.finish,
+		};
+		console.log(JSON.stringify(finishMessage));
 	}
 }
