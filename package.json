@@ -21,9 +21,5 @@
 	"packageManager": "pnpm@7.17.0",
 	"scripts": {
 		"lint": "(eslint . --fix --ext ts && prettier --write .) || echo 0"
-	},
-	"dependencies": {
-		"@types/wtfnode": "^0.7.0",
-		"wtfnode": "^0.9.1"
 	}
 }

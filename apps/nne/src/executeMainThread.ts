@@ -1,4 +1,3 @@
-import wtf from 'wtfnode';
 import { Worker } from 'node:worker_threads';
 import fastGlob from 'fast-glob';
 import * as readline from 'node:readline';
@@ -143,10 +142,8 @@ export const executeMainThread = async () => {
 	const finish = async (): Promise<void> => {
 		for (const worker of workers) {
 			worker.postMessage('exit');
-			// 	await worker.terminate();
 		}
 
-		// the client should not rely on the finish message
 		const finishMessage: FinishMessage = {
 			k: MessageKind.finish,
 		};
@@ -189,7 +186,7 @@ export const executeMainThread = async () => {
 		work();
 	};
 
-	Array.from({ length: WORKER_COUNT }, (_, i) => {
+	for (let i = 0; i < WORKER_COUNT; ++i) {
 		const worker = new Worker(__filename);
 
 		const onMessage = (message: ThreadMessage) => {
@@ -214,7 +211,7 @@ export const executeMainThread = async () => {
 		worker.on('message', onMessage);
 
 		workers.push(worker);
-	});
+	}
 
 	work();
 };
