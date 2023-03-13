@@ -14,8 +14,12 @@ import { CompositeMod, runCompositeMod } from './compositeModRunner';
 export const filterNeitherNullNorUndefined = <T>(value: T): value is T & {} =>
 	value !== undefined && value !== null;
 
-export const executeWorkerThread = async () => {
-	parentPort?.on('message', async (message) => {
+export const executeWorkerThread = () => {
+	const messageHandler = async (message: any) => {
+		if (message === 'exit') {
+			parentPort?.off('message', messageHandler);
+		}
+
 		const { codemodFilePath, newGroups, filePath, outputDirectoryPath } =
 			message;
 
@@ -111,8 +115,6 @@ export const executeWorkerThread = async () => {
 				}
 
 				for (const command of commands) {
-					// TODO maybe some messages are just not buffered fast enough?
-
 					const message = await handleCommand(
 						outputDirectoryPath,
 						mod.caseTitle,
@@ -140,5 +142,7 @@ export const executeWorkerThread = async () => {
 		parentPort?.postMessage({
 			kind: ThreadMessageKind.idlessness,
 		} satisfies ThreadMessage);
-	});
+	};
+
+	parentPort?.on('message', messageHandler);
 };

@@ -1,3 +1,4 @@
+import wtf from 'wtfnode';
 import { Worker } from 'node:worker_threads';
 import fastGlob from 'fast-glob';
 import * as readline from 'node:readline';
@@ -51,7 +52,7 @@ const buildNewGroups = (
 	});
 };
 
-const WORKER_COUNT = 16;
+const WORKER_COUNT = 1;
 
 export const executeMainThread = async () => {
 	const {
@@ -111,13 +112,15 @@ export const executeMainThread = async () => {
 
 	const interfase = readline.createInterface(process.stdin);
 
-	interfase.on('line', async (line) => {
+	const lineHandler = async (line: string) => {
 		if (line !== 'shutdown') {
 			return;
 		}
 
 		process.exit(0);
-	});
+	};
+
+	interfase.on('line', lineHandler);
 
 	const filePaths = await fastGlob(pattern.slice());
 
@@ -137,9 +140,10 @@ export const executeMainThread = async () => {
 
 	let finished = false;
 
-	const finish = async (): Promise<never> => {
+	const finish = async (): Promise<void> => {
 		for (const worker of workers) {
-			await worker.terminate();
+			worker.postMessage('exit');
+			// 	await worker.terminate();
 		}
 
 		// the client should not rely on the finish message
@@ -147,7 +151,8 @@ export const executeMainThread = async () => {
 			k: MessageKind.finish,
 		};
 		console.log(JSON.stringify(finishMessage));
-		process.exit(0);
+
+		interfase.off('line', lineHandler);
 	};
 
 	const work = (): void => {
@@ -207,8 +212,6 @@ export const executeMainThread = async () => {
 		};
 
 		worker.on('message', onMessage);
-		// worker.on('error', onEvent);
-		// worker.on('exit', onEvent);
 
 		workers.push(worker);
 	});
