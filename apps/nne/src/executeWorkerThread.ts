@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { parentPort } from 'node:worker_threads';
 import { codemods as nneCodemods } from '@nne/codemods';
 import { codemods as muiCodemods } from '@nne/mui-codemods';
-import { ThreadMessage, ThreadMessageKind } from './messages';
+import { WorkerMessage, WorkerMessageKind } from './messages';
 import * as ts from 'typescript';
 import { NewGroup } from './groups';
 import { Codemod, runCodemod } from './codemodRunner';
@@ -122,9 +122,9 @@ export const executeWorkerThread = () => {
 					);
 
 					parentPort?.postMessage({
-						kind: ThreadMessageKind.message,
+						kind: WorkerMessageKind.message,
 						message,
-					} satisfies ThreadMessage);
+					} satisfies WorkerMessage);
 				}
 			} catch (error) {
 				if (error instanceof Error) {
@@ -140,8 +140,8 @@ export const executeWorkerThread = () => {
 		}
 
 		parentPort?.postMessage({
-			kind: ThreadMessageKind.idlessness,
-		} satisfies ThreadMessage);
+			kind: WorkerMessageKind.idlessness,
+		} satisfies WorkerMessage);
 	};
 
 	parentPort?.on('message', messageHandler);

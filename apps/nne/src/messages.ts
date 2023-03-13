@@ -61,16 +61,16 @@ type Message =
 	| CreateMessage
 	| CopyMessage;
 
-export enum ThreadMessageKind {
+export enum WorkerMessageKind {
 	message,
 	idlessness,
 }
 
-export type ThreadMessage =
+export type WorkerMessage =
 	| Readonly<{
-			kind: ThreadMessageKind;
+			kind: WorkerMessageKind;
 			message: Message;
 	  }>
 	| Readonly<{
-			kind: ThreadMessageKind.idlessness;
+			kind: WorkerMessageKind.idlessness;
 	  }>;

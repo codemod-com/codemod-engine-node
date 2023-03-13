@@ -7,8 +7,8 @@ import {
 	FinishMessage,
 	MessageKind,
 	ProgressMessage,
-	ThreadMessage,
-	ThreadMessageKind,
+	WorkerMessage,
+	WorkerMessageKind,
 } from './messages';
 import { NewGroup, oldGroupCodec, newGroupCodec } from './groups';
 
@@ -144,12 +144,12 @@ export const executeMainThread = async () => {
 			worker.postMessage('exit');
 		}
 
+		interfase.off('line', lineHandler);
+
 		const finishMessage: FinishMessage = {
 			k: MessageKind.finish,
 		};
 		console.log(JSON.stringify(finishMessage));
-
-		interfase.off('line', lineHandler);
 	};
 
 	const work = (): void => {
@@ -186,29 +186,29 @@ export const executeMainThread = async () => {
 		work();
 	};
 
+	const buildOnWorkerMessage = (i: number) => (message: WorkerMessage) => {
+		if (message.kind === WorkerMessageKind.idlessness) {
+			const progressMessage: ProgressMessage = {
+				k: MessageKind.progress,
+				p: totalFileCount - filePaths.length,
+				t: totalFileCount,
+			};
+
+			console.log(JSON.stringify(progressMessage));
+
+			idleWorkerIds.push(i);
+			work();
+		}
+
+		if (message.kind === WorkerMessageKind.message) {
+			console.log(JSON.stringify(message.message));
+		}
+	};
+
 	for (let i = 0; i < WORKER_COUNT; ++i) {
 		const worker = new Worker(__filename);
 
-		const onMessage = (message: ThreadMessage) => {
-			if (message.kind === ThreadMessageKind.idlessness) {
-				const progressMessage: ProgressMessage = {
-					k: MessageKind.progress,
-					p: totalFileCount - filePaths.length,
-					t: totalFileCount,
-				};
-
-				console.log(JSON.stringify(progressMessage));
-
-				idleWorkerIds.push(i);
-				work();
-			}
-
-			if (message.kind === ThreadMessageKind.message) {
-				console.log(JSON.stringify(message.message));
-			}
-		};
-
-		worker.on('message', onMessage);
+		worker.on('message', buildOnWorkerMessage(i));
 
 		workers.push(worker);
 	}
