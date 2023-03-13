@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { parentPort } from 'node:worker_threads';
 import { codemods as nneCodemods } from '@nne/codemods';
 import { codemods as muiCodemods } from '@nne/mui-codemods';
-import { MessageKind, ProgressMessage } from './messages';
+import { ThreadMessage, ThreadMessageKind } from './messages';
 import * as ts from 'typescript';
 import { NewGroup } from './groups';
 import { Codemod, runCodemod } from './codemodRunner';
@@ -16,14 +16,8 @@ export const filterNeitherNullNorUndefined = <T>(value: T): value is T & {} =>
 
 export const executeWorkerThread = async () => {
 	parentPort?.on('message', async (message) => {
-		const {
-			codemodFilePath,
-			newGroups,
-			filePath,
-			outputDirectoryPath,
-			totalFileCount,
-			fileCount,
-		} = message;
+		const { codemodFilePath, newGroups, filePath, outputDirectoryPath } =
+			message;
 
 		newGroups satisfies ReadonlyArray<NewGroup>;
 
@@ -125,7 +119,10 @@ export const executeWorkerThread = async () => {
 						command,
 					);
 
-					console.log(JSON.stringify(message));
+					parentPort?.postMessage({
+						kind: ThreadMessageKind.message,
+						message,
+					} satisfies ThreadMessage);
 				}
 			} catch (error) {
 				if (error instanceof Error) {
@@ -140,14 +137,8 @@ export const executeWorkerThread = async () => {
 			}
 		}
 
-		const progressMessage: ProgressMessage = {
-			k: MessageKind.progress,
-			p: fileCount,
-			t: totalFileCount,
-		};
-
-		console.log(JSON.stringify(progressMessage));
-
-		parentPort?.postMessage('idle');
+		parentPort?.postMessage({
+			kind: ThreadMessageKind.idlessness,
+		} satisfies ThreadMessage);
 	});
 };

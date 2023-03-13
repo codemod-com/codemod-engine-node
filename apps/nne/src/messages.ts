@@ -51,3 +51,26 @@ export type CopyMessage = Readonly<{
 	newFilePath: string;
 	modId: string;
 }>;
+
+type Message =
+	| RewriteMessage
+	| FinishMessage
+	| ProgressMessage
+	| DeleteMessage
+	| MoveMessage
+	| CreateMessage
+	| CopyMessage;
+
+export enum ThreadMessageKind {
+	message,
+	idlessness,
+}
+
+export type ThreadMessage =
+	| Readonly<{
+			kind: ThreadMessageKind;
+			message: Message;
+	  }>
+	| Readonly<{
+			kind: ThreadMessageKind.idlessness;
+	  }>;

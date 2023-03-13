@@ -3,7 +3,13 @@ import fastGlob from 'fast-glob';
 import * as readline from 'node:readline';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { FinishMessage, MessageKind, ProgressMessage } from './messages';
+import {
+	FinishMessage,
+	MessageKind,
+	ProgressMessage,
+	ThreadMessage,
+	ThreadMessageKind,
+} from './messages';
 import { NewGroup, oldGroupCodec, newGroupCodec } from './groups';
 
 const buildNewGroups = (
@@ -181,10 +187,22 @@ export const executeMainThread = async () => {
 	Array.from({ length: WORKER_COUNT }, (_, i) => {
 		const worker = new Worker(__filename);
 
-		const onMessage = (message: unknown) => {
-			if (message === 'idle') {
+		const onMessage = (message: ThreadMessage) => {
+			if (message.kind === ThreadMessageKind.idlessness) {
+				const progressMessage: ProgressMessage = {
+					k: MessageKind.progress,
+					p: totalFileCount - filePaths.length,
+					t: totalFileCount,
+				};
+
+				console.log(JSON.stringify(progressMessage));
+
 				idleWorkerIds.push(i);
 				work();
+			}
+
+			if (message.kind === ThreadMessageKind.message) {
+				console.log(JSON.stringify(message.message));
 			}
 		};
 
