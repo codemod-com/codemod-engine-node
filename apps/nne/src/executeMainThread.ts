@@ -45,6 +45,8 @@ const buildNewGroups = (
 	});
 };
 
+const WORKER_COUNT = 16;
+
 export const executeMainThread = async () => {
 	const {
 		pattern,
@@ -112,7 +114,6 @@ export const executeMainThread = async () => {
 	});
 
 	const filePaths = await fastGlob(pattern.slice());
-	let fileCount = 0;
 
 	const totalFileCount = Math.min(limit ?? 0, filePaths.length);
 
@@ -124,46 +125,66 @@ export const executeMainThread = async () => {
 
 	console.log(JSON.stringify(progressMessage));
 
-	for (const filePath of filePaths) {
-		if ((limit ?? 0) > 0 && fileCount === limit) {
-			break;
-		}
+	const workers: Worker[] = [];
 
-		++fileCount;
+	const idleWorkerIds = Array.from({ length: WORKER_COUNT }, (v, i) => i);
 
-		await new Promise((resolve) => {
-			const worker = new Worker(__filename, {
-				workerData: {
-					codemodFilePath,
-					filePath,
-					newGroups,
-					outputDirectoryPath,
-					totalFileCount,
-					fileCount,
-				},
+	const work = () => {
+		console.error('A', filePaths.length, idleWorkerIds);
+
+		const filePath = filePaths.pop();
+
+		if (filePath === undefined && idleWorkerIds.length === WORKER_COUNT) {
+			workers.forEach((worker) => {
+				worker.terminate();
 			});
 
-			const timeout = setTimeout(async () => {
-				await worker.terminate();
-			}, 10000);
-
-			const onEvent = () => {
-				clearTimeout(timeout);
-				resolve(null);
+			// the client should not rely on the finish message
+			const finishMessage: FinishMessage = {
+				k: MessageKind.finish,
 			};
 
-			worker.on('message', onEvent);
-			worker.on('error', onEvent);
-			worker.on('exit', onEvent);
-		});
-	}
+			console.log(JSON.stringify(finishMessage));
 
-	// the client should not rely on the finish message
-	const finishMessage: FinishMessage = {
-		k: MessageKind.finish,
+			process.exit(0);
+		} else if (filePath === undefined) {
+			return;
+		}
+
+		const id = idleWorkerIds.pop();
+
+		if (id === undefined) {
+			return;
+		}
+
+		workers[id]?.postMessage({
+			codemodFilePath,
+			filePath,
+			newGroups,
+			outputDirectoryPath,
+			totalFileCount,
+			fileCount: filePaths.length,
+		});
+
+		work();
 	};
 
-	console.log(JSON.stringify(finishMessage));
+	Array.from({ length: WORKER_COUNT }, (_, i) => {
+		const worker = new Worker(__filename);
 
-	process.exit(0);
+		const onMessage = (message: unknown) => {
+			if (message === 'idle') {
+				idleWorkerIds.push(i);
+				work();
+			}
+		};
+
+		worker.on('message', onMessage);
+		// worker.on('error', onEvent);
+		// worker.on('exit', onEvent);
+
+		workers.push(worker);
+	});
+
+	work();
 };
