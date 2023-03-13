@@ -23,8 +23,8 @@ export class WorkerThreadManager {
 		private readonly __workerCount: number,
 		private readonly __filePaths: string[],
 		private readonly __codemodFilePath: string | undefined,
-		private readonly __newGroups: any[],
-		private readonly __outputDirectoryPath: string,
+		private readonly __newGroups: ReadonlyArray<any>,
+		private readonly __outputDirectoryPath: string | undefined,
 	) {
 		this.__interface.on('line', this.__lineHandler);
 

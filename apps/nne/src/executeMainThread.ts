@@ -1,12 +1,8 @@
-import { Worker } from 'node:worker_threads';
-import * as S from '@effect/schema';
 import fastGlob from 'fast-glob';
-import * as readline from 'node:readline';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { FinishMessage, MessageKind, ProgressMessage } from './messages';
 import { NewGroup, oldGroupCodec, newGroupCodec } from './groups';
-import { decodeWorkerThreadMessage } from './workerThreadMessages';
+import { WorkerThreadManager } from './workerThreadManager';
 
 const buildNewGroups = (
 	groups: ReadonlyArray<string> | null,
@@ -110,113 +106,18 @@ export const executeMainThread = async () => {
 
 	const newGroups = buildNewGroups(group ?? null);
 
-	// const interfase = readline.createInterface(process.stdin);
-
-	// const lineHandler = (line: string) => {
-	// 	if (line !== 'shutdown') {
-	// 		return;
-	// 	}
-
-	// 	process.exit(0);
-	// };
-
-	// interfase.on('line', lineHandler);
-
 	const filePaths = await fastGlob(pattern.slice());
 
-	const totalFileCount = Math.min(limit ?? 0, filePaths.length);
+	const newFilePaths = filePaths.slice(
+		0,
+		Math.min(limit ?? 0, filePaths.length),
+	);
 
-	// const progressMessage: ProgressMessage = {
-	// 	k: MessageKind.progress,
-	// 	p: 0,
-	// 	t: totalFileCount,
-	// };
-
-	// console.log(JSON.stringify(progressMessage));
-
-	// const workers: Worker[] = [];
-
-	// const WORKER_COUNT = workerThreadCount ?? 1;
-
-	// const idleWorkerIds = Array.from({ length: WORKER_COUNT }, (_, i) => i);
-
-	// let finished = false;
-
-	// const finish = async (): Promise<void> => {
-	// 	for (const worker of workers) {
-	// 		worker.postMessage('exit');
-	// 	}
-
-	// 	interfase.off('line', lineHandler);
-
-	// 	const finishMessage: FinishMessage = {
-	// 		k: MessageKind.finish,
-	// 	};
-	// 	console.log(JSON.stringify(finishMessage));
-	// };
-
-	// const work = (): void => {
-	// 	if (finished) {
-	// 		return;
-	// 	}
-
-	// 	const filePath = filePaths.pop();
-
-	// 	if (filePath === undefined) {
-	// 		if (idleWorkerIds.length === WORKER_COUNT) {
-	// 			finished = true;
-	// 			finish();
-	// 		}
-
-	// 		return;
-	// 	}
-
-	// 	const id = idleWorkerIds.pop();
-
-	// 	if (id === undefined) {
-	// 		return;
-	// 	}
-
-	// 	workers[id]?.postMessage({
-	// 		codemodFilePath,
-	// 		filePath,
-	// 		newGroups,
-	// 		outputDirectoryPath,
-	// 	});
-
-	// 	work();
-	// };
-
-	// const buildOnWorkerMessage =
-	// 	(i: number) =>
-	// 	(m: unknown): void => {
-	// 		const workerThreadMessage = decodeWorkerThreadMessage(m);
-
-	// 		if (workerThreadMessage.kind === 'idleness') {
-	// 			const progressMessage: ProgressMessage = {
-	// 				k: MessageKind.progress,
-	// 				p: totalFileCount - filePaths.length,
-	// 				t: totalFileCount,
-	// 			};
-
-	// 			console.log(JSON.stringify(progressMessage));
-
-	// 			idleWorkerIds.push(i);
-	// 			work();
-	// 		}
-
-	// 		if (workerThreadMessage.kind === 'message') {
-	// 			console.log(JSON.stringify(workerThreadMessage.message));
-	// 		}
-	// 	};
-
-	// for (let i = 0; i < WORKER_COUNT; ++i) {
-	// 	const worker = new Worker(__filename);
-
-	// 	worker.on('message', buildOnWorkerMessage(i));
-
-	// 	workers.push(worker);
-	// }
-
-	// work();
+	new WorkerThreadManager(
+		workerThreadCount ?? 1,
+		newFilePaths,
+		codemodFilePath,
+		newGroups,
+		outputDirectoryPath,
+	);
 };
