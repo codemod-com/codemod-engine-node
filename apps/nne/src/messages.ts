@@ -60,17 +60,3 @@ type Message =
 	| MoveMessage
 	| CreateMessage
 	| CopyMessage;
-
-// export enum WorkerMessageKind {
-// 	message,
-// 	idlessness,
-// }
-
-// export type WorkerMessage =
-// 	| Readonly<{
-// 			kind: WorkerMessageKind;
-// 			message: Message;
-// 	  }>
-// 	| Readonly<{
-// 			kind: WorkerMessageKind.idlessness;
-// 	  }>;

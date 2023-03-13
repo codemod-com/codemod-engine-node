@@ -9,14 +9,17 @@ import { Filemod, runFilemod } from './filemodRunner';
 import { handleCommand, ModCommand } from './modCommands';
 import { CompositeMod, runCompositeMod } from './compositeModRunner';
 import { WorkerThreadMessage } from './workerThreadMessages';
+import { decodeMainThreadMessage } from './mainThreadMessages';
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export const filterNeitherNullNorUndefined = <T>(value: T): value is T & {} =>
 	value !== undefined && value !== null;
 
 export const executeWorkerThread = () => {
-	const messageHandler = async (message: any) => {
-		if (message === 'exit') {
+	const messageHandler = async (m: unknown) => {
+		const message = decodeMainThreadMessage(m);
+
+		if (message.kind === 'exit') {
 			parentPort?.off('message', messageHandler);
 			return;
 		}
@@ -30,13 +33,13 @@ export const executeWorkerThread = () => {
 
 		const mods: (Codemod | Filemod | CompositeMod)[] = [];
 
-		if (codemodFilePath) {
+		if (codemodFilePath._tag === 'Some') {
 			try {
-				if ((codemodFilePath as string).endsWith('.ts')) {
+				if (codemodFilePath.value.endsWith('.ts')) {
 					// eslint-disable-next-line @typescript-eslint/no-var-requires
 					const requireFromString = require('require-from-string');
 
-					const source = readFileSync(codemodFilePath, {
+					const source = readFileSync(codemodFilePath.value, {
 						encoding: 'utf8',
 					});
 					const compiledCode = ts.transpileModule(source, {
@@ -49,7 +52,7 @@ export const executeWorkerThread = () => {
 
 					mods.push({
 						engine: 'jscodeshift',
-						caseTitle: codemodFilePath,
+						caseTitle: codemodFilePath.value,
 						group: null,
 						transformer,
 						withParser: 'tsx',
@@ -57,9 +60,9 @@ export const executeWorkerThread = () => {
 				} else {
 					mods.push({
 						engine: 'jscodeshift',
-						caseTitle: codemodFilePath,
+						caseTitle: codemodFilePath.value,
 						group: null,
-						transformer: require(codemodFilePath),
+						transformer: require(codemodFilePath.value),
 						withParser: 'tsx',
 					});
 				}
