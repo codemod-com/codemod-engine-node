@@ -51,3 +51,12 @@ export type CopyMessage = Readonly<{
 	newFilePath: string;
 	modId: string;
 }>;
+
+type Message =
+	| RewriteMessage
+	| FinishMessage
+	| ProgressMessage
+	| DeleteMessage
+	| MoveMessage
+	| CreateMessage
+	| CopyMessage;

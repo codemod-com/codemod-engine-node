@@ -3,8 +3,7 @@ import { executeMainThread } from './executeMainThread';
 import { executeWorkerThread } from './executeWorkerThread';
 
 if (!isMainThread) {
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	executeWorkerThread().then(() => {});
+	executeWorkerThread();
 } else {
 	executeMainThread()
 		// eslint-disable-next-line @typescript-eslint/no-empty-function

@@ -4,15 +4,15 @@
 	"description": "A codemod engine for Node.js libraries (e.g. jscodeshift, TSC utilities)",
 	"private": true,
 	"devDependencies": {
-		"typescript": "4.9.3",
-		"turbo": "latest",
+		"@types/node": "18.11.9",
 		"@typescript-eslint/eslint-plugin": "^5.44.0",
 		"@typescript-eslint/parser": "^5.44.0",
 		"eslint": "^8.28.0",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-plugin-prettier": "^4.2.1",
 		"prettier": "^2.8.0",
-		"@types/node": "18.11.9"
+		"turbo": "latest",
+		"typescript": "4.9.3"
 	},
 	"workspaces": [
 		"apps/*",

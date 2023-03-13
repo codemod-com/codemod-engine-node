@@ -1,10 +1,8 @@
-import { Worker } from 'node:worker_threads';
 import fastGlob from 'fast-glob';
-import * as readline from 'node:readline';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { FinishMessage, MessageKind, ProgressMessage } from './messages';
 import { NewGroup, oldGroupCodec, newGroupCodec } from './groups';
+import { WorkerThreadManager } from './workerThreadManager';
 
 const buildNewGroups = (
 	groups: ReadonlyArray<string> | null,
@@ -52,12 +50,14 @@ export const executeMainThread = async () => {
 		filePath: codemodFilePath,
 		outputDirectoryPath,
 		limit,
+		workerThreadCount,
 	} = await Promise.resolve<{
 		pattern: ReadonlyArray<string>;
 		group?: ReadonlyArray<string>;
 		filePath?: string;
-		outputDirectoryPath?: string;
+		outputDirectoryPath: string;
 		limit?: number;
+		workerThreadCount?: number;
 	}>(
 		yargs(hideBin(process.argv))
 			.option('pattern', {
@@ -91,8 +91,13 @@ export const executeMainThread = async () => {
 					'Pass the output directory path to save output files within in',
 				type: 'string',
 			})
+			.option('workerThreadCount', {
+				alias: 'w',
+				describe: 'Pass the number of worker threads to execute',
+				type: 'number',
+			})
 			.demandOption(
-				['pattern'],
+				['pattern', 'outputDirectoryPath'],
 				'Please provide the pattern argument to work with nora-node-engine',
 			)
 			.help()
@@ -101,69 +106,18 @@ export const executeMainThread = async () => {
 
 	const newGroups = buildNewGroups(group ?? null);
 
-	const interfase = readline.createInterface(process.stdin);
-
-	interfase.on('line', async (line) => {
-		if (line !== 'shutdown') {
-			return;
-		}
-
-		process.exit(0);
-	});
-
 	const filePaths = await fastGlob(pattern.slice());
-	let fileCount = 0;
 
-	const totalFileCount = Math.min(limit ?? 0, filePaths.length);
+	const newFilePaths = filePaths.slice(
+		0,
+		Math.min(limit ?? filePaths.length, filePaths.length),
+	);
 
-	const progressMessage: ProgressMessage = {
-		k: MessageKind.progress,
-		p: 0,
-		t: totalFileCount,
-	};
-
-	console.log(JSON.stringify(progressMessage));
-
-	for (const filePath of filePaths) {
-		if ((limit ?? 0) > 0 && fileCount === limit) {
-			break;
-		}
-
-		++fileCount;
-
-		await new Promise((resolve) => {
-			const worker = new Worker(__filename, {
-				workerData: {
-					codemodFilePath,
-					filePath,
-					newGroups,
-					outputDirectoryPath,
-					totalFileCount,
-					fileCount,
-				},
-			});
-
-			const timeout = setTimeout(async () => {
-				await worker.terminate();
-			}, 10000);
-
-			const onEvent = () => {
-				clearTimeout(timeout);
-				resolve(null);
-			};
-
-			worker.on('message', onEvent);
-			worker.on('error', onEvent);
-			worker.on('exit', onEvent);
-		});
-	}
-
-	// the client should not rely on the finish message
-	const finishMessage: FinishMessage = {
-		k: MessageKind.finish,
-	};
-
-	console.log(JSON.stringify(finishMessage));
-
-	process.exit(0);
+	new WorkerThreadManager(
+		workerThreadCount ?? 1,
+		newFilePaths,
+		codemodFilePath ?? null,
+		newGroups,
+		outputDirectoryPath,
+	);
 };
