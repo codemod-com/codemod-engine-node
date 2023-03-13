@@ -110,113 +110,113 @@ export const executeMainThread = async () => {
 
 	const newGroups = buildNewGroups(group ?? null);
 
-	const interfase = readline.createInterface(process.stdin);
+	// const interfase = readline.createInterface(process.stdin);
 
-	const lineHandler = (line: string) => {
-		if (line !== 'shutdown') {
-			return;
-		}
+	// const lineHandler = (line: string) => {
+	// 	if (line !== 'shutdown') {
+	// 		return;
+	// 	}
 
-		process.exit(0);
-	};
+	// 	process.exit(0);
+	// };
 
-	interfase.on('line', lineHandler);
+	// interfase.on('line', lineHandler);
 
 	const filePaths = await fastGlob(pattern.slice());
 
 	const totalFileCount = Math.min(limit ?? 0, filePaths.length);
 
-	const progressMessage: ProgressMessage = {
-		k: MessageKind.progress,
-		p: 0,
-		t: totalFileCount,
-	};
+	// const progressMessage: ProgressMessage = {
+	// 	k: MessageKind.progress,
+	// 	p: 0,
+	// 	t: totalFileCount,
+	// };
 
-	console.log(JSON.stringify(progressMessage));
+	// console.log(JSON.stringify(progressMessage));
 
-	const workers: Worker[] = [];
+	// const workers: Worker[] = [];
 
-	const WORKER_COUNT = workerThreadCount ?? 1;
+	// const WORKER_COUNT = workerThreadCount ?? 1;
 
-	const idleWorkerIds = Array.from({ length: WORKER_COUNT }, (_, i) => i);
+	// const idleWorkerIds = Array.from({ length: WORKER_COUNT }, (_, i) => i);
 
-	let finished = false;
+	// let finished = false;
 
-	const finish = async (): Promise<void> => {
-		for (const worker of workers) {
-			worker.postMessage('exit');
-		}
+	// const finish = async (): Promise<void> => {
+	// 	for (const worker of workers) {
+	// 		worker.postMessage('exit');
+	// 	}
 
-		interfase.off('line', lineHandler);
+	// 	interfase.off('line', lineHandler);
 
-		const finishMessage: FinishMessage = {
-			k: MessageKind.finish,
-		};
-		console.log(JSON.stringify(finishMessage));
-	};
+	// 	const finishMessage: FinishMessage = {
+	// 		k: MessageKind.finish,
+	// 	};
+	// 	console.log(JSON.stringify(finishMessage));
+	// };
 
-	const work = (): void => {
-		if (finished) {
-			return;
-		}
+	// const work = (): void => {
+	// 	if (finished) {
+	// 		return;
+	// 	}
 
-		const filePath = filePaths.pop();
+	// 	const filePath = filePaths.pop();
 
-		if (filePath === undefined) {
-			if (idleWorkerIds.length === WORKER_COUNT) {
-				finished = true;
-				finish();
-			}
+	// 	if (filePath === undefined) {
+	// 		if (idleWorkerIds.length === WORKER_COUNT) {
+	// 			finished = true;
+	// 			finish();
+	// 		}
 
-			return;
-		}
+	// 		return;
+	// 	}
 
-		const id = idleWorkerIds.pop();
+	// 	const id = idleWorkerIds.pop();
 
-		if (id === undefined) {
-			return;
-		}
+	// 	if (id === undefined) {
+	// 		return;
+	// 	}
 
-		workers[id]?.postMessage({
-			codemodFilePath,
-			filePath,
-			newGroups,
-			outputDirectoryPath,
-		});
+	// 	workers[id]?.postMessage({
+	// 		codemodFilePath,
+	// 		filePath,
+	// 		newGroups,
+	// 		outputDirectoryPath,
+	// 	});
 
-		work();
-	};
+	// 	work();
+	// };
 
-	const buildOnWorkerMessage =
-		(i: number) =>
-		(m: unknown): void => {
-			const workerThreadMessage = decodeWorkerThreadMessage(m);
+	// const buildOnWorkerMessage =
+	// 	(i: number) =>
+	// 	(m: unknown): void => {
+	// 		const workerThreadMessage = decodeWorkerThreadMessage(m);
 
-			if (workerThreadMessage.kind === 'idleness') {
-				const progressMessage: ProgressMessage = {
-					k: MessageKind.progress,
-					p: totalFileCount - filePaths.length,
-					t: totalFileCount,
-				};
+	// 		if (workerThreadMessage.kind === 'idleness') {
+	// 			const progressMessage: ProgressMessage = {
+	// 				k: MessageKind.progress,
+	// 				p: totalFileCount - filePaths.length,
+	// 				t: totalFileCount,
+	// 			};
 
-				console.log(JSON.stringify(progressMessage));
+	// 			console.log(JSON.stringify(progressMessage));
 
-				idleWorkerIds.push(i);
-				work();
-			}
+	// 			idleWorkerIds.push(i);
+	// 			work();
+	// 		}
 
-			if (workerThreadMessage.kind === 'message') {
-				console.log(JSON.stringify(workerThreadMessage.message));
-			}
-		};
+	// 		if (workerThreadMessage.kind === 'message') {
+	// 			console.log(JSON.stringify(workerThreadMessage.message));
+	// 		}
+	// 	};
 
-	for (let i = 0; i < WORKER_COUNT; ++i) {
-		const worker = new Worker(__filename);
+	// for (let i = 0; i < WORKER_COUNT; ++i) {
+	// 	const worker = new Worker(__filename);
 
-		worker.on('message', buildOnWorkerMessage(i));
+	// 	worker.on('message', buildOnWorkerMessage(i));
 
-		workers.push(worker);
-	}
+	// 	workers.push(worker);
+	// }
 
-	work();
+	// work();
 };

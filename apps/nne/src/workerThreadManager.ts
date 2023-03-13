@@ -1,11 +1,13 @@
 import * as readline from 'node:readline';
 import { Worker } from 'node:worker_threads';
-import { FinishMessage, MessageKind } from './messages';
+import { FinishMessage, MessageKind, ProgressMessage } from './messages';
+import { decodeWorkerThreadMessage } from './workerThreadMessages';
 
 export class WorkerThreadManager {
 	private __finished = false;
 	private __idleWorkerIds: number[] = [];
 	private __workers: Worker[] = [];
+	private __totalFileCount: number;
 
 	private __interface = readline.createInterface(process.stdin);
 
@@ -23,9 +25,33 @@ export class WorkerThreadManager {
 		private readonly __codemodFilePath: string | undefined,
 		private readonly __newGroups: any[],
 		private readonly __outputDirectoryPath: string,
-	) {}
+	) {
+		this.__interface.on('line', this.__lineHandler);
 
-	public work(): void {
+		this.__totalFileCount = __filePaths.length;
+
+		for (let i = 0; i < __workerCount; ++i) {
+			this.__idleWorkerIds.push(i);
+
+			const worker = new Worker(__filename);
+
+			worker.on('message', this.__buildOnWorkerMessage(i));
+
+			this.__workers.push(worker);
+		}
+
+		const progressMessage: ProgressMessage = {
+			k: MessageKind.progress,
+			p: 0,
+			t: this.__totalFileCount,
+		};
+
+		console.log(JSON.stringify(progressMessage));
+
+		this.__work();
+	}
+
+	private __work(): void {
 		if (this.__finished) {
 			return;
 		}
@@ -55,7 +81,7 @@ export class WorkerThreadManager {
 			outputDirectoryPath: this.__outputDirectoryPath,
 		});
 
-		this.work();
+		this.__work();
 	}
 
 	private __finish(): void {
@@ -69,5 +95,28 @@ export class WorkerThreadManager {
 			k: MessageKind.finish,
 		};
 		console.log(JSON.stringify(finishMessage));
+	}
+
+	private __buildOnWorkerMessage(i: number) {
+		return (m: unknown): void => {
+			const workerThreadMessage = decodeWorkerThreadMessage(m);
+
+			if (workerThreadMessage.kind === 'idleness') {
+				const progressMessage: ProgressMessage = {
+					k: MessageKind.progress,
+					p: this.__totalFileCount - this.__filePaths.length,
+					t: this.__totalFileCount,
+				};
+
+				console.log(JSON.stringify(progressMessage));
+
+				this.__idleWorkerIds.push(i);
+				this.__work();
+			}
+
+			if (workerThreadMessage.kind === 'message') {
+				console.log(JSON.stringify(workerThreadMessage.message));
+			}
+		};
 	}
 }
