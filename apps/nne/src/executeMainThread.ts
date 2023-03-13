@@ -55,7 +55,7 @@ export const executeMainThread = async () => {
 		pattern: ReadonlyArray<string>;
 		group?: ReadonlyArray<string>;
 		filePath?: string;
-		outputDirectoryPath?: string;
+		outputDirectoryPath: string;
 		limit?: number;
 		workerThreadCount?: number;
 	}>(
@@ -97,7 +97,7 @@ export const executeMainThread = async () => {
 				type: 'number',
 			})
 			.demandOption(
-				['pattern'],
+				['pattern', 'outputDirectoryPath'],
 				'Please provide the pattern argument to work with nora-node-engine',
 			)
 			.help()
@@ -116,7 +116,7 @@ export const executeMainThread = async () => {
 	new WorkerThreadManager(
 		workerThreadCount ?? 1,
 		newFilePaths,
-		codemodFilePath,
+		codemodFilePath ?? null,
 		newGroups,
 		outputDirectoryPath,
 	);

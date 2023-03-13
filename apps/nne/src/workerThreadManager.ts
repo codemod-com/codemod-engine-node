@@ -1,6 +1,7 @@
 import * as readline from 'node:readline';
 import { Worker } from 'node:worker_threads';
 import { NewGroup } from './groups';
+import { MainThreadMessage } from './mainThreadMessages';
 import { FinishMessage, MessageKind, ProgressMessage } from './messages';
 import { decodeWorkerThreadMessage } from './workerThreadMessages';
 
@@ -23,9 +24,9 @@ export class WorkerThreadManager {
 	public constructor(
 		private readonly __workerCount: number,
 		private readonly __filePaths: string[],
-		private readonly __codemodFilePath: string | undefined,
+		private readonly __codemodFilePath: string | null,
 		private readonly __newGroups: ReadonlyArray<NewGroup>,
-		private readonly __outputDirectoryPath: string | undefined,
+		private readonly __outputDirectoryPath: string,
 	) {
 		this.__interface.on('line', this.__lineHandler);
 
@@ -76,18 +77,19 @@ export class WorkerThreadManager {
 		}
 
 		this.__workers[id]?.postMessage({
+			kind: 'recipe',
 			codemodFilePath: this.__codemodFilePath,
 			filePath,
 			newGroups: this.__newGroups,
 			outputDirectoryPath: this.__outputDirectoryPath,
-		});
+		} satisfies MainThreadMessage);
 
 		this.__work();
 	}
 
 	private __finish(): void {
 		for (const worker of this.__workers) {
-			worker.postMessage('exit');
+			worker.postMessage({ kind: 'exit' } satisfies MainThreadMessage);
 		}
 
 		this.__interface.off('line', this.__lineHandler);
