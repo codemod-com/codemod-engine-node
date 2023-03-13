@@ -18,6 +18,7 @@ export const executeWorkerThread = () => {
 	const messageHandler = async (message: any) => {
 		if (message === 'exit') {
 			parentPort?.off('message', messageHandler);
+			return;
 		}
 
 		const { codemodFilePath, newGroups, filePath, outputDirectoryPath } =

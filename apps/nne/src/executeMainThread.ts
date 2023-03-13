@@ -1,16 +1,12 @@
 import { Worker } from 'node:worker_threads';
+import * as S from '@effect/schema';
 import fastGlob from 'fast-glob';
 import * as readline from 'node:readline';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import {
-	FinishMessage,
-	MessageKind,
-	ProgressMessage,
-	WorkerMessage,
-	WorkerMessageKind,
-} from './messages';
+import { FinishMessage, MessageKind, ProgressMessage } from './messages';
 import { NewGroup, oldGroupCodec, newGroupCodec } from './groups';
+import { decodeWorkerThreadMessage } from './workerThreadMessages';
 
 const buildNewGroups = (
 	groups: ReadonlyArray<string> | null,
@@ -184,24 +180,28 @@ export const executeMainThread = async () => {
 		work();
 	};
 
-	const buildOnWorkerMessage = (i: number) => (message: WorkerMessage) => {
-		if (message.kind === WorkerMessageKind.idlessness) {
-			const progressMessage: ProgressMessage = {
-				k: MessageKind.progress,
-				p: totalFileCount - filePaths.length,
-				t: totalFileCount,
-			};
+	const buildOnWorkerMessage =
+		(i: number) =>
+		(m: unknown): void => {
+			const workerThreadMessage = decodeWorkerThreadMessage(m);
 
-			console.log(JSON.stringify(progressMessage));
+			if (workerThreadMessage.kind === 'idleness') {
+				const progressMessage: ProgressMessage = {
+					k: MessageKind.progress,
+					p: totalFileCount - filePaths.length,
+					t: totalFileCount,
+				};
 
-			idleWorkerIds.push(i);
-			work();
-		}
+				console.log(JSON.stringify(progressMessage));
 
-		if (message.kind === WorkerMessageKind.message) {
-			console.log(JSON.stringify(message.message));
-		}
-	};
+				idleWorkerIds.push(i);
+				work();
+			}
+
+			if (workerThreadMessage.kind === 'message') {
+				console.log(JSON.stringify(workerThreadMessage.message));
+			}
+		};
 
 	for (let i = 0; i < WORKER_COUNT; ++i) {
 		const worker = new Worker(__filename);
