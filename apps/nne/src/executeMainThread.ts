@@ -47,8 +47,6 @@ const buildNewGroups = (
 	});
 };
 
-const WORKER_COUNT = 1;
-
 export const executeMainThread = async () => {
 	const {
 		pattern,
@@ -56,12 +54,14 @@ export const executeMainThread = async () => {
 		filePath: codemodFilePath,
 		outputDirectoryPath,
 		limit,
+		workerThreadCount,
 	} = await Promise.resolve<{
 		pattern: ReadonlyArray<string>;
 		group?: ReadonlyArray<string>;
 		filePath?: string;
 		outputDirectoryPath?: string;
 		limit?: number;
+		workerThreadCount?: number;
 	}>(
 		yargs(hideBin(process.argv))
 			.option('pattern', {
@@ -94,6 +94,11 @@ export const executeMainThread = async () => {
 				describe:
 					'Pass the output directory path to save output files within in',
 				type: 'string',
+			})
+			.option('workerThreadCount', {
+				alias: 'o',
+				describe: 'Pass the number of worker threads to execute',
+				type: 'number',
 			})
 			.demandOption(
 				['pattern'],
@@ -130,6 +135,8 @@ export const executeMainThread = async () => {
 	console.log(JSON.stringify(progressMessage));
 
 	const workers: Worker[] = [];
+
+	const WORKER_COUNT = workerThreadCount ?? 1;
 
 	const idleWorkerIds = Array.from({ length: WORKER_COUNT }, (_, i) => i);
 

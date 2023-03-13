@@ -2,13 +2,13 @@ import { readFileSync } from 'node:fs';
 import { parentPort } from 'node:worker_threads';
 import { codemods as nneCodemods } from '@nne/codemods';
 import { codemods as muiCodemods } from '@nne/mui-codemods';
-import { WorkerMessage, WorkerMessageKind } from './messages';
 import * as ts from 'typescript';
 import { NewGroup } from './groups';
 import { Codemod, runCodemod } from './codemodRunner';
 import { Filemod, runFilemod } from './filemodRunner';
 import { handleCommand, ModCommand } from './modCommands';
 import { CompositeMod, runCompositeMod } from './compositeModRunner';
+import { WorkerThreadMessage } from './workerThreadMessages';
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export const filterNeitherNullNorUndefined = <T>(value: T): value is T & {} =>
@@ -123,9 +123,9 @@ export const executeWorkerThread = () => {
 					);
 
 					parentPort?.postMessage({
-						kind: WorkerMessageKind.message,
+						kind: 'message',
 						message,
-					} satisfies WorkerMessage);
+					} satisfies WorkerThreadMessage);
 				}
 			} catch (error) {
 				if (error instanceof Error) {
@@ -141,8 +141,8 @@ export const executeWorkerThread = () => {
 		}
 
 		parentPort?.postMessage({
-			kind: WorkerMessageKind.idlessness,
-		} satisfies WorkerMessage);
+			kind: 'idleness',
+		} satisfies WorkerThreadMessage);
 	};
 
 	parentPort?.on('message', messageHandler);
