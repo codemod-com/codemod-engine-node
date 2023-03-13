@@ -179,8 +179,6 @@ export const executeMainThread = async () => {
 			filePath,
 			newGroups,
 			outputDirectoryPath,
-			totalFileCount,
-			fileCount: filePaths.length,
 		});
 
 		work();
