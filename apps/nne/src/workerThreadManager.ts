@@ -1,4 +1,5 @@
 import * as readline from 'node:readline';
+import { Interface } from 'node:readline';
 import { Worker } from 'node:worker_threads';
 import { NewGroup } from './groups';
 import { MainThreadMessage } from './mainThreadMessages';
@@ -10,16 +11,8 @@ export class WorkerThreadManager {
 	private __idleWorkerIds: number[] = [];
 	private __workers: Worker[] = [];
 	private __totalFileCount: number;
-
-	private __interface = readline.createInterface(process.stdin);
-
-	private __lineHandler = (line: string): void => {
-		if (line !== 'shutdown') {
-			return;
-		}
-
-		process.exit(0);
-	};
+	private readonly __interface: Interface;
+	private readonly __lineHandler: (line: string) => void;
 
 	public constructor(
 		private readonly __workerCount: number,
@@ -28,6 +21,14 @@ export class WorkerThreadManager {
 		private readonly __newGroups: ReadonlyArray<NewGroup>,
 		private readonly __outputDirectoryPath: string,
 	) {
+		this.__lineHandler = (line: string): void => {
+			if (line === 'shutdown') {
+				process.exit(0);
+			}
+		};
+
+		process.stdin.unref();
+		this.__interface = readline.createInterface(process.stdin);
 		this.__interface.on('line', this.__lineHandler);
 
 		this.__totalFileCount = __filePaths.length;
@@ -73,6 +74,8 @@ export class WorkerThreadManager {
 		const id = this.__idleWorkerIds.pop();
 
 		if (id === undefined) {
+			this.__filePaths.push(filePath);
+
 			return;
 		}
 

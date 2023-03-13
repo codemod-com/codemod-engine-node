@@ -92,7 +92,7 @@ export const executeMainThread = async () => {
 				type: 'string',
 			})
 			.option('workerThreadCount', {
-				alias: 'o',
+				alias: 'w',
 				describe: 'Pass the number of worker threads to execute',
 				type: 'number',
 			})
@@ -110,7 +110,7 @@ export const executeMainThread = async () => {
 
 	const newFilePaths = filePaths.slice(
 		0,
-		Math.min(limit ?? 0, filePaths.length),
+		Math.min(limit ?? filePaths.length, filePaths.length),
 	);
 
 	new WorkerThreadManager(
