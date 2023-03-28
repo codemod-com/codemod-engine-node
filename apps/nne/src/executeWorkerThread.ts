@@ -12,7 +12,7 @@ import { WorkerThreadMessage } from './workerThreadMessages';
 import { decodeMainThreadMessage } from './mainThreadMessages';
 
 type CodemodExecutionErrorType = 'unrecognizedCodemod' | 'errorRunningCodemod';
-class CodemodError extends Error {
+class CodemodExecutionError extends Error {
 	public readonly kind: CodemodExecutionErrorType;
 	constructor(message: string, kind?: CodemodExecutionErrorType) {
 		super(message);
@@ -124,7 +124,7 @@ export const executeWorkerThread = () => {
 						oldSource,
 					);
 				} else {
-					throw new CodemodError(
+					throw new CodemodExecutionError(
 						`Unrecognized mod`,
 						'unrecognizedCodemod',
 					);
@@ -143,7 +143,7 @@ export const executeWorkerThread = () => {
 					} satisfies WorkerThreadMessage);
 				}
 			} catch (error) {
-				if (error instanceof CodemodError) {
+				if (error instanceof CodemodExecutionError) {
 					console.error(
 						JSON.stringify({
 							message: error.message,
