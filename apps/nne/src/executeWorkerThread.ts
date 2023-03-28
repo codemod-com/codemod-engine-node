@@ -14,9 +14,9 @@ import { decodeMainThreadMessage } from './mainThreadMessages';
 type CodemodExecutionErrorType = 'unrecognizedCodemod' | 'errorRunningCodemod';
 class CodemodExecutionError extends Error {
 	public readonly kind: CodemodExecutionErrorType;
-	constructor(message: string, kind?: CodemodExecutionErrorType) {
+	constructor(message: string, kind: CodemodExecutionErrorType) {
 		super(message);
-		this.kind = kind ?? 'errorRunningCodemod';
+		this.kind = kind;
 	}
 }
 
@@ -143,21 +143,16 @@ export const executeWorkerThread = () => {
 					} satisfies WorkerThreadMessage);
 				}
 			} catch (error) {
-				if (error instanceof CodemodExecutionError) {
+				if (
+					error instanceof CodemodExecutionError ||
+					error instanceof Error
+				) {
 					console.error(
 						JSON.stringify({
 							message: error.message,
 							caseTitle: mod.caseTitle,
 							group: mod.group,
-							kind: error.kind,
-						}),
-					);
-				} else if (error instanceof Error) {
-					console.error(
-						JSON.stringify({
-							message: error.message,
-							caseTitle: mod.caseTitle,
-							group: mod.group,
+							...('kind' in error ? { kind: error.kind } : {}),
 						}),
 					);
 				}
