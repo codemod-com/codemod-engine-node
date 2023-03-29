@@ -11,6 +11,7 @@ importers:
       eslint-config-prettier: ^8.5.0
       eslint-plugin-prettier: ^4.2.1
       prettier: ^2.8.0
+      ts-node: ^10.9.1
       turbo: latest
       typescript: 4.9.3
     devDependencies:
@@ -21,6 +22,7 @@ importers:
       eslint-config-prettier: 8.5.0_eslint@8.28.0
       eslint-plugin-prettier: 4.2.1_cwlo2dingkvfydnaculr42urve
       prettier: 2.8.0
+      ts-node: 10.9.1_wup25etrarvlqkprac7h35hj7u
       turbo: 1.8.6
       typescript: 4.9.3
 

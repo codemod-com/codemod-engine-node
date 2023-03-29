@@ -22,7 +22,7 @@ import { ModCommand } from './modCommands';
 
 export const runRepomod = async (
 	repomod: Repomod<Dependencies>,
-	filePath: string,
+	inputPath: string,
 ): Promise<readonly ModCommand[]> => {
 	const fileSystemManager = new FileSystemManager(
 		fsPromises.readdir,
@@ -41,7 +41,7 @@ export const runRepomod = async (
 	const externalFileCommands = await executeRepomod(
 		api,
 		repomod,
-		filePath,
+		inputPath,
 		{},
 	);
 
