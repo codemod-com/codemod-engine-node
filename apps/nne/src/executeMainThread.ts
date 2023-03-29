@@ -5,6 +5,7 @@ import ts from 'typescript';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { NewGroup, oldGroupCodec, newGroupCodec } from './groups.js';
+import { handleCommand } from './modCommands.js';
 import { runRepomod } from './repomodRunner.js';
 import { WorkerThreadManager } from './workerThreadManager.js';
 
@@ -158,12 +159,25 @@ export const executeMainThread = async () => {
 		if (exports.__esModule && typeof exports.default === 'object') {
 			const repomod = exports.default as Repomod<{}>;
 
-			const x = await runRepomod(repomod, inputPath);
+			const commands = await runRepomod(repomod, inputPath);
 
-			console.log(x);
+			for (const command of commands) {
+				const message = await handleCommand(
+					outputDirectoryPath,
+					'repomod',
+					command,
+				);
+
+				console.log(JSON.stringify(message));
+
+				// parentPort?.postMessage({
+				// 	kind: 'message',
+				// 	message,
+				// } satisfies WorkerThreadMessage);
+			}
 		}
 
-		throw new Error('Could not compile the provided codemod');
+		return;
 	}
 
 	const newGroups = buildNewGroups(argv.group ?? null);
