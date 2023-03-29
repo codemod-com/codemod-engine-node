@@ -1,12 +1,9 @@
 import * as fs from 'fs';
 import * as fsPromises from 'fs/promises';
-import {
-	Repomod,
-	executeRepomod,
-} from '@intuita-inc/repomod-engine-api/dist/repomod';
-import { buildApi } from '@intuita-inc/repomod-engine-api/dist/api';
-import { UnifiedFileSystem } from '@intuita-inc/repomod-engine-api/dist/unifiedFileSystem';
-import { FileSystemManager } from '@intuita-inc/repomod-engine-api/dist/fileSystemManager';
+import { Repomod, executeRepomod } from '@intuita-inc/repomod-engine-api';
+import { buildApi } from '@intuita-inc/repomod-engine-api';
+import { UnifiedFileSystem } from '@intuita-inc/repomod-engine-api';
+import { FileSystemManager } from '@intuita-inc/repomod-engine-api';
 import jscodeshift from 'jscodeshift';
 import rehypeParse from 'rehype-parse';
 import { unified } from 'unified';
@@ -18,7 +15,7 @@ type Dependencies = Readonly<{
 	rehypeParse: typeof rehypeParse;
 	hastToBabelAst: typeof hastToBabelAst;
 }>;
-import { ModCommand } from './modCommands';
+import { ModCommand } from './modCommands.js';
 
 export const runRepomod = async (
 	repomod: Repomod<Dependencies>,

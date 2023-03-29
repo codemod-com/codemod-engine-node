@@ -1,5 +1,5 @@
 import jscodeshift, { API, FileInfo } from 'jscodeshift';
-import { ModCommand } from './modCommands';
+import { ModCommand } from './modCommands.js';
 
 export type Codemod = Readonly<{
 	engine: 'jscodeshift';

@@ -1,12 +1,12 @@
-import { Repomod } from '@intuita-inc/repomod-engine-api/dist/repomod';
+import { Repomod } from '@intuita-inc/repomod-engine-api';
 import fastGlob from 'fast-glob';
 import { readFileSync } from 'node:fs';
 import ts from 'typescript';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { NewGroup, oldGroupCodec, newGroupCodec } from './groups';
-import { runRepomod } from './repomodRunner';
-import { WorkerThreadManager } from './workerThreadManager';
+import { NewGroup, oldGroupCodec, newGroupCodec } from './groups.js';
+import { runRepomod } from './repomodRunner.js';
+import { WorkerThreadManager } from './workerThreadManager.js';
 
 const buildNewGroups = (
 	groups: ReadonlyArray<string> | null,
@@ -176,10 +176,10 @@ export const executeMainThread = async () => {
 	);
 
 	new WorkerThreadManager(
-		workerThreadCount ?? 1,
+		argv.workerThreadCount ?? 1,
 		newFilePaths,
-		codemodFilePath ?? null,
+		argv.filePath ?? null,
 		newGroups,
-		outputDirectoryPath,
+		argv.outputDirectoryPath,
 	);
 };

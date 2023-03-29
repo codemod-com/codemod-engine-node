@@ -1,6 +1,6 @@
-import { Codemod, runCodemod } from './codemodRunner';
-import { Filemod, runFilemod } from './filemodRunner';
-import { ModCommand } from './modCommands';
+import { Codemod, runCodemod } from './codemodRunner.js';
+import { Filemod, runFilemod } from './filemodRunner.js';
+import { ModCommand } from './modCommands.js';
 
 export type CompositeMod = Readonly<{
 	engine: 'composite-mod-engine';

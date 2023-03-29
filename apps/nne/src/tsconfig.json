@@ -3,7 +3,8 @@
 	"include": ["."],
 	"exclude": ["./dist", "./build", "./node_modules"],
 	"compilerOptions": {
-		"moduleResolution": "Node",
+		"module": "NodeNext",
+		"moduleResolution": "nodenext",
 		"allowJs": true,
 		"checkJs": false,
 		"strict": true,

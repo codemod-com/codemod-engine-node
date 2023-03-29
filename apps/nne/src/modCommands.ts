@@ -8,7 +8,7 @@ import {
 	MessageKind,
 	MoveMessage,
 	RewriteMessage,
-} from './messages';
+} from './messages.js';
 
 export type CreateFileCommand = Readonly<{
 	kind: 'createFile';
