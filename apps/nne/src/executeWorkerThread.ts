@@ -11,6 +11,15 @@ import { CompositeMod, runCompositeMod } from './compositeModRunner';
 import { WorkerThreadMessage } from './workerThreadMessages';
 import { decodeMainThreadMessage } from './mainThreadMessages';
 
+type CodemodExecutionErrorType = 'unrecognizedCodemod' | 'errorRunningCodemod';
+class CodemodExecutionError extends Error {
+	public readonly kind: CodemodExecutionErrorType;
+	constructor(message: string, kind: CodemodExecutionErrorType) {
+		super(message);
+		this.kind = kind;
+	}
+}
+
 // eslint-disable-next-line @typescript-eslint/ban-types
 export const filterNeitherNullNorUndefined = <T>(value: T): value is T & {} =>
 	value !== undefined && value !== null;
@@ -115,7 +124,10 @@ export const executeWorkerThread = () => {
 						oldSource,
 					);
 				} else {
-					throw new Error(`Unrecognized mod ${mod}`);
+					throw new CodemodExecutionError(
+						`Unrecognized mod`,
+						'unrecognizedCodemod',
+					);
 				}
 
 				for (const command of commands) {
@@ -131,12 +143,16 @@ export const executeWorkerThread = () => {
 					} satisfies WorkerThreadMessage);
 				}
 			} catch (error) {
-				if (error instanceof Error) {
+				if (
+					error instanceof CodemodExecutionError ||
+					error instanceof Error
+				) {
 					console.error(
 						JSON.stringify({
 							message: error.message,
 							caseTitle: mod.caseTitle,
 							group: mod.group,
+							...('kind' in error ? { kind: error.kind } : {}),
 						}),
 					);
 				}
