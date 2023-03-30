@@ -62,6 +62,10 @@ const repomod: Repomod<Dependencies> = {
 
 		const index_html_data = await api.readFile(path);
 
+		if (!index_html_data.includes('redwood-app')) {
+			return [];
+		}
+
 		return [
 			{
 				kind: 'deleteFile',
