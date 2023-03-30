@@ -157,6 +157,7 @@ export const executeMainThread = async () => {
 		new Function(keys.join(), outputText).apply(exports, values);
 
 		if (exports.__esModule && typeof exports.default === 'object') {
+			// eslint-disable-next-line @typescript-eslint/ban-types
 			const repomod = exports.default as Repomod<{}>;
 
 			const commands = await runRepomod(repomod, inputPath);

@@ -27,15 +27,13 @@
 	},
 	"main": "./src/index.ts",
 	"scripts": {
-		"build": "ncc build ./src/index.ts -m -o ./build-ncc",
+		"build": "esbuild ./src/index.ts --bundle --platform=node --outfile=dist/index.cjs",
 		"lint:eslint": "eslint src --fix --ext ts",
 		"lint:prettier": "prettier --write .",
-		"package": "pkg --compress GZip .",
+		"package": "pkg --compress GZip ./dist/index.cjs",
 		"test": "mocha"
 	},
-	"bin": "./build-ncc/index.js",
 	"pkg": {
-		"scripts": "./build-ncc/**/*.js",
 		"assets": "./assets/*.*",
 		"outputPath": "./build/"
 	},
@@ -46,6 +44,6 @@
 		"@types/jscodeshift": "^0.11.5",
 		"@types/node": "^18.11.9",
 		"@types/yargs": "^17.0.13",
-		"@vercel/ncc": "^0.34.0"
+		"esbuild": "^0.17.14"
 	}
 }
