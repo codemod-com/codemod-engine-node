@@ -4,6 +4,7 @@ import ts from 'typescript';
 import { FinishMessage, MessageKind } from './messages.js';
 import { handleCommand } from './modCommands.js';
 import { runRepomod } from './repomodRunner.js';
+import redwoodjsRepomod from './repomods/redwoodjs.js';
 
 type Exports =
 	| Readonly<{
@@ -19,12 +20,13 @@ type Arguments = Readonly<{
 	repomodFilePath: string;
 }>;
 
-export const handleRepomodCliCommand = async ({
-	repomodFilePath,
-	inputPath,
-	outputDirectoryPath,
-}: Arguments) => {
-	const source = readFileSync(repomodFilePath, {
+// eslint-disable-next-line @typescript-eslint/ban-types
+const getRepomod = (args: Arguments): Repomod<any> | null => {
+	if (args.repomodFilePath === 'redwoodjs_experimental') {
+		return redwoodjsRepomod;
+	}
+
+	const source = readFileSync(args.repomodFilePath, {
 		encoding: 'utf8',
 	});
 
@@ -44,27 +46,36 @@ export const handleRepomodCliCommand = async ({
 	new Function(keys.join(), outputText).apply(exports, values);
 
 	if (!exports.__esModule || typeof exports.default !== 'object') {
+		return null;
+	}
+
+	return exports.default as Repomod<any>;
+};
+
+const finishMessage: FinishMessage = {
+	k: MessageKind.finish,
+};
+
+export const handleRepomodCliCommand = async (args: Arguments) => {
+	const repomod = getRepomod(args);
+
+	if (repomod === null) {
+		console.log(JSON.stringify(finishMessage));
+
 		return;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/ban-types
-	const repomod = exports.default as Repomod<{}>;
-
-	const commands = await runRepomod(repomod, inputPath);
+	const commands = await runRepomod(repomod, args.inputPath);
 
 	for (const command of commands) {
 		const message = await handleCommand(
-			outputDirectoryPath,
-			'repomod',
+			args.outputDirectoryPath,
+			args.repomodFilePath,
 			command,
 		);
 
 		console.log(JSON.stringify(message));
 	}
-
-	const finishMessage: FinishMessage = {
-		k: MessageKind.finish,
-	};
 
 	console.log(JSON.stringify(finishMessage));
 };
