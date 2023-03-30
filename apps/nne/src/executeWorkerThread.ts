@@ -3,13 +3,13 @@ import { parentPort } from 'node:worker_threads';
 import { codemods as nneCodemods } from '@nne/codemods';
 import { codemods as muiCodemods } from '@nne/mui-codemods';
 import * as ts from 'typescript';
-import { NewGroup } from './groups';
-import { Codemod, runCodemod } from './codemodRunner';
-import { Filemod, runFilemod } from './filemodRunner';
-import { handleCommand, ModCommand } from './modCommands';
-import { CompositeMod, runCompositeMod } from './compositeModRunner';
-import { WorkerThreadMessage } from './workerThreadMessages';
-import { decodeMainThreadMessage } from './mainThreadMessages';
+import { NewGroup } from './groups.js';
+import { Codemod, runCodemod } from './codemodRunner.js';
+import { Filemod, runFilemod } from './filemodRunner.js';
+import { handleCommand, ModCommand } from './modCommands.js';
+import { CompositeMod, runCompositeMod } from './compositeModRunner.js';
+import { WorkerThreadMessage } from './workerThreadMessages.js';
+import { decodeMainThreadMessage } from './mainThreadMessages.js';
 
 type CodemodExecutionErrorType = 'unrecognizedCodemod' | 'errorRunningCodemod';
 class CodemodExecutionError extends Error {

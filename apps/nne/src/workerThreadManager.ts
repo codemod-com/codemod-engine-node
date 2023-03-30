@@ -1,10 +1,10 @@
 import * as readline from 'node:readline';
 import { Interface } from 'node:readline';
 import { Worker } from 'node:worker_threads';
-import { NewGroup } from './groups';
-import { MainThreadMessage } from './mainThreadMessages';
-import { FinishMessage, MessageKind, ProgressMessage } from './messages';
-import { decodeWorkerThreadMessage } from './workerThreadMessages';
+import { NewGroup } from './groups.js';
+import { MainThreadMessage } from './mainThreadMessages.js';
+import { FinishMessage, MessageKind, ProgressMessage } from './messages.js';
+import { decodeWorkerThreadMessage } from './workerThreadMessages.js';
 
 export class WorkerThreadManager {
 	private __finished = false;

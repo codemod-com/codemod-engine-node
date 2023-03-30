@@ -2,14 +2,17 @@
 	"name": "nne",
 	"version": "0.0.1",
 	"private": true,
+	"type": "module",
 	"dependencies": {
 		"@babel/core": "^7.20.2",
 		"@babel/preset-env": "^7.20.2",
 		"@babel/traverse": "7.20.5",
 		"@effect/schema": "0.0.5",
 		"@intuita-inc/filemod-engine": "1.2.0",
+		"@intuita-inc/repomod-engine-api": "link:/intuita/repomod-engine/packages/repomod-engine-api/",
 		"@nne/codemods": "workspace:*",
 		"@nne/mui-codemods": "workspace:*",
+		"@svgr/hast-util-to-babel-ast": "^7.0.0",
 		"ast-types": "^0.14.2",
 		"diff": "^5.1.0",
 		"fast-glob": "^3.2.12",
@@ -17,20 +20,21 @@
 		"io-ts": "^2.2.20",
 		"jscodeshift": "^0.14.0",
 		"jscodeshift-add-imports": "1.0.10",
+		"rehype-parse": "^8.0.4",
 		"require-from-string": "2.0.2",
+		"unified": "^10.1.2",
 		"yargs": "^17.6.2"
 	},
 	"main": "./src/index.ts",
+	"bin": "dist/index.cjs",
 	"scripts": {
-		"build": "ncc build ./src/index.ts -m -o ./build-ncc",
+		"build": "esbuild ./src/index.ts --bundle --platform=node --minify --outfile=dist/index.cjs",
 		"lint:eslint": "eslint src --fix --ext ts",
 		"lint:prettier": "prettier --write .",
 		"package": "pkg --compress GZip .",
 		"test": "mocha"
 	},
-	"bin": "./build-ncc/index.js",
 	"pkg": {
-		"scripts": "./build-ncc/**/*.js",
 		"assets": "./assets/*.*",
 		"outputPath": "./build/"
 	},
@@ -41,6 +45,6 @@
 		"@types/jscodeshift": "^0.11.5",
 		"@types/node": "^18.11.9",
 		"@types/yargs": "^17.0.13",
-		"@vercel/ncc": "^0.34.0"
+		"esbuild": "^0.17.14"
 	}
 }

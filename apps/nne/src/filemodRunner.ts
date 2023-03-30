@@ -3,7 +3,7 @@ import {
 	buildDeclarativeTransform,
 	buildFilePathTransformApi,
 } from '@intuita-inc/filemod-engine';
-import { ModCommand } from './modCommands';
+import { ModCommand } from './modCommands.js';
 
 export type Filemod = Readonly<{
 	engine: 'filemod-engine';
