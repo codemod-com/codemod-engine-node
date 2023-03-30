@@ -12,6 +12,37 @@ type Dependencies = Readonly<{
 	hastToBabelAst: typeof hastToBabelAst;
 }>;
 
+const entry_client_jsx_data = `
+/// <reference types="vite/client" />
+import { hydrateRoot, createRoot } from 'react-dom/client'
+
+import App from './App'
+import { Document } from './Document'
+import { ServerContextProvider } from './entry-server'
+/**
+ * When \`#redwood-app\` isn't empty then it's very likely that you're using
+ * prerendering. So React attaches event listeners to the existing markup
+ * rather than replacing it.
+ * https://reactjs.org/docs/react-dom-client.html#hydrateroot
+ */
+const redwoodAppElement = document.getElementById('redwood-app')
+
+if (redwoodAppElement.children?.length > 0) {
+  hydrateRoot(
+    document,
+    <ServerContextProvider value={window.__loadServerData?.()}>
+      <Document css={window.__assetMap?.().css}>
+        <App />
+      </Document>
+    </ServerContextProvider>
+  )
+} else {
+  console.log('Rendering from scratch 🇦🇼🇦🇼')
+  const root = createRoot(document)
+  root.render(<App />)
+}
+`;
+
 const repomod: Repomod<Dependencies> = {
 	includePatterns: ['**/*.index.html'],
 	excludePatterns: ['**/node_modules'],
@@ -24,6 +55,10 @@ const repomod: Repomod<Dependencies> = {
 
 		const dirname = api.getDirname(index_html_path);
 		const document_tsx_path = api.joinPaths(dirname, 'Document.tsx');
+		const entry_client_jsx_path = api.joinPaths(
+			dirname,
+			'entry-client.jsx',
+		);
 
 		const index_html_data = await api.readFile(path);
 
@@ -41,10 +76,26 @@ const repomod: Repomod<Dependencies> = {
 					index_html_data,
 				},
 			},
+			{
+				kind: 'upsertFile',
+				path: entry_client_jsx_path,
+				options: {
+					...options,
+					entry_client_jsx_data,
+				},
+			},
 		];
 	},
 	// this function might not be called at all
 	handleData: async (api, path, __, options) => {
+		if (path.endsWith('entry-client.jsx')) {
+			return Promise.resolve({
+				kind: 'upsertData',
+				path,
+				data: options['entry_client_jsx_data'] ?? '',
+			});
+		}
+
 		const dependencies = api.getDependencies();
 
 		const j = dependencies.jscodeshift;

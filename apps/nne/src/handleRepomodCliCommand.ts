@@ -22,7 +22,7 @@ type Arguments = Readonly<{
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 const getRepomod = (args: Arguments): Repomod<any> | null => {
-	if (args.repomodFilePath === 'redwoodjs') {
+	if (args.repomodFilePath === 'redwoodjs_experimental') {
 		return redwoodjsRepomod;
 	}
 
@@ -70,7 +70,7 @@ export const handleRepomodCliCommand = async (args: Arguments) => {
 	for (const command of commands) {
 		const message = await handleCommand(
 			args.outputDirectoryPath,
-			'repomod',
+			args.repomodFilePath,
 			command,
 		);
 
