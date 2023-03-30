@@ -1,12 +1,8 @@
-import { Repomod } from '@intuita-inc/repomod-engine-api';
 import fastGlob from 'fast-glob';
-import { readFileSync } from 'node:fs';
-import ts from 'typescript';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { NewGroup, oldGroupCodec, newGroupCodec } from './groups.js';
-import { handleCommand } from './modCommands.js';
-import { runRepomod } from './repomodRunner.js';
+import { handleRepomodCliCommand } from './handleRepomodCliCommand.js';
 import { WorkerThreadManager } from './workerThreadManager.js';
 
 const buildNewGroups = (
@@ -127,56 +123,7 @@ export const executeMainThread = async () => {
 	);
 
 	if (String(argv._) === 'repomod') {
-		const { repomodFilePath, inputPath, outputDirectoryPath } = argv;
-
-		const source = readFileSync(repomodFilePath, {
-			encoding: 'utf8',
-		});
-
-		const { outputText } = ts.transpileModule(source, {
-			compilerOptions: {
-				module: ts.ModuleKind.CommonJS,
-				noEmitOnError: false,
-			},
-		});
-
-		type Exports =
-			| {
-					__esModule?: true;
-					default?: unknown;
-			  }
-			// eslint-disable-next-line @typescript-eslint/ban-types
-			| Function;
-
-		const exports: Exports = {};
-		const module = { exports };
-
-		const keys = ['module', 'exports'];
-		const values = [module, exports];
-
-		new Function(keys.join(), outputText).apply(exports, values);
-
-		if (exports.__esModule && typeof exports.default === 'object') {
-			// eslint-disable-next-line @typescript-eslint/ban-types
-			const repomod = exports.default as Repomod<{}>;
-
-			const commands = await runRepomod(repomod, inputPath);
-
-			for (const command of commands) {
-				const message = await handleCommand(
-					outputDirectoryPath,
-					'repomod',
-					command,
-				);
-
-				console.log(JSON.stringify(message));
-
-				// parentPort?.postMessage({
-				// 	kind: 'message',
-				// 	message,
-				// } satisfies WorkerThreadMessage);
-			}
-		}
+		await handleRepomodCliCommand(argv);
 
 		return;
 	}
