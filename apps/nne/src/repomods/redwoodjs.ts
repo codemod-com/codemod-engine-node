@@ -16,9 +16,8 @@ const repomod: Repomod<Dependencies> = {
 	includePatterns: ['**/*.index.html'],
 	excludePatterns: ['**/node_modules'],
 	handleFile: async (api, path: string, options) => {
-		// we process only index.html files here (in this mod)
 		if (api.getBasename(path) !== 'index.html') {
-			return []; // no commands
+			return [];
 		}
 
 		const index_html_path = path;
@@ -26,20 +25,15 @@ const repomod: Repomod<Dependencies> = {
 		const dirname = api.getDirname(index_html_path);
 		const document_tsx_path = api.joinPaths(dirname, 'Document.tsx');
 
-		// this operation will call the file system and cache the file content
 		const index_html_data = await api.readFile(path);
 
 		return [
 			{
-				// here, we mark the index.html file for deletion
-				// if another function reads it, this would end up in an error
-				// the file will be really deleted only after the mod has finished
 				kind: 'deleteFile',
 				path: index_html_path,
 				options,
 			},
 			{
-				// let's handle the data
 				kind: 'upsertFile',
 				path: document_tsx_path,
 				options: {
@@ -58,17 +52,17 @@ const repomod: Repomod<Dependencies> = {
 		const index_html_data = options['index_html_data'] ?? '';
 
 		const root = j.withParser('tsx')(`
-			import React from 'react';
+import React from 'react';
 
-			interface DocumentProps {
-				children: React.ReactNode;
-				css: string[]; // array of css import strings
-				meta?: string[];
-			}
+interface DocumentProps {
+	children: React.ReactNode;
+	css: string[]; // array of css import strings
+	meta?: string[];
+}
 
-			export const Document = ({ children, css = [] }: DocumentProps) => {
-				return '#TODO replace with index.html contents';
-			}
+export const Document = ({ children, css = [] }: DocumentProps) => {
+	return '#TODO replace with index.html contents';
+}
 		`);
 
 		const hast = dependencies
@@ -157,8 +151,6 @@ const repomod: Repomod<Dependencies> = {
 
 			return j.returnStatement(firstExpression.expression);
 		});
-
-		console.log(root.toSource());
 
 		return Promise.resolve({
 			kind: 'upsertData',

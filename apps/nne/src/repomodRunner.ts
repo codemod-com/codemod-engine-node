@@ -42,18 +42,30 @@ export const runRepomod = async (
 		{},
 	);
 
-	return externalFileCommands.map((externalFileCommand): ModCommand => {
-		if (externalFileCommand.kind === 'upsertFile') {
-			return {
-				kind: 'updateFile',
-				oldPath: externalFileCommand.path,
-				newData: externalFileCommand.data,
-			};
-		}
+	return Promise.all(
+		externalFileCommands.map(async (externalFileCommand) => {
+			if (externalFileCommand.kind === 'upsertFile') {
+				try {
+					await fsPromises.stat(externalFileCommand.path);
 
-		return {
-			kind: 'deleteFile',
-			oldPath: externalFileCommand.path,
-		};
-	});
+					return {
+						kind: 'updateFile',
+						oldPath: externalFileCommand.path,
+						newData: externalFileCommand.data,
+					};
+				} catch (error) {
+					return {
+						kind: 'createFile',
+						newPath: externalFileCommand.path,
+						newData: externalFileCommand.data,
+					};
+				}
+			}
+
+			return {
+				kind: 'deleteFile',
+				oldPath: externalFileCommand.path,
+			};
+		}),
+	);
 };
