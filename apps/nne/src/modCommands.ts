@@ -49,6 +49,8 @@ export type ModCommand =
 	| MoveFileCommand
 	| CopyFileCommand;
 
+export type FormattedInternalCommand = ModCommand & { formatted: true };
+
 const formatText = async (path: string, data: string): Promise<string> => {
 	try {
 		const options = await resolveConfig(path);
@@ -72,9 +74,7 @@ export const handleCreateFileCommand = async (
 
 	const newDataPath = join(outputDirectoryPath, `${hash}.txt`);
 
-	const data = await formatText(newDataPath, command.newData);
-
-	await writeFile(newDataPath, data);
+	await writeFile(newDataPath, command.newData);
 
 	return {
 		k: MessageKind.create,
@@ -149,6 +149,40 @@ export const handleCopyFileCommand = async (
 		oldFilePath: command.oldPath,
 		newFilePath: command.newPath,
 		modId,
+	};
+};
+
+export const buildFormattedInternalCommand = async (
+	command: ModCommand,
+): Promise<FormattedInternalCommand | null> => {
+	if (command.kind === 'createFile') {
+		const newData = await formatText(command.newPath, command.newData);
+
+		return {
+			...command,
+			newData,
+			formatted: true,
+		};
+	}
+
+	if (command.kind === 'updateFile') {
+		const oldData = await formatText(command.oldPath, command.oldData);
+		const newData = await formatText(command.oldPath, command.newData);
+
+		if (oldData === newData) {
+			return null;
+		}
+
+		return {
+			...command,
+			newData,
+			formatted: true,
+		};
+	}
+
+	return {
+		...command,
+		formatted: true,
 	};
 };
 
