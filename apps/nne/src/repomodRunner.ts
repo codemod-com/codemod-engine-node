@@ -51,6 +51,7 @@ export const runRepomod = async (
 					return {
 						kind: 'updateFile',
 						oldPath: externalFileCommand.path,
+						oldData: '', // TODO update
 						newData: externalFileCommand.data,
 					};
 				} catch (error) {

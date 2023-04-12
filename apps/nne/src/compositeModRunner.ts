@@ -162,6 +162,7 @@ export const runCompositeMod = async (
 		if (file.updated) {
 			commands.push({
 				kind: 'updateFile',
+				oldData: '', // TODO handle that later
 				oldPath: file.path,
 				newData: file.data,
 			});

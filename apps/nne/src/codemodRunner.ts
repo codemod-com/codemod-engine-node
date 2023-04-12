@@ -57,6 +57,7 @@ export const runCodemod = async (
 		commands.push({
 			kind: 'updateFile',
 			oldPath: oldPath,
+			oldData: oldSource,
 			newData: newSource,
 		});
 	}

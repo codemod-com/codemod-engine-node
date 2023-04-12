@@ -1,3 +1,4 @@
+import { format, resolveConfig } from 'prettier';
 import { createHash } from 'node:crypto';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -19,6 +20,7 @@ export type CreateFileCommand = Readonly<{
 export type UpdateFileCommand = Readonly<{
 	kind: 'updateFile';
 	oldPath: string;
+	oldData: string;
 	newData: string;
 }>;
 
@@ -46,6 +48,16 @@ export type ModCommand =
 	| MoveFileCommand
 	| CopyFileCommand;
 
+const formatText = async (path: string, data: string): Promise<string> => {
+	try {
+		const options = await resolveConfig(path);
+
+		return format(data, options ?? undefined);
+	} catch (err) {
+		return data;
+	}
+};
+
 export const handleCreateFileCommand = async (
 	outputDirectoryPath: string,
 	modId: string,
@@ -59,7 +71,9 @@ export const handleCreateFileCommand = async (
 
 	const newDataPath = join(outputDirectoryPath, `${hash}.txt`);
 
-	await writeFile(newDataPath, command.newData);
+	const data = await formatText(newDataPath, command.newData);
+
+	await writeFile(newDataPath, data);
 
 	return {
 		k: MessageKind.create,
@@ -82,7 +96,9 @@ export const handleUpdateFileCommand = async (
 
 	const newDataPath = join(outputDirectoryPath, `${hash}.txt`);
 
-	await writeFile(newDataPath, command.newData);
+	const data = await formatText(newDataPath, command.newData);
+
+	await writeFile(newDataPath, data);
 
 	return {
 		k: MessageKind.rewrite,
