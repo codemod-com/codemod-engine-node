@@ -3,6 +3,7 @@ import { parentPort } from 'node:worker_threads';
 import { codemods as nneCodemods } from '@nne/codemods';
 import { codemods as muiCodemods } from '@nne/mui-codemods';
 import * as ts from 'typescript';
+import * as tsmorph from 'ts-morph';
 import { NewGroup } from './groups.js';
 import { Codemod, runCodemod } from './codemodRunner.js';
 import { Filemod, runFilemod } from './filemodRunner.js';
@@ -48,7 +49,64 @@ export const executeWorkerThread = () => {
 
 		if (codemodFilePath != null) {
 			try {
-				if (codemodFilePath.endsWith('.ts')) {
+				if (codemodFilePath.endsWith('.tsm.ts')) {
+					const source = readFileSync(codemodFilePath, {
+						encoding: 'utf8',
+					});
+					const compiledCode = ts.transpileModule(source, {
+						compilerOptions: { module: ts.ModuleKind.CommonJS },
+					});
+
+					type Exports =
+						| {
+								__esModule?: true;
+								default?: unknown;
+								handleSourceFile?: unknown;
+						  }
+						// eslint-disable-next-line @typescript-eslint/ban-types
+						| Function;
+
+					const exports: Exports = {};
+					const module = { exports };
+					const req = (name: string) => {
+						if (name === 'ts-morph') {
+							return tsmorph;
+						}
+					};
+
+					const keys = ['module', 'exports', 'require'];
+					const values = [module, exports, req];
+
+					// eslint-disable-next-line prefer-spread
+					new Function(...keys, compiledCode.outputText).apply(
+						null,
+						values,
+					);
+
+					const transformer =
+						typeof exports === 'function'
+							? exports
+							: exports.__esModule &&
+							  typeof exports.default === 'function'
+							? exports.default
+							: typeof exports.handleSourceFile === 'function'
+							? exports.handleSourceFile
+							: null;
+
+					if (transformer === null) {
+						throw new Error(
+							'Could not compile the provided codemod',
+						);
+					}
+
+					mods.push({
+						engine: 'tsmorph',
+						caseTitle: codemodFilePath,
+						group: null,
+						transformer,
+						withParser: 'tsx',
+					});
+				} else if (codemodFilePath.endsWith('.ts')) {
 					// eslint-disable-next-line @typescript-eslint/no-var-requires
 					const requireFromString = require('require-from-string');
 
@@ -96,7 +154,8 @@ export const executeWorkerThread = () => {
 
 			try {
 				if (
-					mod.engine === 'jscodeshift' &&
+					(mod.engine === 'jscodeshift' ||
+						mod.engine === 'tsmorph') &&
 					typeof mod.transformer === 'function' &&
 					mod.transformer &&
 					mod.withParser

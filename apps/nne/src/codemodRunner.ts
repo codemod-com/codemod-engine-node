@@ -1,8 +1,9 @@
 import jscodeshift, { API, FileInfo } from 'jscodeshift';
+import { Project } from 'ts-morph';
 import { ModCommand } from './modCommands.js';
 
 export type Codemod = Readonly<{
-	engine: 'jscodeshift';
+	engine: 'jscodeshift' | 'tsmorph';
 	caseTitle: string;
 	group: string | null;
 	// eslint-disable-next-line @typescript-eslint/ban-types
@@ -40,18 +41,28 @@ export const runCodemod = async (
 		});
 	};
 
-	const fileInfo: FileInfo = {
-		path: oldPath,
-		source: oldSource,
-	};
+	let newSource: string | undefined = undefined;
 
-	const newSource = codemod.transformer(
-		fileInfo,
-		buildApi(codemod.withParser),
-		{
-			createFile,
-		},
-	);
+	if (codemod.engine === 'jscodeshift') {
+		const fileInfo: FileInfo = {
+			path: oldPath,
+			source: oldSource,
+		};
+
+		newSource = codemod.transformer(
+			fileInfo,
+			buildApi(codemod.withParser),
+			{
+				createFile,
+			},
+		);
+	} else {
+		const project = new Project({});
+
+		const sourceFile = project.createSourceFile('index.tsx', oldSource);
+
+		newSource = codemod.transformer(sourceFile);
+	}
 
 	if (newSource && oldSource !== newSource) {
 		commands.push({
