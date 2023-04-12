@@ -179,7 +179,27 @@ export const buildFormattedInternalCommand = async (
 	};
 };
 
-export const handleCommand = async (
+export const buildFormattedInternalCommands = async (
+	commands: readonly ModCommand[],
+): Promise<readonly FormattedInternalCommand[]> => {
+	const formattedInternalCommands: FormattedInternalCommand[] = [];
+
+	for (const command of commands) {
+		const formattedInternalCommand = await buildFormattedInternalCommand(
+			command,
+		);
+
+		if (formattedInternalCommand === null) {
+			continue;
+		}
+
+		formattedInternalCommands.push(formattedInternalCommand);
+	}
+
+	return formattedInternalCommands;
+};
+
+export const handleFormattedInternalCommand = async (
 	outputDirectoryPath: string,
 	modId: string,
 	command: FormattedInternalCommand,

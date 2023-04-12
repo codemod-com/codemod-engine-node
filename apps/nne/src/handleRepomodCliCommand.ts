@@ -2,7 +2,10 @@ import { Repomod } from '@intuita-inc/repomod-engine-api';
 import { readFileSync } from 'node:fs';
 import ts from 'typescript';
 import { FinishMessage, MessageKind } from './messages.js';
-import { handleCommand } from './modCommands.js';
+import {
+	buildFormattedInternalCommands,
+	handleFormattedInternalCommand,
+} from './modCommands.js';
 import { runRepomod } from './repomodRunner.js';
 import redwoodjsRepomod from './repomods/redwoodjs.js';
 
@@ -67,16 +70,18 @@ export const handleRepomodCliCommand = async (args: Arguments) => {
 
 	const commands = await runRepomod(repomod, args.inputPath);
 
-	for (const command of commands) {
-		const message = await handleCommand(
+	const formattedInternalCommands = await buildFormattedInternalCommands(
+		commands,
+	);
+
+	for (const formattedInternalCommand of formattedInternalCommands) {
+		const message = await handleFormattedInternalCommand(
 			args.outputDirectoryPath,
 			args.repomodFilePath,
-			command,
+			formattedInternalCommand,
 		);
 
-		if (message !== null) {
-			console.log(JSON.stringify(message));
-		}
+		console.log(JSON.stringify(message));
 	}
 
 	console.log(JSON.stringify(finishMessage));
