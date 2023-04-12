@@ -74,7 +74,9 @@ export const handleRepomodCliCommand = async (args: Arguments) => {
 			command,
 		);
 
-		console.log(JSON.stringify(message));
+		if (message !== null) {
+			console.log(JSON.stringify(message));
+		}
 	}
 
 	console.log(JSON.stringify(finishMessage));

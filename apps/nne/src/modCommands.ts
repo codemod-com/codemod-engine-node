@@ -6,6 +6,7 @@ import {
 	CopyMessage,
 	CreateMessage,
 	DeleteMessage,
+	Message,
 	MessageKind,
 	MoveMessage,
 	RewriteMessage,
@@ -87,7 +88,7 @@ export const handleUpdateFileCommand = async (
 	outputDirectoryPath: string,
 	modId: string,
 	command: UpdateFileCommand,
-): Promise<RewriteMessage> => {
+): Promise<RewriteMessage | null> => {
 	const hash = createHash('md5')
 		.update(command.kind)
 		.update(command.oldPath)
@@ -96,9 +97,14 @@ export const handleUpdateFileCommand = async (
 
 	const newDataPath = join(outputDirectoryPath, `${hash}.txt`);
 
-	const data = await formatText(newDataPath, command.newData);
+	const oldData = await formatText(command.oldPath, command.oldData);
+	const newData = await formatText(command.oldPath, command.newData);
 
-	await writeFile(newDataPath, data);
+	if (oldData === newData) {
+		return null;
+	}
+
+	await writeFile(newDataPath, newData);
 
 	return {
 		k: MessageKind.rewrite,
@@ -150,7 +156,7 @@ export const handleCommand = async (
 	outputDirectoryPath: string,
 	modId: string,
 	command: ModCommand,
-) => {
+): Promise<Message | null> => {
 	switch (command.kind) {
 		case 'createFile':
 			return await handleCreateFileCommand(
