@@ -25,7 +25,8 @@
 		"rehype-parse": "^8.0.4",
 		"require-from-string": "2.0.2",
 		"unified": "^10.1.2",
-		"yargs": "^17.6.2"
+		"yargs": "^17.6.2",
+		"ts-morph": "18.0.0"
 	},
 	"main": "./src/index.ts",
 	"bin": "dist/index.cjs",
