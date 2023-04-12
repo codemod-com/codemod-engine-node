@@ -6,7 +6,11 @@ import * as ts from 'typescript';
 import { NewGroup } from './groups.js';
 import { Codemod, runCodemod } from './codemodRunner.js';
 import { Filemod, runFilemod } from './filemodRunner.js';
-import { handleCommand, ModCommand } from './modCommands.js';
+import {
+	buildFormattedInternalCommands,
+	handleFormattedInternalCommand,
+	ModCommand,
+} from './modCommands.js';
 import { CompositeMod, runCompositeMod } from './compositeModRunner.js';
 import { WorkerThreadMessage } from './workerThreadMessages.js';
 import { decodeMainThreadMessage } from './mainThreadMessages.js';
@@ -130,11 +134,14 @@ export const executeWorkerThread = () => {
 					);
 				}
 
-				for (const command of commands) {
-					const message = await handleCommand(
+				const formattedInternalCommands =
+					await buildFormattedInternalCommands(commands);
+
+				for (const formattedInternalCommand of formattedInternalCommands) {
+					const message = await handleFormattedInternalCommand(
 						outputDirectoryPath,
 						mod.caseTitle,
-						command,
+						formattedInternalCommand,
 					);
 
 					parentPort?.postMessage({

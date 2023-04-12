@@ -52,7 +52,7 @@ export type CopyMessage = Readonly<{
 	modId: string;
 }>;
 
-type Message =
+export type Message =
 	| RewriteMessage
 	| FinishMessage
 	| ProgressMessage

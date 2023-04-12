@@ -1,3 +1,4 @@
+import { format, resolveConfig } from 'prettier';
 import { createHash } from 'node:crypto';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -5,6 +6,7 @@ import {
 	CopyMessage,
 	CreateMessage,
 	DeleteMessage,
+	Message,
 	MessageKind,
 	MoveMessage,
 	RewriteMessage,
@@ -19,6 +21,7 @@ export type CreateFileCommand = Readonly<{
 export type UpdateFileCommand = Readonly<{
 	kind: 'updateFile';
 	oldPath: string;
+	oldData: string;
 	newData: string;
 }>;
 
@@ -45,6 +48,18 @@ export type ModCommand =
 	| DeleteFileCommand
 	| MoveFileCommand
 	| CopyFileCommand;
+
+export type FormattedInternalCommand = ModCommand & { formatted: true };
+
+const formatText = async (path: string, data: string): Promise<string> => {
+	try {
+		const options = await resolveConfig(path);
+
+		return format(data, options ?? undefined);
+	} catch (err) {
+		return data;
+	}
+};
 
 export const handleCreateFileCommand = async (
 	outputDirectoryPath: string,
@@ -130,11 +145,65 @@ export const handleCopyFileCommand = async (
 	};
 };
 
-export const handleCommand = async (
+export const buildFormattedInternalCommand = async (
+	command: ModCommand,
+): Promise<FormattedInternalCommand | null> => {
+	if (command.kind === 'createFile') {
+		const newData = await formatText(command.newPath, command.newData);
+
+		return {
+			...command,
+			newData,
+			formatted: true,
+		};
+	}
+
+	if (command.kind === 'updateFile') {
+		const oldData = await formatText(command.oldPath, command.oldData);
+		const newData = await formatText(command.oldPath, command.newData);
+
+		if (oldData === newData) {
+			return null;
+		}
+
+		return {
+			...command,
+			newData,
+			formatted: true,
+		};
+	}
+
+	return {
+		...command,
+		formatted: true,
+	};
+};
+
+export const buildFormattedInternalCommands = async (
+	commands: readonly ModCommand[],
+): Promise<readonly FormattedInternalCommand[]> => {
+	const formattedInternalCommands: FormattedInternalCommand[] = [];
+
+	for (const command of commands) {
+		const formattedInternalCommand = await buildFormattedInternalCommand(
+			command,
+		);
+
+		if (formattedInternalCommand === null) {
+			continue;
+		}
+
+		formattedInternalCommands.push(formattedInternalCommand);
+	}
+
+	return formattedInternalCommands;
+};
+
+export const handleFormattedInternalCommand = async (
 	outputDirectoryPath: string,
 	modId: string,
-	command: ModCommand,
-) => {
+	command: FormattedInternalCommand,
+): Promise<Message> => {
 	switch (command.kind) {
 		case 'createFile':
 			return await handleCreateFileCommand(

@@ -51,6 +51,7 @@ export const runRepomod = async (
 					return {
 						kind: 'updateFile',
 						oldPath: externalFileCommand.path,
+						oldData: '', // TODO get the old data from the repomod
 						newData: externalFileCommand.data,
 					};
 				} catch (error) {

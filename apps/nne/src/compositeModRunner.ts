@@ -11,7 +11,8 @@ export type CompositeMod = Readonly<{
 
 type File = {
 	path: string;
-	data: string;
+	oldData: string;
+	newData: string;
 	created: boolean;
 	deleted: boolean;
 	updated: boolean;
@@ -27,7 +28,8 @@ const handleModCommands = (
 		if (modCommand.kind === 'createFile') {
 			files.push({
 				path: modCommand.newPath,
-				data: modCommand.newData,
+				oldData: '',
+				newData: modCommand.newData,
 				created: true,
 				deleted: false,
 				updated: false,
@@ -35,11 +37,14 @@ const handleModCommands = (
 		}
 
 		if (modCommand.kind === 'copyFile') {
+			const newData =
+				files.find((file) => file.path === modCommand.oldPath)
+					?.newData ?? '';
+
 			files.push({
 				path: modCommand.newPath,
-				data:
-					files.find((file) => file.path === modCommand.oldPath)
-						?.data ?? '',
+				oldData: '',
+				newData,
 				created: true,
 				deleted: false,
 				updated: false,
@@ -60,8 +65,8 @@ const handleModCommands = (
 
 		if (modCommand.kind === 'moveFile') {
 			const oldData =
-				files.find((file) => file.path === modCommand.oldPath)?.data ??
-				'';
+				files.find((file) => file.path === modCommand.oldPath)
+					?.oldData ?? '';
 
 			files = files.map((file) => {
 				return {
@@ -75,7 +80,8 @@ const handleModCommands = (
 
 			files.push({
 				path: modCommand.newPath,
-				data: oldData,
+				oldData,
+				newData: oldData,
 				created: true,
 				deleted: false,
 				updated: false,
@@ -84,14 +90,22 @@ const handleModCommands = (
 
 		if (modCommand.kind === 'updateFile') {
 			files = files.map((file) => {
+				const oldData =
+					file.path === modCommand.oldPath
+						? modCommand.oldData
+						: file.oldData;
+
+				const newData =
+					file.path === modCommand.newData
+						? modCommand.newData
+						: file.newData;
+
 				return {
 					path: file.path,
 					created: file.created,
 					deleted: false,
-					data:
-						file.path === modCommand.oldPath
-							? modCommand.newData
-							: file.data,
+					oldData,
+					newData,
 					updated:
 						file.path === modCommand.oldPath ? true : file.updated,
 				};
@@ -110,7 +124,8 @@ export const runCompositeMod = async (
 	let files: File[] = [
 		{
 			path,
-			data,
+			oldData: data,
+			newData: data,
 			created: false,
 			deleted: false,
 			updated: false,
@@ -140,7 +155,11 @@ export const runCompositeMod = async (
 					continue;
 				}
 
-				const modCommand = await runCodemod(file.path, file.data, mod);
+				const modCommand = await runCodemod(
+					file.path,
+					file.newData,
+					mod,
+				);
 
 				files = handleModCommands(files, modCommand).slice();
 			}
@@ -162,8 +181,9 @@ export const runCompositeMod = async (
 		if (file.updated) {
 			commands.push({
 				kind: 'updateFile',
+				oldData: '',
 				oldPath: file.path,
-				newData: file.data,
+				newData: file.newData,
 			});
 
 			continue;
@@ -173,7 +193,7 @@ export const runCompositeMod = async (
 			commands.push({
 				kind: 'createFile',
 				newPath: file.path,
-				newData: file.data,
+				newData: file.newData,
 			});
 		}
 	}
