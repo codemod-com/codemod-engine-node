@@ -1,15 +1,24 @@
 import jscodeshift, { API, FileInfo } from 'jscodeshift';
-import { Project } from 'ts-morph';
+import { EmitHint, Project } from 'ts-morph';
 import { ModCommand } from './modCommands.js';
 
-export type Codemod = Readonly<{
-	engine: 'jscodeshift' | 'tsmorph';
-	caseTitle: string;
-	group: string | null;
-	// eslint-disable-next-line @typescript-eslint/ban-types
-	transformer: Function;
-	withParser: string;
-}>;
+export type Codemod =
+	| Readonly<{
+			engine: 'jscodeshift';
+			caseTitle: string;
+			group: string | null;
+			// eslint-disable-next-line @typescript-eslint/ban-types
+			transformer: Function;
+			withParser: string;
+	  }>
+	| Readonly<{
+			engine: 'tsmorph';
+			caseTitle: string;
+			group: string | null;
+			// eslint-disable-next-line @typescript-eslint/ban-types
+			transformer: Function;
+			withParser: string;
+	  }>;
 
 const buildApi = (parser: string): API => ({
 	j: jscodeshift.withParser(parser),
@@ -26,11 +35,11 @@ const buildApi = (parser: string): API => ({
 	},
 });
 
-export const runCodemod = async (
+export const runJscodeshiftCodemod = (
+	codemod: Codemod & { engine: 'jscodeshift' },
 	oldPath: string,
 	oldSource: string,
-	codemod: Codemod,
-): Promise<ModCommand[]> => {
+): readonly ModCommand[] => {
 	const commands: ModCommand[] = [];
 
 	const createFile = (newPath: string, newData: string): void => {
@@ -41,28 +50,18 @@ export const runCodemod = async (
 		});
 	};
 
-	let newSource: string | undefined = undefined;
+	const fileInfo: FileInfo = {
+		path: oldPath,
+		source: oldSource,
+	};
 
-	if (codemod.engine === 'jscodeshift') {
-		const fileInfo: FileInfo = {
-			path: oldPath,
-			source: oldSource,
-		};
-
-		newSource = codemod.transformer(
-			fileInfo,
-			buildApi(codemod.withParser),
-			{
-				createFile,
-			},
-		);
-	} else {
-		const project = new Project({});
-
-		const sourceFile = project.createSourceFile('index.tsx', oldSource);
-
-		newSource = codemod.transformer(sourceFile);
-	}
+	const newSource = codemod.transformer(
+		fileInfo,
+		buildApi(codemod.withParser),
+		{
+			createFile,
+		},
+	);
 
 	if (newSource && oldSource !== newSource) {
 		commands.push({
@@ -74,4 +73,45 @@ export const runCodemod = async (
 	}
 
 	return commands;
+};
+
+export const runTsMorphCodemod = (
+	codemod: Codemod & { engine: 'tsmorph' },
+	oldPath: string,
+	oldData: string,
+): readonly ModCommand[] => {
+	// reprint the original (old) data
+	const oldProject = new Project({});
+	const oldSourceFile = oldProject.createSourceFile('index.tsx', oldData);
+	const oldSource = oldSourceFile.print({ emitHint: EmitHint.SourceFile });
+
+	const newProject = new Project({});
+	// the newSourceFile is created from the oldSource
+	const newSourceFile = newProject.createSourceFile('index.tsx', oldSource);
+	const newSource = codemod.transformer(newSourceFile);
+
+	if (typeof newSource === 'string' && oldSource !== newSource) {
+		return [
+			{
+				kind: 'updateFile',
+				oldPath: oldPath,
+				oldData: oldSource,
+				newData: newSource,
+			},
+		];
+	}
+
+	return [];
+};
+
+export const runCodemod = (
+	codemod: Codemod,
+	oldPath: string,
+	oldData: string,
+): readonly ModCommand[] => {
+	if (codemod.engine === 'jscodeshift') {
+		return runJscodeshiftCodemod(codemod, oldPath, oldData);
+	}
+
+	return runTsMorphCodemod(codemod, oldPath, oldData);
 };

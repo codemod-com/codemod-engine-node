@@ -11,8 +11,9 @@ export const enum MessageKind {
 export type RewriteMessage = Readonly<{
 	k: MessageKind.rewrite; // kind
 	i: string; // (input) file path
-	o: string; // output file path
+	o: string; // output file path (newDataPath)
 	c: string;
+	oldDataPath: string;
 }>;
 
 export type FinishMessage = Readonly<{
