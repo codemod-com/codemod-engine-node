@@ -1,4 +1,4 @@
-import { format, resolveConfig } from 'prettier';
+import { format, resolveConfig, Options } from 'prettier';
 import { createHash } from 'node:crypto';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -51,11 +51,40 @@ export type ModCommand =
 
 export type FormattedInternalCommand = ModCommand & { formatted: true };
 
+const DEFAULT_PRETTIER_OPTIONS: Options = {
+	tabWidth: 4,
+	useTabs: true,
+	semi: true,
+	singleQuote: true,
+	quoteProps: 'as-needed',
+	trailingComma: 'all',
+	bracketSpacing: true,
+	arrowParens: 'always',
+	endOfLine: 'lf',
+	parser: 'typescript',
+};
+
+const getConfig = async (path: string): Promise<Options> => {
+	try {
+		const config = await resolveConfig(path);
+
+		if (config === null || Object.keys(config).length === 0) {
+			return DEFAULT_PRETTIER_OPTIONS;
+		}
+
+		return config;
+	} catch (error) {
+		console.error(error);
+
+		return DEFAULT_PRETTIER_OPTIONS;
+	}
+};
+
 const formatText = async (path: string, data: string): Promise<string> => {
 	try {
-		const options = await resolveConfig(path);
+		const options = await getConfig(path);
 
-		return format(data, options ?? undefined);
+		return format(data, options);
 	} catch (err) {
 		return data;
 	}
@@ -89,19 +118,28 @@ export const handleUpdateFileCommand = async (
 	modId: string,
 	command: UpdateFileCommand,
 ): Promise<RewriteMessage> => {
-	const hash = createHash('md5')
+	const oldHashDigest = createHash('md5')
+		.update(command.kind)
+		.update(command.oldPath)
+		.update(command.oldData)
+		.digest('base64url');
+
+	const newHashDigest = createHash('md5')
 		.update(command.kind)
 		.update(command.oldPath)
 		.update(command.newData)
 		.digest('base64url');
 
-	const newDataPath = join(outputDirectoryPath, `${hash}.txt`);
+	const oldDataPath = join(outputDirectoryPath, `${oldHashDigest}.txt`);
+	const newDataPath = join(outputDirectoryPath, `${newHashDigest}.txt`);
 
+	await writeFile(oldDataPath, command.oldData);
 	await writeFile(newDataPath, command.newData);
 
 	return {
 		k: MessageKind.rewrite,
 		i: command.oldPath,
+		oldDataPath,
 		o: newDataPath,
 		c: modId,
 	};
@@ -169,6 +207,7 @@ export const buildFormattedInternalCommand = async (
 		return {
 			...command,
 			newData,
+			oldData,
 			formatted: true,
 		};
 	}

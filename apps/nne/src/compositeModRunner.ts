@@ -155,13 +155,9 @@ export const runCompositeMod = async (
 					continue;
 				}
 
-				const modCommand = await runCodemod(
-					file.path,
-					file.newData,
-					mod,
-				);
+				const modCommands = runCodemod(mod, file.path, file.newData);
 
-				files = handleModCommands(files, modCommand).slice();
+				files = handleModCommands(files, modCommands).slice();
 			}
 		}
 	}

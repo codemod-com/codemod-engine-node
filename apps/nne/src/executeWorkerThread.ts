@@ -160,12 +160,7 @@ export const executeWorkerThread = () => {
 					mod.transformer &&
 					mod.withParser
 				) {
-					commands = await runCodemod(
-						// outputDirectoryPath,
-						filePath,
-						oldSource,
-						mod as any, // TODO fixme
-					);
+					commands = runCodemod(mod, filePath, oldSource).slice();
 				} else if (
 					mod.engine === 'filemod-engine' &&
 					mod.transformer &&
