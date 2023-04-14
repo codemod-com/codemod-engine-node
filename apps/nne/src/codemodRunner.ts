@@ -12,12 +12,11 @@ export type Codemod =
 			withParser: string;
 	  }>
 	| Readonly<{
-			engine: 'tsmorph';
+			engine: 'ts-morph';
 			caseTitle: string;
 			group: string | null;
 			// eslint-disable-next-line @typescript-eslint/ban-types
 			transformer: Function;
-			withParser: string;
 	  }>;
 
 const buildApi = (parser: string): API => ({
@@ -76,7 +75,7 @@ export const runJscodeshiftCodemod = (
 };
 
 export const runTsMorphCodemod = (
-	codemod: Codemod & { engine: 'tsmorph' },
+	codemod: Codemod & { engine: 'ts-morph' },
 	oldPath: string,
 	oldData: string,
 ): readonly ModCommand[] => {
