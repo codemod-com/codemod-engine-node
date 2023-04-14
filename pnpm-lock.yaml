@@ -214,6 +214,9 @@ importers:
       jscodeshift:
         specifier: ^0.14.0
         version: 0.14.0(@babel/preset-env@7.20.2)
+      ts-morph:
+        specifier: 18.0.0
+        version: 18.0.0
     devDependencies:
       '@types/jscodeshift':
         specifier: ^0.11.5

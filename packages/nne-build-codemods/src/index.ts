@@ -12,6 +12,12 @@ type CodemodObject =
 			withParser: string;
 	  }>
 	| Readonly<{
+			engine: 'ts-morph';
+			group: string;
+			caseTitle: string;
+			transformer: string;
+	  }>
+	| Readonly<{
 			engine: 'filemod-engine';
 			group: string;
 			caseTitle: string;
@@ -63,6 +69,45 @@ const fetchCodemods = async () => {
 				encoding: 'utf8',
 			});
 			const config = JSON.parse(jsonConfig);
+
+			if (config.engine === 'ts-morph') {
+				const hashDigest = createHash('ripemd160')
+					.update(config.name)
+					.digest('hex');
+
+				const codemodDirname = join(
+					dirname,
+					`./codemods/${hashDigest}/`,
+				);
+
+				if (!existsSync(codemodDirname)) {
+					await mkdir(codemodDirname);
+				}
+
+				{
+					const tsPath = join(codemodDirectoryPath, 'index.ts');
+					const jsPath = join(codemodDirectoryPath, 'index.js');
+					const path = existsSync(tsPath) ? tsPath : jsPath;
+					if (!existsSync(path)) {
+						throw new Error(`${path} does not exists`);
+					}
+					const ext = extname(path);
+					const readStream = createReadStream(path);
+					const filePath = join(codemodDirname, `index${ext}`);
+					if (!existsSync(filePath)) {
+						readStream.pipe(createWriteStream(filePath));
+					}
+				}
+				writeStream.write(
+					`import { handleSourceFile as transformer${hashDigest} } from './codemods/${hashDigest}';\n`,
+				);
+				codemodObjects.push({
+					engine: 'ts-morph',
+					caseTitle: config.name,
+					group: setConfig.name,
+					transformer: `transformer${hashDigest}`,
+				});
+			}
 
 			if (config.engine === 'jscodeshift') {
 				const hash = createHash('ripemd160')

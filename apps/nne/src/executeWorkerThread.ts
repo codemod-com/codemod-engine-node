@@ -100,11 +100,10 @@ export const executeWorkerThread = () => {
 					}
 
 					mods.push({
-						engine: 'tsmorph',
+						engine: 'ts-morph',
 						caseTitle: codemodFilePath,
 						group: null,
 						transformer,
-						withParser: 'tsx',
 					});
 				} else if (codemodFilePath.endsWith('.ts')) {
 					// eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -155,10 +154,9 @@ export const executeWorkerThread = () => {
 			try {
 				if (
 					(mod.engine === 'jscodeshift' ||
-						mod.engine === 'tsmorph') &&
+						mod.engine === 'ts-morph') &&
 					typeof mod.transformer === 'function' &&
-					mod.transformer &&
-					mod.withParser
+					mod.transformer
 				) {
 					commands = runCodemod(mod, filePath, oldSource).slice();
 				} else if (
@@ -166,7 +164,7 @@ export const executeWorkerThread = () => {
 					mod.transformer &&
 					typeof mod.transformer === 'string'
 				) {
-					commands = await runFilemod(mod as any, filePath);
+					commands = await runFilemod(mod, filePath);
 				} else if (mod.engine === 'composite-mod-engine') {
 					const subMods = (mod.mods as unknown as string[])
 						.map((caseTitle) =>

@@ -13,7 +13,8 @@
 	"dependencies": {
 		"@babel/preset-env": "^7.1.6",
 		"@babel/core": ">=7.13.0",
-		"jscodeshift": "^0.14.0"
+		"jscodeshift": "^0.14.0",
+		"ts-morph": "18.0.0"
 	},
 	"scripts": {
 		"build": "tsc || echo 0"
