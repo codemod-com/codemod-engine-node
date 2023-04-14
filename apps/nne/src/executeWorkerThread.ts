@@ -9,12 +9,14 @@ import { Codemod, runCodemod } from './codemodRunner.js';
 import { Filemod, runFilemod } from './filemodRunner.js';
 import {
 	buildFormattedInternalCommands,
+	formatText,
 	handleFormattedInternalCommand,
 	ModCommand,
 } from './modCommands.js';
 import { CompositeMod, runCompositeMod } from './compositeModRunner.js';
 import { WorkerThreadMessage } from './workerThreadMessages.js';
 import { decodeMainThreadMessage } from './mainThreadMessages.js';
+import { readFile } from 'node:fs/promises';
 
 type CodemodExecutionErrorType = 'unrecognizedCodemod' | 'errorRunningCodemod';
 class CodemodExecutionError extends Error {
@@ -28,6 +30,17 @@ class CodemodExecutionError extends Error {
 // eslint-disable-next-line @typescript-eslint/ban-types
 export const filterNeitherNullNorUndefined = <T>(value: T): value is T & {} =>
 	value !== undefined && value !== null;
+
+const getOldData = async (oldPath: string): Promise<string> => {
+	const data = await readFile(oldPath, { encoding: 'utf8' });
+
+	// reprint the original (old) data
+	const project = new tsmorph.Project({ useInMemoryFileSystem: true });
+	const sourceFile = project.createSourceFile(oldPath, data);
+	const print = sourceFile.print({ emitHint: tsmorph.EmitHint.SourceFile });
+
+	return formatText(oldPath, print);
+};
 
 export const executeWorkerThread = () => {
 	const messageHandler = async (m: unknown) => {
@@ -43,7 +56,7 @@ export const executeWorkerThread = () => {
 
 		newGroups satisfies ReadonlyArray<NewGroup>;
 
-		const oldSource = readFileSync(filePath, { encoding: 'utf8' });
+		const oldData = await getOldData(filePath);
 
 		const mods: (Codemod | Filemod | CompositeMod)[] = [];
 
@@ -158,7 +171,7 @@ export const executeWorkerThread = () => {
 					typeof mod.transformer === 'function' &&
 					mod.transformer
 				) {
-					commands = runCodemod(mod, filePath, oldSource).slice();
+					commands = runCodemod(mod, filePath, oldData).slice();
 				} else if (
 					mod.engine === 'filemod-engine' &&
 					mod.transformer &&
@@ -177,7 +190,7 @@ export const executeWorkerThread = () => {
 					commands = await runCompositeMod(
 						newMod as any,
 						filePath,
-						oldSource,
+						oldData,
 					);
 				} else {
 					throw new CodemodExecutionError(
