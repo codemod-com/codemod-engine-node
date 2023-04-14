@@ -1,5 +1,5 @@
 import jscodeshift, { API, FileInfo } from 'jscodeshift';
-import { EmitHint, Project } from 'ts-morph';
+import { Project } from 'ts-morph';
 import { ModCommand } from './modCommands.js';
 
 export type Codemod =
@@ -37,7 +37,7 @@ const buildApi = (parser: string): API => ({
 export const runJscodeshiftCodemod = (
 	codemod: Codemod & { engine: 'jscodeshift' },
 	oldPath: string,
-	oldSource: string,
+	oldData: string,
 ): readonly ModCommand[] => {
 	const commands: ModCommand[] = [];
 
@@ -51,10 +51,10 @@ export const runJscodeshiftCodemod = (
 
 	const fileInfo: FileInfo = {
 		path: oldPath,
-		source: oldSource,
+		source: oldData,
 	};
 
-	const newSource = codemod.transformer(
+	const newData = codemod.transformer(
 		fileInfo,
 		buildApi(codemod.withParser),
 		{
@@ -62,14 +62,16 @@ export const runJscodeshiftCodemod = (
 		},
 	);
 
-	if (newSource && oldSource !== newSource) {
-		commands.push({
-			kind: 'updateFile',
-			oldPath: oldPath,
-			oldData: oldSource,
-			newData: newSource,
-		});
+	if (typeof newData !== 'string' || oldData === newData) {
+		return commands;
 	}
+
+	commands.push({
+		kind: 'updateFile',
+		oldPath,
+		oldData: oldData,
+		newData,
+	});
 
 	return commands;
 };
@@ -79,28 +81,22 @@ export const runTsMorphCodemod = (
 	oldPath: string,
 	oldData: string,
 ): readonly ModCommand[] => {
-	// reprint the original (old) data
-	const oldProject = new Project({});
-	const oldSourceFile = oldProject.createSourceFile('index.tsx', oldData);
-	const oldSource = oldSourceFile.print({ emitHint: EmitHint.SourceFile });
+	const project = new Project({ useInMemoryFileSystem: true });
+	const sourceFile = project.createSourceFile(oldPath, oldData);
+	const newData = codemod.transformer(sourceFile);
 
-	const newProject = new Project({});
-	// the newSourceFile is created from the oldSource
-	const newSourceFile = newProject.createSourceFile('index.tsx', oldSource);
-	const newSource = codemod.transformer(newSourceFile);
-
-	if (typeof newSource === 'string' && oldSource !== newSource) {
-		return [
-			{
-				kind: 'updateFile',
-				oldPath: oldPath,
-				oldData: oldSource,
-				newData: newSource,
-			},
-		];
+	if (typeof newData !== 'string' || oldData === newData) {
+		return [];
 	}
 
-	return [];
+	return [
+		{
+			kind: 'updateFile',
+			oldPath,
+			oldData,
+			newData,
+		},
+	];
 };
 
 export const runCodemod = (

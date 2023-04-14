@@ -80,7 +80,10 @@ const getConfig = async (path: string): Promise<Options> => {
 	}
 };
 
-const formatText = async (path: string, data: string): Promise<string> => {
+export const formatText = async (
+	path: string,
+	data: string,
+): Promise<string> => {
 	try {
 		const options = await getConfig(path);
 
@@ -197,17 +200,15 @@ export const buildFormattedInternalCommand = async (
 	}
 
 	if (command.kind === 'updateFile') {
-		const oldData = await formatText(command.oldPath, command.oldData);
 		const newData = await formatText(command.oldPath, command.newData);
 
-		if (oldData === newData) {
+		if (command.oldData === newData) {
 			return null;
 		}
 
 		return {
 			...command,
 			newData,
-			oldData,
 			formatted: true,
 		};
 	}
