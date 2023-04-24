@@ -8,8 +8,9 @@ const mainThreadMessageSchema = S.union(
 		kind: S.literal('recipe'),
 		codemodFilePath: S.union(S.string, S.null),
 		filePath: S.string,
-		newGroups: S.array(S.any),
+		newGroups: S.array(S.string),
 		outputDirectoryPath: S.string,
+		codemodHashDigests: S.array(S.string),
 	}),
 );
 
