@@ -2,6 +2,7 @@ import fastGlob from 'fast-glob';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { NewGroup, oldGroupCodec, newGroupCodec } from './groups.js';
+import { handleListCliCommand } from './handleListCliCommand.js';
 import { handleRepomodCliCommand } from './handleRepomodCliCommand.js';
 import { WorkerThreadManager } from './workerThreadManager.js';
 
@@ -118,9 +119,16 @@ export const executeMainThread = async () => {
 						'Please provide the repomodFilePath and outputDirectoryPath argument to work with codemod-engine-node',
 					);
 			})
+			.command('list', 'list the codemods')
 			.help()
 			.alias('help', 'h').argv,
 	);
+
+	if (String(argv._) === 'list') {
+		handleListCliCommand();
+
+		return;
+	}
 
 	if (String(argv._) === 'repomod') {
 		await handleRepomodCliCommand(argv);
