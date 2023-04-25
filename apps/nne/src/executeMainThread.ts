@@ -62,6 +62,12 @@ export const executeMainThread = async () => {
 						array: true,
 						type: 'string',
 					})
+					.option('codemodHashDigests', {
+						alias: 'c',
+						describe: 'Pass the codemod hash digests for execution',
+						array: true,
+						type: 'string',
+					})
 					.option('filePath', {
 						alias: 'f',
 						describe:
@@ -137,6 +143,7 @@ export const executeMainThread = async () => {
 	}
 
 	const newGroups = buildNewGroups(argv.group ?? null);
+	const codemodHashDigests = argv.codemodHashDigests ?? [];
 
 	const filePaths = await fastGlob(argv.pattern.slice());
 
@@ -151,5 +158,6 @@ export const executeMainThread = async () => {
 		argv.filePath ?? null,
 		newGroups,
 		argv.outputDirectoryPath,
+		codemodHashDigests,
 	);
 };

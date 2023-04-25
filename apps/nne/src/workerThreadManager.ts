@@ -20,6 +20,7 @@ export class WorkerThreadManager {
 		private readonly __codemodFilePath: string | null,
 		private readonly __newGroups: ReadonlyArray<NewGroup>,
 		private readonly __outputDirectoryPath: string,
+		private readonly __codemodHashDigests: ReadonlyArray<string>,
 	) {
 		this.__lineHandler = (line: string): void => {
 			if (line === 'shutdown') {
@@ -84,6 +85,7 @@ export class WorkerThreadManager {
 			codemodFilePath: this.__codemodFilePath,
 			filePath,
 			newGroups: this.__newGroups,
+			codemodHashDigests: this.__codemodHashDigests,
 			outputDirectoryPath: this.__outputDirectoryPath,
 		} satisfies MainThreadMessage);
 

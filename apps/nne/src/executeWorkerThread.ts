@@ -17,6 +17,7 @@ import { CompositeMod, runCompositeMod } from './compositeModRunner.js';
 import { WorkerThreadMessage } from './workerThreadMessages.js';
 import { decodeMainThreadMessage } from './mainThreadMessages.js';
 import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 
 type CodemodExecutionErrorType = 'unrecognizedCodemod' | 'errorRunningCodemod';
 class CodemodExecutionError extends Error {
@@ -51,10 +52,13 @@ export const executeWorkerThread = () => {
 			return;
 		}
 
-		const { codemodFilePath, newGroups, filePath, outputDirectoryPath } =
-			message;
-
-		newGroups satisfies ReadonlyArray<NewGroup>;
+		const {
+			codemodFilePath,
+			newGroups,
+			codemodHashDigests,
+			filePath,
+			outputDirectoryPath,
+		} = message;
 
 		const oldData = await getOldData(filePath);
 
@@ -158,7 +162,19 @@ export const executeWorkerThread = () => {
 		}
 
 		for (const mod of mods) {
-			if (newGroups.length > 0 && !newGroups.includes(mod.group)) {
+			// TODO: in the future, the hash digest will be embedded in the codemods
+			if (
+				codemodHashDigests.length > 0 &&
+				!codemodHashDigests.includes(
+					createHash('ripemd')
+						.update(mod.caseTitle)
+						.digest('base64url'),
+				)
+			) {
+				continue;
+			}
+
+			if (newGroups.length > 0 && !newGroups.includes(mod.group ?? '')) {
 				continue;
 			}
 
