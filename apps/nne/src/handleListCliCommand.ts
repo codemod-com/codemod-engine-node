@@ -6,6 +6,7 @@ type CodemodEntry = Readonly<{
 	kind: 'codemod';
 	hashDigest: string;
 	name: string;
+	description: string;
 }>;
 
 export const handleListCliCommand = () => {
@@ -20,6 +21,8 @@ export const handleListCliCommand = () => {
 			kind: 'codemod',
 			hashDigest,
 			name: codemod.caseTitle,
+			description:
+				'description' in codemod ? String(codemod.description) : '',
 		});
 	}
 
@@ -33,6 +36,7 @@ export const handleListCliCommand = () => {
 			kind: 'codemod',
 			hashDigest,
 			name: codemod.caseTitle,
+			description: '',
 		});
 	}
 
