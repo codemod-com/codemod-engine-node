@@ -74,8 +74,6 @@ const getConfig = async (path: string): Promise<Options> => {
 
 		return config;
 	} catch (error) {
-		console.error(error);
-
 		return DEFAULT_PRETTIER_OPTIONS;
 	}
 };
