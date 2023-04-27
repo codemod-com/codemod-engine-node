@@ -21,6 +21,7 @@
 	],
 	"packageManager": "pnpm@7.17.0",
 	"scripts": {
+		"build": "turbo build",
 		"lint": "(eslint . --fix --ext ts && prettier --write .) || echo 0",
 		"package": "turbo package"
 	}
