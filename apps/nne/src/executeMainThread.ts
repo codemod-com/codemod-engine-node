@@ -7,12 +7,8 @@ import { handleRepomodCliCommand } from './handleRepomodCliCommand.js';
 import { WorkerThreadManager } from './workerThreadManager.js';
 
 const buildNewGroups = (
-	groups: ReadonlyArray<string> | null,
+	groups: ReadonlyArray<string>,
 ): ReadonlyArray<NewGroup> => {
-	if (!groups) {
-		return [];
-	}
-
 	return groups.map((group): NewGroup => {
 		const isOldGroup = oldGroupCodec.is(group);
 
@@ -142,9 +138,14 @@ export const executeMainThread = async () => {
 		return;
 	}
 
-	const newGroups = buildNewGroups(argv.group ?? null);
-	const codemodHashDigests = argv.codemodHashDigests ?? [];
+	const newGroups = buildNewGroups(argv.group ?? []);
 
+	// https://github.com/yargs/yargs/blob/main/docs/tricks.md#quotes
+	// if the codemod hash digests are created with `'"..."', for some reason
+	// yargs does not strip ", so we do it manually here
+	const codemodHashDigests = (argv.codemodHashDigests ?? []).map(
+		(hashDigest) => hashDigest.replace(/"/g, ''),
+	);
 	const filePaths = await fastGlob(argv.pattern.slice());
 
 	const newFilePaths = filePaths.slice(
