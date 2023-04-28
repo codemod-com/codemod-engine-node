@@ -4,7 +4,6 @@ import { codemods as nneCodemods } from '@nne/codemods';
 import { codemods as muiCodemods } from '@nne/mui-codemods';
 import * as ts from 'typescript';
 import * as tsmorph from 'ts-morph';
-import { NewGroup } from './groups.js';
 import { Codemod, runCodemod } from './codemodRunner.js';
 import { Filemod, runFilemod } from './filemodRunner.js';
 import {
@@ -154,7 +153,13 @@ export const executeWorkerThread = () => {
 					});
 				}
 			} catch (error) {
-				console.error(error);
+				if (error instanceof Error) {
+					console.error(
+						JSON.stringify({
+							message: error.message,
+						}),
+					);
+				}
 			}
 		} else {
 			mods.push(...(nneCodemods as any));
