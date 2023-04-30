@@ -9,6 +9,8 @@ if (!isMainThread) {
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
 		.then(() => {})
 		.catch((error) => {
-			console.error(error);
+			if (error instanceof Error) {
+				console.error(JSON.stringify({ message: error.message }));
+			}
 		});
 }

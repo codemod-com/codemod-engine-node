@@ -72,7 +72,10 @@ const getConfig = async (path: string): Promise<Options> => {
 			return DEFAULT_PRETTIER_OPTIONS;
 		}
 
-		return config;
+		return {
+			...config,
+			parser: config.parser ?? DEFAULT_PRETTIER_OPTIONS.parser,
+		};
 	} catch (error) {
 		return DEFAULT_PRETTIER_OPTIONS;
 	}

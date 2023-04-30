@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import jscodeshift, { API, FileInfo } from 'jscodeshift';
 import { Project } from 'ts-morph';
 import { ModCommand } from './modCommands.js';
@@ -22,16 +23,8 @@ export type Codemod =
 const buildApi = (parser: string): API => ({
 	j: jscodeshift.withParser(parser),
 	jscodeshift: jscodeshift.withParser(parser),
-	stats: () => {
-		console.error(
-			'The stats function was called, which is not supported on purpose',
-		);
-	},
-	report: () => {
-		console.error(
-			'The report function was called, which is not supported on purpose',
-		);
-	},
+	stats: () => {},
+	report: () => {},
 });
 
 export const runJscodeshiftCodemod = (
@@ -81,7 +74,13 @@ export const runTsMorphCodemod = (
 	oldPath: string,
 	oldData: string,
 ): readonly ModCommand[] => {
-	const project = new Project({ useInMemoryFileSystem: true });
+	const project = new Project({
+		useInMemoryFileSystem: true,
+		skipFileDependencyResolution: true,
+		compilerOptions: {
+			allowJs: true,
+		},
+	});
 	const sourceFile = project.createSourceFile(oldPath, oldData);
 	const newData = codemod.transformer(sourceFile);
 
