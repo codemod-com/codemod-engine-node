@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import jscodeshift, { API, FileInfo } from 'jscodeshift';
 import { Project } from 'ts-morph';
+import { buildTsMorphProject } from './buildTsMorphProject.js';
 import { ModCommand } from './modCommands.js';
 
 export type Codemod =
@@ -74,13 +75,7 @@ export const runTsMorphCodemod = (
 	oldPath: string,
 	oldData: string,
 ): readonly ModCommand[] => {
-	const project = new Project({
-		useInMemoryFileSystem: true,
-		skipFileDependencyResolution: true,
-		compilerOptions: {
-			allowJs: true,
-		},
-	});
+	const project = buildTsMorphProject();
 	const sourceFile = project.createSourceFile(oldPath, oldData);
 	const newData = codemod.transformer(sourceFile);
 
