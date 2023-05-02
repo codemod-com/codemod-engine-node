@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import jscodeshift, { API, FileInfo } from 'jscodeshift';
-import { Project } from 'ts-morph';
 import { buildTsMorphProject } from './buildTsMorphProject.js';
 import { ModCommand } from './modCommands.js';
 

@@ -72,9 +72,13 @@ const getConfig = async (path: string): Promise<Options> => {
 			return DEFAULT_PRETTIER_OPTIONS;
 		}
 
+		const parser = path.endsWith('.css')
+			? 'css'
+			: config.parser ?? DEFAULT_PRETTIER_OPTIONS.parser;
+
 		return {
 			...config,
-			parser: config.parser ?? DEFAULT_PRETTIER_OPTIONS.parser,
+			parser,
 		};
 	} catch (error) {
 		return DEFAULT_PRETTIER_OPTIONS;
@@ -191,6 +195,8 @@ export const buildFormattedInternalCommand = async (
 	command: ModCommand,
 ): Promise<FormattedInternalCommand | null> => {
 	if (command.kind === 'createFile') {
+		console.error(`Formatting file ${command.newPath}`);
+
 		const newData = await formatText(command.newPath, command.newData);
 
 		return {
