@@ -6,13 +6,17 @@ import { MainThreadMessage } from './mainThreadMessages.js';
 import { FinishMessage, MessageKind, ProgressMessage } from './messages.js';
 import { decodeWorkerThreadMessage } from './workerThreadMessages.js';
 
+const WORKER_THREAD_TIME_LIMIT = 10000;
+
 export class WorkerThreadManager {
 	private __finished = false;
 	private __idleWorkerIds: number[] = [];
 	private __workers: Worker[] = [];
+	private __workerTimestamps: number[] = [];
 	private __totalFileCount: number;
 	private readonly __interface: Interface;
 	private readonly __lineHandler: (line: string) => void;
+	private readonly __interval: NodeJS.Timeout;
 
 	public constructor(
 		private readonly __workerCount: number,
@@ -36,6 +40,7 @@ export class WorkerThreadManager {
 
 		for (let i = 0; i < __workerCount; ++i) {
 			this.__idleWorkerIds.push(i);
+			this.__workerTimestamps.push(Date.now());
 
 			const worker = new Worker(__filename);
 
@@ -53,6 +58,28 @@ export class WorkerThreadManager {
 		console.log(JSON.stringify(progressMessage));
 
 		this.__work();
+
+		this.__interval = setInterval(() => {
+			const now = Date.now();
+
+			for (let i = 0; i < __workerCount; ++i) {
+				const timestamp = this.__workerTimestamps[i] ?? Date.now();
+
+				if (now > timestamp + WORKER_THREAD_TIME_LIMIT) {
+					// hanging promise on purpose
+					this.__workers[i].terminate();
+
+					const worker = new Worker(__filename);
+					worker.on('message', this.__buildOnWorkerMessage(i));
+
+					this.__workers[i] = worker;
+
+					this.__idleWorkerIds.push(i);
+
+					this.__workerTimestamps[i] = Date.now();
+				}
+			}
+		}, 1000);
 	}
 
 	private __work(): void {
@@ -89,10 +116,14 @@ export class WorkerThreadManager {
 			outputDirectoryPath: this.__outputDirectoryPath,
 		} satisfies MainThreadMessage);
 
+		this.__workerTimestamps[id] = Date.now();
+
 		this.__work();
 	}
 
 	private __finish(): void {
+		clearInterval(this.__interval);
+
 		for (const worker of this.__workers) {
 			worker.postMessage({ kind: 'exit' } satisfies MainThreadMessage);
 		}
