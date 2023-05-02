@@ -17,6 +17,7 @@ import { WorkerThreadMessage } from './workerThreadMessages.js';
 import { decodeMainThreadMessage } from './mainThreadMessages.js';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
+import { buildTsMorphProject } from './buildTsMorphProject.js';
 
 type CodemodExecutionErrorType = 'unrecognizedCodemod' | 'errorRunningCodemod';
 class CodemodExecutionError extends Error {
@@ -35,7 +36,7 @@ const getOldData = async (oldPath: string): Promise<string> => {
 	const data = await readFile(oldPath, { encoding: 'utf8' });
 
 	// reprint the original (old) data
-	const project = new tsmorph.Project({ useInMemoryFileSystem: true });
+	const project = buildTsMorphProject();
 	const sourceFile = project.createSourceFile(oldPath, data);
 	const print = sourceFile.print({ emitHint: tsmorph.EmitHint.SourceFile });
 
