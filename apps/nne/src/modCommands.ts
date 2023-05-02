@@ -195,8 +195,6 @@ export const buildFormattedInternalCommand = async (
 	command: ModCommand,
 ): Promise<FormattedInternalCommand | null> => {
 	if (command.kind === 'createFile') {
-		console.error(`Formatting file ${command.newPath}`);
-
 		const newData = await formatText(command.newPath, command.newData);
 
 		return {
