@@ -7,6 +7,7 @@ import { FinishMessage, MessageKind, ProgressMessage } from './messages.js';
 import { decodeWorkerThreadMessage } from './workerThreadMessages.js';
 
 const WORKER_THREAD_TIME_LIMIT = 10000;
+const MAIN_THREAD_TIME_LIMIT = 15000;
 
 export class WorkerThreadManager {
 	private __finished = false;
@@ -134,6 +135,13 @@ export class WorkerThreadManager {
 			k: MessageKind.finish,
 		};
 		console.log(JSON.stringify(finishMessage));
+
+		const timeout = setTimeout(
+			() => process.exit(),
+			MAIN_THREAD_TIME_LIMIT,
+		);
+
+		timeout.unref();
 	}
 
 	private __buildOnWorkerMessage(i: number) {
