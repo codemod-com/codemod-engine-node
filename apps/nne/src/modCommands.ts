@@ -1,7 +1,7 @@
 import { format, resolveConfig, Options } from 'prettier';
 import { createHash } from 'node:crypto';
 import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, extname } from 'node:path';
 import {
 	CopyMessage,
 	CreateMessage,
@@ -109,7 +109,8 @@ export const handleCreateFileCommand = async (
 		.update(command.newData)
 		.digest('base64url');
 
-	const newDataPath = join(outputDirectoryPath, `${hash}.txt`);
+	const extName = extname(command.newPath);
+	const newDataPath = join(outputDirectoryPath, `${hash}${extName}`);
 
 	await writeFile(newDataPath, command.newData);
 
@@ -138,8 +139,10 @@ export const handleUpdateFileCommand = async (
 		.update(command.newData)
 		.digest('base64url');
 
-	const oldDataPath = join(outputDirectoryPath, `${oldHashDigest}.txt`);
-	const newDataPath = join(outputDirectoryPath, `${newHashDigest}.txt`);
+	const extName = extname(command.oldPath);
+
+	const oldDataPath = join(outputDirectoryPath, `${oldHashDigest}${extName}`);
+	const newDataPath = join(outputDirectoryPath, `${newHashDigest}${extName}`);
 
 	await writeFile(oldDataPath, command.oldData);
 	await writeFile(newDataPath, command.newData);
