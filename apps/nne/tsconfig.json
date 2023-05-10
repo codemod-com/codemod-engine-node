@@ -7,6 +7,6 @@
 		"moduleResolution": "nodenext",
 		"allowJs": true,
 		"checkJs": false,
-		"strict": true,
+		"strict": true
 	}
 }
