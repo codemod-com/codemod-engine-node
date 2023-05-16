@@ -8,7 +8,6 @@ import { Codemod, runCodemod } from './codemodRunner.js';
 import { Filemod, runFilemod } from './filemodRunner.js';
 import {
 	buildFormattedInternalCommands,
-	formatText,
 	handleFormattedInternalCommand,
 	ModCommand,
 } from './modCommands.js';
@@ -17,7 +16,6 @@ import { WorkerThreadMessage } from './workerThreadMessages.js';
 import { decodeMainThreadMessage } from './mainThreadMessages.js';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import { buildTsMorphProject } from './buildTsMorphProject.js';
 
 type CodemodExecutionErrorType = 'unrecognizedCodemod' | 'errorRunningCodemod';
 class CodemodExecutionError extends Error {
@@ -35,12 +33,7 @@ export const filterNeitherNullNorUndefined = <T>(value: T): value is T & {} =>
 const getOldData = async (oldPath: string): Promise<string> => {
 	const data = await readFile(oldPath, { encoding: 'utf8' });
 
-	// reprint the original (old) data
-	const project = buildTsMorphProject();
-	const sourceFile = project.createSourceFile(oldPath, data);
-	const print = sourceFile.print({ emitHint: tsmorph.EmitHint.SourceFile });
-
-	return formatText(oldPath, print);
+	return data.replace(/\n\n/gm, '\n/** **/\n');
 };
 
 export const executeWorkerThread = () => {
