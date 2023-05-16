@@ -64,9 +64,6 @@ importers:
       '@svgr/hast-util-to-babel-ast':
         specifier: ^7.0.0
         version: 7.0.0
-      '@types/prettier':
-        specifier: ^2.7.2
-        version: 2.7.2
       ast-types:
         specifier: ^0.14.2
         version: 0.14.2
@@ -88,9 +85,6 @@ importers:
       jscodeshift-add-imports:
         specifier: 1.0.10
         version: 1.0.10(jscodeshift@0.14.0)
-      prettier:
-        specifier: ^2.8.7
-        version: 2.8.7
       rehype-parse:
         specifier: ^8.0.4
         version: 8.0.4
@@ -116,12 +110,18 @@ importers:
       '@types/node':
         specifier: ^18.11.9
         version: 18.11.9
+      '@types/prettier':
+        specifier: ^2.7.2
+        version: 2.7.2
       '@types/yargs':
         specifier: ^17.0.13
         version: 17.0.13
       esbuild:
         specifier: ^0.17.14
         version: 0.17.14
+      prettier:
+        specifier: ^2.8.7
+        version: 2.8.7
 
   codemod-registry/codemods/jscodeshift:
     dependencies:
@@ -2765,7 +2765,7 @@ packages:
 
   /@types/prettier@2.7.2:
     resolution: {integrity: sha512-KufADq8uQqo1pYKVIYzfKbJfBAc0sOeXqGbFaSpv8MRmC/zXgowNZmFcbngndGk922QDmOASEXUZCaY48gs4cg==}
-    dev: false
+    dev: true
 
   /@types/semver@7.3.13:
     resolution: {integrity: sha512-21cFJr9z3g5dW8B0CVI9g2O9beqaThGQ6ZFBqHfwhzLDKUxaqTIy3vnfah/UPkfOiF2pLq+tGz+W8RyCskuslw==}
@@ -4381,7 +4381,7 @@ packages:
     resolution: {integrity: sha512-yPngTo3aXUUmyuTjeTUT75txrf+aMh9FiD7q9ZE/i6r0bPb22g4FsE6Y338PQX1bmfy08i9QQCB7/rcUAVntfw==}
     engines: {node: '>=10.13.0'}
     hasBin: true
-    dev: false
+    dev: true
 
   /property-information@6.2.0:
     resolution: {integrity: sha512-kma4U7AFCTwpqq5twzC1YVIDXSqg6qQK6JN0smOw8fgRy1OkMi0CYSzFmsy6dnqSenamAtj0CyXMUJ1Mf6oROg==}
