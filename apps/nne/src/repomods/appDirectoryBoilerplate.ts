@@ -138,6 +138,10 @@ export const repomod: Repomod<Dependencies> = {
 			directoryNames.length > 0 &&
 			directoryNames.lastIndexOf('pages') === directoryNames.length - 1;
 
+		if (!directoryNames.includes('pages')) {
+			return [];
+		}
+
 		const nameIsIndex = parsedPath.name === 'index';
 
 		if (endsWithPages && nameIsIndex) {
