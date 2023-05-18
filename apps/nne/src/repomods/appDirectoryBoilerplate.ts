@@ -1,6 +1,7 @@
 import { posix } from 'node:path';
 import type { Repomod } from '@intuita-inc/repomod-engine-api';
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 type Dependencies = Readonly<{}>;
 
 const ROOT_LAYOUT_CONTENT = `
@@ -290,3 +291,5 @@ export const repomod: Repomod<Dependencies> = {
 		};
 	},
 };
+
+export default repomod;
