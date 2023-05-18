@@ -84,10 +84,15 @@ export const handleRepomodCliCommand = async (args: Arguments) => {
 		commands,
 	);
 
+	const modId =
+		args.repomodFilePath === 'QKEdp-pofR9UnglrKAGDm1Oj6W0'
+			? 'next/13/app-directory-boilerplate'
+			: args.repomodFilePath;
+
 	for (const formattedInternalCommand of formattedInternalCommands) {
 		const message = await handleFormattedInternalCommand(
 			args.outputDirectoryPath,
-			args.repomodFilePath,
+			modId,
 			formattedInternalCommand,
 		);
 
