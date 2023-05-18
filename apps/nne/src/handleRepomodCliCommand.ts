@@ -1,4 +1,5 @@
 import { Repomod } from '@intuita-inc/repomod-engine-api';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import ts from 'typescript';
 import { FinishMessage, MessageKind } from './messages.js';
@@ -8,6 +9,7 @@ import {
 } from './modCommands.js';
 import { runRepomod } from './repomodRunner.js';
 import redwoodjsRepomod from './repomods/redwoodjs.js';
+import nextjsRepomod from './repomods/appDirectoryBoilerplate.js';
 
 type Exports =
 	| Readonly<{
@@ -23,10 +25,18 @@ type Arguments = Readonly<{
 	repomodFilePath: string;
 }>;
 
+const boilerplateHashDigest = createHash('ripemd160')
+	.update('next/13/app-directory-boilerplate')
+	.digest('base64url');
+
 // eslint-disable-next-line @typescript-eslint/ban-types
 const getRepomod = (args: Arguments): Repomod<any> | null => {
 	if (args.repomodFilePath === 'redwoodjs_experimental') {
 		return redwoodjsRepomod;
+	}
+
+	if (args.repomodFilePath === boilerplateHashDigest) {
+		return nextjsRepomod;
 	}
 
 	const source = readFileSync(args.repomodFilePath, {
