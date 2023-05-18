@@ -9,7 +9,7 @@
 		"@babel/traverse": "7.20.5",
 		"@effect/schema": "0.0.5",
 		"@intuita-inc/filemod-engine": "1.2.0",
-		"@intuita-inc/repomod-engine-api": "link:/intuita/repomod-engine/packages/repomod-engine-api/",
+		"@intuita-inc/repomod-engine-api": "1.0.1",
 		"@nne/codemods": "workspace:*",
 		"@nne/mui-codemods": "workspace:*",
 		"@svgr/hast-util-to-babel-ast": "^7.0.0",

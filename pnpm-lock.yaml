@@ -53,8 +53,8 @@ importers:
         specifier: 1.2.0
         version: 1.2.0(@types/node@18.11.9)(typescript@4.9.4)
       '@intuita-inc/repomod-engine-api':
-        specifier: link:/intuita/repomod-engine/packages/repomod-engine-api/
-        version: link:../../../repomod-engine/packages/repomod-engine-api
+        specifier: 1.0.1
+        version: 1.0.1
       '@nne/codemods':
         specifier: workspace:*
         version: link:../../packages/nne-codemods
@@ -2587,6 +2587,12 @@ packages:
       - '@swc/wasm'
       - '@types/node'
       - typescript
+    dev: false
+
+  /@intuita-inc/repomod-engine-api@1.0.1:
+    resolution: {integrity: sha512-DmvWEzGvmCFqsNS9NlpLIcqpT4E5YwBJuU7qZDPidAMoqeCjv2P5PTobaARqZpp6wK5PzwqRWiW5VyoMcbYbRw==}
+    dependencies:
+      glob: 8.1.0
     dev: false
 
   /@jridgewell/gen-mapping@0.1.1:
