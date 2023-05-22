@@ -239,6 +239,7 @@ export const executeWorkerThread = () => {
 							message: error.message,
 							caseTitle: mod.caseTitle,
 							group: mod.group,
+							filePath,
 							...('kind' in error ? { kind: error.kind } : {}),
 						}),
 					);
