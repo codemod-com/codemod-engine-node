@@ -84,23 +84,14 @@ export default function RouteLayout(
 const ROUTE_PAGE_CONTENT = `
 import RouteClientComponent from './client-component';
 
-export default function RoutePage() {
+export default function RoutePage(
 	{
-        params,
-        searchParams,
-    }: {
-        params: { slug: string };
-        searchParams: { [key: string]: string | string[] | undefined };
-    }) {
-        return <RouteClientComponent />;
-}
-`;
-
-const ROUTE_CLIENT_COMPONENT_CONTENT = `
-'use client';
-
-export default function RouteClientComponent({}: {}) {
-	return null;
+		params,
+	}: {
+		params: {},
+	}
+) {
+    return <RouteClientComponent />;
 }
 `;
 
@@ -113,7 +104,6 @@ enum FilePurpose {
 	// route directories
 	ROUTE_LAYOUT = 'ROUTE_LAYOUT',
 	ROUTE_PAGE = 'ROUTE_PAGE',
-	ROUTE_CLIENT_COMPONENT = 'ROUTE_CLIENT_COMPONENT',
 }
 
 const map = new Map([
@@ -123,7 +113,6 @@ const map = new Map([
 	[FilePurpose.ROOT_PAGE, ROOT_PAGE_CONTENT],
 	[FilePurpose.ROUTE_LAYOUT, ROUTE_LAYOUT_CONTENT],
 	[FilePurpose.ROUTE_PAGE, ROUTE_PAGE_CONTENT],
-	[FilePurpose.ROUTE_CLIENT_COMPONENT, ROUTE_CLIENT_COMPONENT_CONTENT],
 ]);
 
 const EXTENSION = '.tsx';
@@ -137,10 +126,6 @@ export const repomod: Repomod<Dependencies> = {
 		const endsWithPages =
 			directoryNames.length > 0 &&
 			directoryNames.lastIndexOf('pages') === directoryNames.length - 1;
-
-		if (!directoryNames.includes('pages')) {
-			return [];
-		}
 
 		const nameIsIndex = parsedPath.name === 'index';
 
@@ -234,13 +219,6 @@ export const repomod: Repomod<Dependencies> = {
 				name: 'layout',
 			});
 
-			const routeClientComponentPath = posix.format({
-				root: parsedPath.root,
-				dir: newDir,
-				ext: EXTENSION,
-				name: 'client-component',
-			});
-
 			return [
 				{
 					kind: 'upsertFile',
@@ -256,14 +234,6 @@ export const repomod: Repomod<Dependencies> = {
 					options: {
 						...options,
 						filePurpose: FilePurpose.ROUTE_LAYOUT,
-					},
-				},
-				{
-					kind: 'upsertFile',
-					path: routeClientComponentPath,
-					options: {
-						...options,
-						filePurpose: FilePurpose.ROUTE_CLIENT_COMPONENT,
 					},
 				},
 			];
