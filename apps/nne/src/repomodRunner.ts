@@ -8,12 +8,14 @@ import jscodeshift from 'jscodeshift';
 import rehypeParse from 'rehype-parse';
 import { unified } from 'unified';
 import hastToBabelAst from '@svgr/hast-util-to-babel-ast';
+import tsmorph from 'ts-morph';
 
 type Dependencies = Readonly<{
 	jscodeshift: typeof jscodeshift;
 	unified: typeof unified;
 	rehypeParse: typeof rehypeParse;
 	hastToBabelAst: typeof hastToBabelAst;
+	tsmorph: typeof tsmorph;
 }>;
 import { ModCommand } from './modCommands.js';
 
@@ -33,6 +35,7 @@ export const runRepomod = async (
 		unified,
 		rehypeParse,
 		hastToBabelAst,
+		tsmorph,
 	}));
 
 	const externalFileCommands = await executeRepomod(
