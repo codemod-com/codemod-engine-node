@@ -51,6 +51,7 @@ export const executeWorkerThread = () => {
 			codemodHashDigests,
 			filePath,
 			outputDirectoryPath,
+			executionId,
 		} = message;
 
 		const oldData = await getOldData(filePath);
@@ -222,6 +223,7 @@ export const executeWorkerThread = () => {
 						outputDirectoryPath,
 						mod.caseTitle,
 						formattedInternalCommand,
+						executionId,
 					);
 
 					parentPort?.postMessage({

@@ -26,6 +26,7 @@ export class WorkerThreadManager {
 		private readonly __newGroups: ReadonlyArray<NewGroup>,
 		private readonly __outputDirectoryPath: string,
 		private readonly __codemodHashDigests: ReadonlyArray<string>,
+		private readonly __executionId: string,
 	) {
 		this.__lineHandler = (line: string): void => {
 			if (line === 'shutdown') {
@@ -115,6 +116,7 @@ export class WorkerThreadManager {
 			newGroups: this.__newGroups,
 			codemodHashDigests: this.__codemodHashDigests,
 			outputDirectoryPath: this.__outputDirectoryPath,
+			executionId: this.__executionId,
 		} satisfies MainThreadMessage);
 
 		this.__workerTimestamps[id] = Date.now();

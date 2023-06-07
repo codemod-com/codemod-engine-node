@@ -11,6 +11,7 @@ const mainThreadMessageSchema = S.union(
 		newGroups: S.array(S.string),
 		outputDirectoryPath: S.string,
 		codemodHashDigests: S.array(S.string),
+		executionId: S.string,
 	}),
 );
 

@@ -56,6 +56,7 @@ export const handleCreateFileCommand = async (
 	outputDirectoryPath: string,
 	modId: string,
 	command: CreateFileCommand,
+	executionId: string,
 ): Promise<CreateMessage> => {
 	const hash = createHash('md5')
 		.update(command.kind)
@@ -64,8 +65,10 @@ export const handleCreateFileCommand = async (
 		.digest('base64url');
 
 	const extName = extname(command.newPath);
-	const newDataPath = join(outputDirectoryPath, `${hash}${extName}`);
-
+	const newDataPath = join(
+		outputDirectoryPath,
+		`${executionId}${hash}${extName}`,
+	);
 	await writeFile(newDataPath, command.newData);
 
 	return {
@@ -80,6 +83,7 @@ export const handleUpdateFileCommand = async (
 	outputDirectoryPath: string,
 	modId: string,
 	command: UpdateFileCommand,
+	executionId: string,
 ): Promise<RewriteMessage> => {
 	const oldHashDigest = createHash('md5')
 		.update(command.kind)
@@ -94,9 +98,14 @@ export const handleUpdateFileCommand = async (
 		.digest('base64url');
 
 	const extName = extname(command.oldPath);
-
-	const oldDataPath = join(outputDirectoryPath, `${oldHashDigest}${extName}`);
-	const newDataPath = join(outputDirectoryPath, `${newHashDigest}${extName}`);
+	const oldDataPath = join(
+		outputDirectoryPath,
+		`${executionId}${oldHashDigest}${extName}`,
+	);
+	const newDataPath = join(
+		outputDirectoryPath,
+		`${executionId}${newHashDigest}${extName}`,
+	);
 
 	await writeFile(oldDataPath, command.oldData);
 	await writeFile(newDataPath, command.newData);
@@ -205,6 +214,7 @@ export const handleFormattedInternalCommand = async (
 	outputDirectoryPath: string,
 	modId: string,
 	command: FormattedInternalCommand,
+	executionId: string,
 ): Promise<Message> => {
 	switch (command.kind) {
 		case 'createFile':
@@ -212,6 +222,7 @@ export const handleFormattedInternalCommand = async (
 				outputDirectoryPath,
 				modId,
 				command,
+				executionId,
 			);
 		case 'deleteFile':
 			return await handleDeleteFileCommmand(
@@ -230,6 +241,7 @@ export const handleFormattedInternalCommand = async (
 				outputDirectoryPath,
 				modId,
 				command,
+				executionId,
 			);
 		case 'copyFile':
 			return await handleCopyFileCommand(
