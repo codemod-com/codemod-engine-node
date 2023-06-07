@@ -5,6 +5,7 @@ import { NewGroup, oldGroupCodec, newGroupCodec } from './groups.js';
 import { handleListCliCommand } from './handleListCliCommand.js';
 import { handleRepomodCliCommand } from './handleRepomodCliCommand.js';
 import { WorkerThreadManager } from './workerThreadManager.js';
+import { buildExecutionId } from './buildExecutionId.js';
 
 const buildNewGroups = (
 	groups: ReadonlyArray<string>,
@@ -42,6 +43,8 @@ const buildNewGroups = (
 };
 
 export const executeMainThread = async () => {
+	const executionId = buildExecutionId();
+
 	const argv = await Promise.resolve(
 		yargs(hideBin(process.argv))
 			.command('*', 'the default command', (y) => {
@@ -133,7 +136,7 @@ export const executeMainThread = async () => {
 	}
 
 	if (String(argv._) === 'repomod') {
-		await handleRepomodCliCommand(argv);
+		await handleRepomodCliCommand(argv, executionId);
 
 		return;
 	}
@@ -160,5 +163,6 @@ export const executeMainThread = async () => {
 		newGroups,
 		argv.outputDirectoryPath,
 		codemodHashDigests,
+		executionId,
 	);
 };

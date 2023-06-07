@@ -69,7 +69,10 @@ const finishMessage: FinishMessage = {
 	k: MessageKind.finish,
 };
 
-export const handleRepomodCliCommand = async (args: Arguments) => {
+export const handleRepomodCliCommand = async (
+	args: Arguments,
+	executionId: string,
+) => {
 	const repomod = getRepomod(args);
 
 	if (repomod === null) {
@@ -79,7 +82,6 @@ export const handleRepomodCliCommand = async (args: Arguments) => {
 	}
 
 	const commands = await runRepomod(repomod, args.inputPath);
-
 	const formattedInternalCommands = await buildFormattedInternalCommands(
 		commands,
 	);
@@ -95,6 +97,7 @@ export const handleRepomodCliCommand = async (args: Arguments) => {
 			args.outputDirectoryPath,
 			modId,
 			formattedInternalCommand,
+			executionId,
 		);
 
 		console.log(JSON.stringify(message));
