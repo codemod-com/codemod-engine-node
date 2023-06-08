@@ -10,6 +10,7 @@ import {
 import { runRepomod } from './repomodRunner.js';
 import redwoodjsRepomod from './repomods/redwoodjs.js';
 import nextjsRepomod from './repomods/appDirectoryBoilerplate.js';
+import { repomod } from './repomods/removeNextOutput.js';
 
 type Exports =
 	| Readonly<{
@@ -25,8 +26,12 @@ type Arguments = Readonly<{
 	repomodFilePath: string;
 }>;
 
-const boilerplateHashDigest = createHash('ripemd160')
+const appDirectoryBoilerplateHashDigest = createHash('ripemd160')
 	.update('next/13/app-directory-boilerplate')
+	.digest('base64url');
+
+const removeNextExportHashDigest = createHash('ripemd160')
+	.update('next/13/remove-next-export')
 	.digest('base64url');
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -35,8 +40,12 @@ const getRepomod = (args: Arguments): Repomod<any> | null => {
 		return redwoodjsRepomod;
 	}
 
-	if (args.repomodFilePath === boilerplateHashDigest) {
+	if (args.repomodFilePath === appDirectoryBoilerplateHashDigest) {
 		return nextjsRepomod;
+	}
+
+	if (args.repomodFilePath === removeNextExportHashDigest) {
+		return repomod;
 	}
 
 	const source = readFileSync(args.repomodFilePath, {
