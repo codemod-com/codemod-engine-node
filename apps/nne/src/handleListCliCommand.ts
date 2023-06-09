@@ -59,6 +59,22 @@ export const handleListCliCommand = () => {
 		});
 	}
 
+	{
+		// TODO hack
+		const hashDigest = createHash('ripemd160')
+			.update('next/13/remove-next-export')
+			.digest('base64url');
+
+		entries.push({
+			kind: 'codemod',
+			engine: 'repomod-engine',
+			hashDigest,
+			name: 'next/13/remove-next-export',
+			description:
+				'This codemod removes all usages of the next export command.',
+		});
+	}
+
 	entries.sort((a, b) => a.name.localeCompare(b.name));
 
 	console.log(JSON.stringify(entries));
