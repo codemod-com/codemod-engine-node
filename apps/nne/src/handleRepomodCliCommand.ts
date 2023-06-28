@@ -1,3 +1,5 @@
+import * as readline from 'node:readline';
+import { Interface } from 'node:readline';
 import { Repomod } from '@intuita-inc/repomod-engine-api';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -89,6 +91,18 @@ export const handleRepomodCliCommand = async (
 
 		return;
 	}
+
+	process.stdin.unref();
+
+	const lineHandler = (line: string): void => {
+		if (line === 'shutdown') {
+			process.stdout.destroy();
+			process.exit(0);
+		}
+	};
+
+	const interfaze = readline.createInterface(process.stdin);
+	interfaze.on('line', lineHandler);
 
 	const commands = await runRepomod(repomod, args.inputPath);
 	const formattedInternalCommands = await buildFormattedInternalCommands(
