@@ -85,12 +85,6 @@ export const handleUpdateFileCommand = async (
 	command: UpdateFileCommand,
 	executionId: string,
 ): Promise<RewriteMessage> => {
-	const oldHashDigest = createHash('md5')
-		.update(command.kind)
-		.update(command.oldPath)
-		.update(command.oldData)
-		.digest('base64url');
-
 	const newHashDigest = createHash('md5')
 		.update(command.kind)
 		.update(command.oldPath)
@@ -98,22 +92,17 @@ export const handleUpdateFileCommand = async (
 		.digest('base64url');
 
 	const extName = extname(command.oldPath);
-	const oldDataPath = join(
-		outputDirectoryPath,
-		`${executionId}${oldHashDigest}${extName}`,
-	);
+
 	const newDataPath = join(
 		outputDirectoryPath,
 		`${executionId}${newHashDigest}${extName}`,
 	);
 
-	await writeFile(oldDataPath, command.oldData);
 	await writeFile(newDataPath, command.newData);
 
 	return {
 		k: MessageKind.rewrite,
 		i: command.oldPath,
-		oldDataPath,
 		o: newDataPath,
 		c: modId,
 	};

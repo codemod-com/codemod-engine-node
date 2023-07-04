@@ -1,5 +1,4 @@
 import * as readline from 'node:readline';
-import { Interface } from 'node:readline';
 import { Repomod } from '@intuita-inc/repomod-engine-api';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
