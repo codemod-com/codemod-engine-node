@@ -120,6 +120,7 @@ export const runCompositeMod = async (
 	compositeMod: CompositeMod,
 	path: string,
 	data: string,
+	formatWithPrettier: boolean,
 ): Promise<ModCommand[]> => {
 	let files: File[] = [
 		{
@@ -155,7 +156,12 @@ export const runCompositeMod = async (
 					continue;
 				}
 
-				const modCommands = runCodemod(mod, file.path, file.newData);
+				const modCommands = runCodemod(
+					mod,
+					file.path,
+					file.newData,
+					formatWithPrettier,
+				);
 
 				files = handleModCommands(files, modCommands).slice();
 			}
@@ -180,6 +186,7 @@ export const runCompositeMod = async (
 				oldData: '',
 				oldPath: file.path,
 				newData: file.newData,
+				formatWithPrettier,
 			});
 
 			continue;
@@ -190,6 +197,7 @@ export const runCompositeMod = async (
 				kind: 'createFile',
 				newPath: file.path,
 				newData: file.newData,
+				formatWithPrettier,
 			});
 		}
 	}

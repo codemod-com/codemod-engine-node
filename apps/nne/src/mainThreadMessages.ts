@@ -12,6 +12,7 @@ const mainThreadMessageSchema = S.union(
 		outputDirectoryPath: S.string,
 		codemodHashDigests: S.array(S.string),
 		executionId: S.string,
+		formatWithPrettier: S.boolean,
 	}),
 );
 

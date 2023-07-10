@@ -93,6 +93,11 @@ export const executeMainThread = async () => {
 							'Pass the number of worker threads to execute',
 						type: 'number',
 					})
+					.option('formatWithPrettier', {
+						describe:
+							'Pass whether to format the output files with Prettier or not',
+						type: 'boolean',
+					})
 					.demandOption(
 						['pattern', 'outputDirectoryPath'],
 						'Please provide the pattern argument to work with nora-node-engine',
@@ -119,6 +124,11 @@ export const executeMainThread = async () => {
 							'Pass the output directory path to save output files within in',
 						type: 'string',
 					})
+					.option('formatWithPrettier', {
+						describe:
+							'Pass whether to format the output files with Prettier or not',
+						type: 'boolean',
+					})
 					.demandOption(
 						['repomodFilePath', 'inputPath', 'outputDirectoryPath'],
 						'Please provide the repomodFilePath and outputDirectoryPath argument to work with codemod-engine-node',
@@ -135,8 +145,13 @@ export const executeMainThread = async () => {
 		return;
 	}
 
+	const formatWithPrettier = argv.formatWithPrettier ?? false;
+
 	if (String(argv._) === 'repomod') {
-		await handleRepomodCliCommand(argv, executionId);
+		await handleRepomodCliCommand(
+			{ ...argv, formatWithPrettier },
+			executionId,
+		);
 
 		return;
 	}
@@ -164,5 +179,6 @@ export const executeMainThread = async () => {
 		argv.outputDirectoryPath,
 		codemodHashDigests,
 		executionId,
+		formatWithPrettier,
 	);
 };
