@@ -1,4 +1,4 @@
-import { posix } from 'node:path';
+import { ParsedPath, posix } from 'node:path';
 import tsmorph from 'ts-morph';
 import type { Repomod } from '@intuita-inc/repomod-engine-api';
 
@@ -53,19 +53,6 @@ export default function NotFound() {
 }
 `;
 
-const ROOT_PAGE_CONTENT = `
-export default function RootPage(
-    {
-        params,
-        searchParams,
-    }: {
-        params: { slug: string };
-        searchParams: { [key: string]: string | string[] | undefined };
-    }) {
-        return null;
-}
-`;
-
 const ROUTE_LAYOUT_CONTENT = `
 import { Metadata } from 'next';
  
@@ -111,7 +98,7 @@ const map = new Map([
 	[FilePurpose.ROOT_LAYOUT, ROOT_LAYOUT_CONTENT],
 	[FilePurpose.ROOT_ERROR, ROOT_ERROR_CONTENT],
 	[FilePurpose.ROOT_NOT_FOUND, ROOT_NOT_FOUND_CONTENT],
-	[FilePurpose.ROOT_PAGE, ROOT_PAGE_CONTENT],
+	[FilePurpose.ROOT_PAGE, ''],
 	[FilePurpose.ROUTE_LAYOUT, ROUTE_LAYOUT_CONTENT],
 	[FilePurpose.ROUTE_PAGE, ROUTE_PAGE_CONTENT],
 ]);
@@ -164,9 +151,28 @@ export const repomod: Repomod<Dependencies> = {
 				name: 'page',
 			});
 
-			return [
+			const jsxErrorPath = posix.format({
+				...parsedPath,
+				name: '_error',
+				ext: '.jsx',
+				base: undefined,
+			});
+
+			const tsxErrorPath = posix.format({
+				...parsedPath,
+				name: '_error',
+				ext: '.tsx',
+				base: undefined,
+			});
+
+			const rootErrorPathIncludes =
+				api.exists(jsxErrorPath) || api.exists(tsxErrorPath);
+
+			const oldData = await api.readFile(path);
+
+			const commands = [
 				{
-					kind: 'upsertFile',
+					kind: 'upsertFile' as const,
 					path: rootLayoutPath,
 					options: {
 						...options,
@@ -174,15 +180,7 @@ export const repomod: Repomod<Dependencies> = {
 					},
 				},
 				{
-					kind: 'upsertFile',
-					path: rootErrorPath,
-					options: {
-						...options,
-						filePurpose: FilePurpose.ROOT_ERROR,
-					},
-				},
-				{
-					kind: 'upsertFile',
+					kind: 'upsertFile' as const,
 					path: rootNotFoundPath,
 					options: {
 						...options,
@@ -190,14 +188,29 @@ export const repomod: Repomod<Dependencies> = {
 					},
 				},
 				{
-					kind: 'upsertFile',
+					kind: 'upsertFile' as const,
 					path: rootPagePath,
 					options: {
 						...options,
 						filePurpose: FilePurpose.ROOT_PAGE,
+						oldPath: path,
+						oldData,
 					},
 				},
 			];
+
+			if (rootErrorPathIncludes) {
+				commands.push({
+					kind: 'upsertFile' as const,
+					path: rootErrorPath,
+					options: {
+						...options,
+						filePurpose: FilePurpose.ROOT_ERROR,
+					},
+				});
+			}
+
+			return commands;
 		}
 
 		if (!endsWithPages) {
@@ -268,7 +281,11 @@ export const repomod: Repomod<Dependencies> = {
 			};
 		}
 
-		if (filePurpose === FilePurpose.ROUTE_PAGE && options.oldPath) {
+		if (
+			(filePurpose === FilePurpose.ROUTE_PAGE ||
+				filePurpose === FilePurpose.ROOT_PAGE) &&
+			options.oldPath
+		) {
 			const { tsmorph } = api.getDependencies();
 
 			const project = new tsmorph.Project({
@@ -290,13 +307,13 @@ export const repomod: Repomod<Dependencies> = {
 				if (tsmorph.Node.isImportDeclaration(statement)) {
 					const structure = statement.getStructure();
 
-					if (structure.moduleSpecifier.startsWith('..')) {
+					if (structure.moduleSpecifier.startsWith('./')) {
+						structure.moduleSpecifier = `.${structure.moduleSpecifier}`;
+					} else if (structure.moduleSpecifier.startsWith('../')) {
 						structure.moduleSpecifier = `../${structure.moduleSpecifier}`;
 					}
 
-					newSourceFile.addImportDeclaration(
-						statement.getStructure(),
-					);
+					newSourceFile.addImportDeclaration(structure);
 
 					return;
 				}
@@ -306,15 +323,15 @@ export const repomod: Repomod<Dependencies> = {
 						.getDeclarationList()
 						.getDeclarations();
 
-					const getStaticPropsUsed = declarations.some(
+					const getStaticPathUsed = declarations.some(
 						(declaration) => {
-							return declaration.getName() === 'getStaticProps';
+							return declaration.getName() === 'getStaticPath';
 						},
 					);
 
-					if (getStaticPropsUsed) {
+					if (getStaticPathUsed) {
 						newSourceFile.addStatements(
-							`// TODO reimplement getStaticProps as generateStaticParams\n`,
+							`// TODO reimplement getStaticPath as generateStaticParams\n`,
 						);
 					}
 
