@@ -52,6 +52,7 @@ export const executeWorkerThread = () => {
 			filePath,
 			outputDirectoryPath,
 			executionId,
+			formatWithPrettier,
 		} = message;
 
 		const oldData = await getOldData(filePath);
@@ -187,7 +188,12 @@ export const executeWorkerThread = () => {
 					typeof mod.transformer === 'function' &&
 					mod.transformer
 				) {
-					commands = runCodemod(mod, filePath, oldData).slice();
+					commands = runCodemod(
+						mod,
+						filePath,
+						oldData,
+						formatWithPrettier,
+					).slice();
 				} else if (
 					mod.engine === 'filemod-engine' &&
 					mod.transformer &&
@@ -207,6 +213,7 @@ export const executeWorkerThread = () => {
 						newMod as any,
 						filePath,
 						oldData,
+						formatWithPrettier,
 					);
 				} else {
 					throw new CodemodExecutionError(

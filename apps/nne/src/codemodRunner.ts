@@ -31,6 +31,7 @@ export const runJscodeshiftCodemod = (
 	codemod: Codemod & { engine: 'jscodeshift' },
 	oldPath: string,
 	oldData: string,
+	formatWithPrettier: boolean,
 ): readonly ModCommand[] => {
 	const commands: ModCommand[] = [];
 
@@ -39,6 +40,7 @@ export const runJscodeshiftCodemod = (
 			kind: 'createFile',
 			newPath,
 			newData,
+			formatWithPrettier,
 		});
 	};
 
@@ -64,6 +66,7 @@ export const runJscodeshiftCodemod = (
 		oldPath,
 		oldData: oldData,
 		newData,
+		formatWithPrettier,
 	});
 
 	return commands;
@@ -73,6 +76,7 @@ export const runTsMorphCodemod = (
 	codemod: Codemod & { engine: 'ts-morph' },
 	oldPath: string,
 	oldData: string,
+	formatWithPrettier: boolean,
 ): readonly ModCommand[] => {
 	const project = buildTsMorphProject();
 	const sourceFile = project.createSourceFile(oldPath, oldData);
@@ -88,6 +92,7 @@ export const runTsMorphCodemod = (
 			oldPath,
 			oldData,
 			newData,
+			formatWithPrettier,
 		},
 	];
 };
@@ -96,10 +101,16 @@ export const runCodemod = (
 	codemod: Codemod,
 	oldPath: string,
 	oldData: string,
+	formatWithPrettier: boolean,
 ): readonly ModCommand[] => {
 	if (codemod.engine === 'jscodeshift') {
-		return runJscodeshiftCodemod(codemod, oldPath, oldData);
+		return runJscodeshiftCodemod(
+			codemod,
+			oldPath,
+			oldData,
+			formatWithPrettier,
+		);
 	}
 
-	return runTsMorphCodemod(codemod, oldPath, oldData);
+	return runTsMorphCodemod(codemod, oldPath, oldData, formatWithPrettier);
 };

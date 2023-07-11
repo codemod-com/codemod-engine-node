@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { writeFile } from 'node:fs/promises';
 import { join, extname } from 'node:path';
+import { format, resolveConfig, Options } from 'prettier';
 import {
 	CopyMessage,
 	CreateMessage,
@@ -15,6 +16,7 @@ export type CreateFileCommand = Readonly<{
 	kind: 'createFile';
 	newPath: string;
 	newData: string;
+	formatWithPrettier: boolean;
 }>;
 
 export type UpdateFileCommand = Readonly<{
@@ -22,6 +24,7 @@ export type UpdateFileCommand = Readonly<{
 	oldPath: string;
 	oldData: string;
 	newData: string;
+	formatWithPrettier: boolean;
 }>;
 
 export type DeleteFileCommand = Readonly<{
@@ -50,7 +53,56 @@ export type ModCommand =
 
 export type FormattedInternalCommand = ModCommand & { formatted: true };
 
-export const formatText = (data: string) => data.replace(/\/\*\* \*\*\//gm, '');
+export const DEFAULT_PRETTIER_OPTIONS: Options = {
+	tabWidth: 4,
+	useTabs: true,
+	semi: true,
+	singleQuote: true,
+	quoteProps: 'as-needed',
+	trailingComma: 'all',
+	bracketSpacing: true,
+	arrowParens: 'always',
+	endOfLine: 'lf',
+	parser: 'typescript',
+};
+
+export const getConfig = async (path: string): Promise<Options> => {
+	const config = await resolveConfig(path, {
+		editorconfig: false,
+	});
+
+	if (config === null || Object.keys(config).length === 0) {
+		throw new Error('Unable to resolve config');
+	}
+
+	const parser = path.endsWith('.css')
+		? 'css'
+		: config.parser ?? DEFAULT_PRETTIER_OPTIONS.parser;
+
+	return {
+		...config,
+		parser,
+	};
+};
+
+export const formatText = async (
+	path: string,
+	oldData: string,
+	formatWithPrettier: boolean,
+): Promise<string> => {
+	const newData = oldData.replace(/\/\*\* \*\*\//gm, '');
+
+	if (!formatWithPrettier) {
+		return newData;
+	}
+
+	try {
+		const options = await getConfig(path);
+		return format(newData, options);
+	} catch (err) {
+		return newData;
+	}
+};
 
 export const handleCreateFileCommand = async (
 	outputDirectoryPath: string,
@@ -150,7 +202,11 @@ export const buildFormattedInternalCommand = async (
 	command: ModCommand,
 ): Promise<FormattedInternalCommand | null> => {
 	if (command.kind === 'createFile') {
-		const newData = formatText(command.newData);
+		const newData = await formatText(
+			command.newPath,
+			command.newData,
+			command.formatWithPrettier,
+		);
 
 		return {
 			...command,
@@ -160,7 +216,11 @@ export const buildFormattedInternalCommand = async (
 	}
 
 	if (command.kind === 'updateFile') {
-		const newData = formatText(command.newData);
+		const newData = await formatText(
+			command.oldPath,
+			command.newData,
+			command.formatWithPrettier,
+		);
 
 		if (command.oldData === newData) {
 			return null;

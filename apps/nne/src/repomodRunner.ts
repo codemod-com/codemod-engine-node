@@ -22,6 +22,7 @@ import { ModCommand } from './modCommands.js';
 export const runRepomod = async (
 	repomod: Repomod<Dependencies>,
 	inputPath: string,
+	formatWithPrettier: boolean,
 ): Promise<readonly ModCommand[]> => {
 	const fileSystemManager = new FileSystemManager(
 		fsPromises.readdir,
@@ -56,12 +57,14 @@ export const runRepomod = async (
 						oldPath: externalFileCommand.path,
 						oldData: '', // TODO get the old data from the repomod
 						newData: externalFileCommand.data,
+						formatWithPrettier,
 					};
 				} catch (error) {
 					return {
 						kind: 'createFile',
 						newPath: externalFileCommand.path,
 						newData: externalFileCommand.data,
+						formatWithPrettier,
 					};
 				}
 			}
