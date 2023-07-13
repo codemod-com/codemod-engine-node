@@ -104,7 +104,11 @@ export const handleRepomodCliCommand = async (
 	const interfaze = readline.createInterface(process.stdin);
 	interfaze.on('line', lineHandler);
 
-	const commands = await runRepomod(repomod, args.inputPath, args.formatWithPrettier);
+	const commands = await runRepomod(
+		repomod,
+		args.inputPath,
+		args.formatWithPrettier,
+	);
 	const formattedInternalCommands = await buildFormattedInternalCommands(
 		commands,
 	);

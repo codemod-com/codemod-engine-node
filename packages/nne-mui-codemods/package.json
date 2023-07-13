@@ -3,7 +3,7 @@
 	"version": "0.0.1",
 	"private": true,
 	"files": [],
-    "main": "./dist/index.js",
+	"main": "./dist/index.js",
 	"dependencies": {
 		"@babel/core": "7.20.5",
 		"@babel/traverse": "7.20.5",
