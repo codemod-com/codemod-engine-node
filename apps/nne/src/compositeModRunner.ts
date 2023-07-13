@@ -1,11 +1,13 @@
+import { Repomod } from '@intuita-inc/repomod-engine-api';
 import { Codemod, runCodemod } from './codemodRunner.js';
 import { Filemod, runFilemod } from './filemodRunner.js';
 import { ModCommand } from './modCommands.js';
+import { Dependencies } from './repomodRunner.js';
 
 export type CompositeMod = Readonly<{
 	engine: 'composite-mod-engine';
 	caseTitle: string;
-	mods: ReadonlyArray<Filemod | Codemod>;
+	mods: ReadonlyArray<Filemod | Codemod | Repomod<Dependencies>>;
 }>;
 
 type File = {
@@ -133,7 +135,7 @@ export const runCompositeMod = async (
 	];
 
 	for (const mod of compositeMod.mods) {
-		if (mod.engine === 'filemod-engine') {
+		if ('engine' in mod && mod.engine === 'filemod-engine') {
 			const currentFiles = files.slice();
 
 			for (const file of currentFiles) {
@@ -147,7 +149,10 @@ export const runCompositeMod = async (
 			}
 		}
 
-		if (mod.engine === 'jscodeshift' || mod.engine === 'ts-morph') {
+		if (
+			'engine' in mod &&
+			(mod.engine === 'jscodeshift' || mod.engine === 'ts-morph')
+		) {
 			const currentFiles = files.slice();
 
 			for (const file of currentFiles) {

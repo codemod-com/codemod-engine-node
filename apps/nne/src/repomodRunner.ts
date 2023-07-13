@@ -9,15 +9,15 @@ import rehypeParse from 'rehype-parse';
 import { unified } from 'unified';
 import hastToBabelAst from '@svgr/hast-util-to-babel-ast';
 import tsmorph from 'ts-morph';
+import { ModCommand } from './modCommands.js';
 
-type Dependencies = Readonly<{
+export type Dependencies = Readonly<{
 	jscodeshift: typeof jscodeshift;
 	unified: typeof unified;
 	rehypeParse: typeof rehypeParse;
 	hastToBabelAst: typeof hastToBabelAst;
 	tsmorph: typeof tsmorph;
 }>;
-import { ModCommand } from './modCommands.js';
 
 export const runRepomod = async (
 	repomod: Repomod<Dependencies>,

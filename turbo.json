@@ -6,17 +6,11 @@
 			"outputs": []
 		},
 		"build": {
-			"dependsOn": [
-				"//#lint",
-				"^build"
-			],
+			"dependsOn": ["//#lint", "^build"],
 			"outputMode": "full"
 		},
 		"package": {
-			"dependsOn": [
-				"build",
-				"^package"
-			],
+			"dependsOn": ["build", "^package"],
 			"outputMode": "full"
 		}
 	}

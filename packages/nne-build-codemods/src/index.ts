@@ -1,5 +1,10 @@
 import { createHash } from 'node:crypto';
-import { createReadStream, createWriteStream, existsSync } from 'node:fs';
+import {
+	constants,
+	createReadStream,
+	createWriteStream,
+	existsSync,
+} from 'node:fs';
 import { mkdir, readdir, readFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 
@@ -33,8 +38,10 @@ type CodemodObject =
 const dirname = join(__dirname, '../../nne-codemods/src/');
 
 const fetchCodemods = async () => {
+	await mkdir(dirname, { recursive: true });
+
 	const indexFilePath = join(dirname, './index.ts');
-	const writeStream = createWriteStream(indexFilePath);
+	const writeStream = createWriteStream(indexFilePath, {});
 
 	const codemodObjects: CodemodObject[] = [];
 
@@ -81,7 +88,7 @@ const fetchCodemods = async () => {
 				);
 
 				if (!existsSync(codemodDirname)) {
-					await mkdir(codemodDirname);
+					await mkdir(codemodDirname, { recursive: true });
 				}
 
 				{
@@ -117,7 +124,7 @@ const fetchCodemods = async () => {
 				const codemodDirname = join(dirname, `./codemods/${hash}/`);
 
 				if (!existsSync(codemodDirname)) {
-					await mkdir(codemodDirname);
+					await mkdir(codemodDirname, { recursive: true });
 				}
 
 				{
