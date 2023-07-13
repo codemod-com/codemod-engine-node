@@ -5,7 +5,6 @@ import { ModCommand } from './modCommands.js';
 export type CompositeMod = Readonly<{
 	engine: 'composite-mod-engine';
 	caseTitle: string;
-	group: string | null;
 	mods: ReadonlyArray<Filemod | Codemod>;
 }>;
 
@@ -148,7 +147,7 @@ export const runCompositeMod = async (
 			}
 		}
 
-		if (mod.engine === 'jscodeshift') {
+		if (mod.engine === 'jscodeshift' || mod.engine === 'ts-morph') {
 			const currentFiles = files.slice();
 
 			for (const file of currentFiles) {

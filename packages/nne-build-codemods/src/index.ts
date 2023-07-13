@@ -7,7 +7,6 @@ type CodemodObject =
 	| Readonly<{
 			engine: 'jscodeshift';
 			description: string;
-			group: string;
 			caseTitle: string;
 			transformer: string;
 			withParser: string;
@@ -15,21 +14,18 @@ type CodemodObject =
 	| Readonly<{
 			engine: 'ts-morph';
 			description: string;
-			group: string;
 			caseTitle: string;
 			transformer: string;
 	  }>
 	| Readonly<{
 			engine: 'filemod-engine';
 			description: string;
-			group: string;
 			caseTitle: string;
 			transformer: string;
 	  }>
 	| Readonly<{
 			engine: 'composite-mod-engine';
 			description: string;
-			group: string;
 			caseTitle: string;
 			mods: ReadonlyArray<string>;
 	  }>;
@@ -108,8 +104,7 @@ const fetchCodemods = async () => {
 				codemodObjects.push({
 					engine: 'ts-morph',
 					caseTitle: config.name,
-					description: config.description, 
-					group: setConfig.name,
+					description: config.description,
 					transformer: `transformer${hashDigest}`,
 				});
 			}
@@ -145,8 +140,7 @@ const fetchCodemods = async () => {
 				codemodObjects.push({
 					engine: 'jscodeshift',
 					caseTitle: config.name,
-					description: config.description, 
-					group: setConfig.name,
+					description: config.description,
 					transformer: `transformer${hash}`,
 					withParser: 'tsx',
 				});
@@ -183,9 +177,8 @@ const fetchCodemods = async () => {
 
 						codemodObjects.push({
 							engine: 'filemod-engine',
-							description: config.description, 
+							description: config.description,
 							caseTitle: config.name,
-							group: setConfig.name,
 							transformer: `"` + buffer + `"`,
 						});
 
@@ -199,9 +192,8 @@ const fetchCodemods = async () => {
 			if (config.engine === 'composite-mod-engine') {
 				codemodObjects.push({
 					engine: 'composite-mod-engine',
-					description: config.description, 
+					description: config.description,
 					caseTitle: config.name,
-					group: setConfig.name,
 					mods: config.mods,
 				});
 			}
@@ -215,7 +207,6 @@ const fetchCodemods = async () => {
 				`\t\t"engine": "${codemodObject.engine}",\n` +
 				`\t\t"caseTitle": "${codemodObject.caseTitle}",\n` +
 				`\t\t"description": "${codemodObject.description}",\n` +
-				`\t\t"group": "${codemodObject.group}",\n` +
 				('transformer' in codemodObject
 					? `\t\t"transformer": ${codemodObject.transformer},\n`
 					: '') +

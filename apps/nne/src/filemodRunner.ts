@@ -8,7 +8,6 @@ import { ModCommand } from './modCommands.js';
 export type Filemod = Readonly<{
 	engine: 'filemod-engine';
 	caseTitle: string;
-	group: string | null;
 	transformer: string;
 }>;
 

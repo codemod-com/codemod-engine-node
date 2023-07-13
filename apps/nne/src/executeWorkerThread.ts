@@ -47,7 +47,6 @@ export const executeWorkerThread = () => {
 
 		const {
 			codemodFilePath,
-			newGroups,
 			codemodHashDigests,
 			filePath,
 			outputDirectoryPath,
@@ -114,7 +113,6 @@ export const executeWorkerThread = () => {
 					mods.push({
 						engine: 'ts-morph',
 						caseTitle: codemodFilePath,
-						group: null,
 						transformer,
 					});
 				} else if (codemodFilePath.endsWith('.ts')) {
@@ -135,7 +133,6 @@ export const executeWorkerThread = () => {
 					mods.push({
 						engine: 'jscodeshift',
 						caseTitle: codemodFilePath,
-						group: null,
 						transformer,
 						withParser: 'tsx',
 					});
@@ -143,7 +140,6 @@ export const executeWorkerThread = () => {
 					mods.push({
 						engine: 'jscodeshift',
 						caseTitle: codemodFilePath,
-						group: null,
 						transformer: require(codemodFilePath),
 						withParser: 'tsx',
 					});
@@ -172,10 +168,6 @@ export const executeWorkerThread = () => {
 						.digest('base64url'),
 				)
 			) {
-				continue;
-			}
-
-			if (newGroups.length > 0 && !newGroups.includes(mod.group ?? '')) {
 				continue;
 			}
 
@@ -247,7 +239,6 @@ export const executeWorkerThread = () => {
 						JSON.stringify({
 							message: error.message,
 							caseTitle: mod.caseTitle,
-							group: mod.group,
 							filePath,
 							...('kind' in error ? { kind: error.kind } : {}),
 						}),
