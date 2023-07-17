@@ -208,7 +208,6 @@ export const executeWorkerThread = () => {
 				for (const formattedInternalCommand of formattedInternalCommands) {
 					const message = await handleFormattedInternalCommand(
 						outputDirectoryPath,
-						mod.caseTitle,
 						formattedInternalCommand,
 						executionId,
 					);

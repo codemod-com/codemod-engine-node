@@ -157,7 +157,6 @@ export const handleUpdateFileCommand = async (
 };
 
 export const handleDeleteFileCommmand = async (
-	_: string,
 	command: DeleteFileCommand,
 ): Promise<DeleteMessage> => {
 	return {
@@ -167,7 +166,6 @@ export const handleDeleteFileCommmand = async (
 };
 
 export const handleMoveFileCommand = async (
-	_: string,
 	command: MoveFileCommand,
 ): Promise<MoveMessage> => {
 	return {
@@ -178,7 +176,6 @@ export const handleMoveFileCommand = async (
 };
 
 export const handleCopyFileCommand = async (
-	_: string,
 	command: CopyFileCommand,
 ): Promise<CopyMessage> => {
 	return {
@@ -262,9 +259,9 @@ export const handleFormattedInternalCommand = async (
 				executionId,
 			);
 		case 'deleteFile':
-			return await handleDeleteFileCommmand(outputDirectoryPath, command);
+			return await handleDeleteFileCommmand(command);
 		case 'moveFile':
-			return await handleMoveFileCommand(outputDirectoryPath, command);
+			return await handleMoveFileCommand(command);
 		case 'updateFile':
 			return await handleUpdateFileCommand(
 				outputDirectoryPath,
@@ -272,6 +269,6 @@ export const handleFormattedInternalCommand = async (
 				executionId,
 			);
 		case 'copyFile':
-			return await handleCopyFileCommand(outputDirectoryPath, command);
+			return await handleCopyFileCommand(command);
 	}
 };
