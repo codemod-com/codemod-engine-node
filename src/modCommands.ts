@@ -156,35 +156,6 @@ export const handleUpdateFileCommand = async (
 	};
 };
 
-export const handleDeleteFileCommmand = async (
-	command: DeleteFileCommand,
-): Promise<DeleteMessage> => {
-	return {
-		k: MessageKind.delete,
-		oldFilePath: command.oldPath,
-	};
-};
-
-export const handleMoveFileCommand = async (
-	command: MoveFileCommand,
-): Promise<MoveMessage> => {
-	return {
-		k: MessageKind.move,
-		oldFilePath: command.oldPath,
-		newFilePath: command.newPath,
-	};
-};
-
-export const handleCopyFileCommand = async (
-	command: CopyFileCommand,
-): Promise<CopyMessage> => {
-	return {
-		k: MessageKind.copy,
-		oldFilePath: command.oldPath,
-		newFilePath: command.newPath,
-	};
-};
-
 export const buildFormattedInternalCommand = async (
 	command: ModCommand,
 ): Promise<FormattedInternalCommand | null> => {
@@ -259,9 +230,16 @@ export const handleFormattedInternalCommand = async (
 				executionId,
 			);
 		case 'deleteFile':
-			return await handleDeleteFileCommmand(command);
+			return {
+				k: MessageKind.delete,
+				oldFilePath: command.oldPath,
+			};
 		case 'moveFile':
-			return await handleMoveFileCommand(command);
+			return {
+				k: MessageKind.move,
+				oldFilePath: command.oldPath,
+				newFilePath: command.newPath,
+			};
 		case 'updateFile':
 			return await handleUpdateFileCommand(
 				outputDirectoryPath,
@@ -269,6 +247,10 @@ export const handleFormattedInternalCommand = async (
 				executionId,
 			);
 		case 'copyFile':
-			return await handleCopyFileCommand(command);
+			return {
+				k: MessageKind.copy,
+				oldFilePath: command.oldPath,
+				newFilePath: command.newPath,
+			};
 	}
 };
