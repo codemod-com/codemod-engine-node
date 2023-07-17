@@ -1,4 +1,4 @@
-import { ParsedPath, posix } from 'node:path';
+import { posix } from 'node:path';
 import tsmorph from 'ts-morph';
 import type { Repomod } from '@intuita-inc/repomod-engine-api';
 
@@ -71,18 +71,6 @@ export default function RouteLayout(
 }
 `;
 
-const ROUTE_PAGE_CONTENT = `
-export default function RoutePage(
-	{
-		params,
-	}: {
-		params: {},
-	}
-) {
-    return <RouteClientComponent />;
-}
-`;
-
 enum FilePurpose {
 	// root directory
 	ROOT_LAYOUT = 'ROOT_LAYOUT',
@@ -90,7 +78,6 @@ enum FilePurpose {
 	ROOT_PAGE = 'ROOT_PAGE',
 	ROOT_NOT_FOUND = 'ROOT_NOT_FOUND',
 	// route directories
-	ROUTE_LAYOUT = 'ROUTE_LAYOUT',
 	ROUTE_PAGE = 'ROUTE_PAGE',
 }
 
@@ -99,8 +86,7 @@ const map = new Map([
 	[FilePurpose.ROOT_ERROR, ROOT_ERROR_CONTENT],
 	[FilePurpose.ROOT_NOT_FOUND, ROOT_NOT_FOUND_CONTENT],
 	[FilePurpose.ROOT_PAGE, ''],
-	[FilePurpose.ROUTE_LAYOUT, ROUTE_LAYOUT_CONTENT],
-	[FilePurpose.ROUTE_PAGE, ROUTE_PAGE_CONTENT],
+	[FilePurpose.ROUTE_PAGE, ''],
 ]);
 
 const EXTENSION = '.tsx';
@@ -165,8 +151,25 @@ export const repomod: Repomod<Dependencies> = {
 				base: undefined,
 			});
 
-			const rootErrorPathIncludes =
+			const rootErrorPathIncluded =
 				api.exists(jsxErrorPath) || api.exists(tsxErrorPath);
+
+			const jsxNotFoundPath = posix.format({
+				...parsedPath,
+				name: '_404',
+				ext: '.jsx',
+				base: undefined,
+			});
+
+			const tsxNotFoundPath = posix.format({
+				...parsedPath,
+				name: '_404',
+				ext: '.tsx',
+				base: undefined,
+			});
+
+			const rootNotFoundPathIncluded =
+				api.exists(jsxNotFoundPath) || api.exists(tsxNotFoundPath);
 
 			const oldData = await api.readFile(path);
 
@@ -181,14 +184,6 @@ export const repomod: Repomod<Dependencies> = {
 				},
 				{
 					kind: 'upsertFile' as const,
-					path: rootNotFoundPath,
-					options: {
-						...options,
-						filePurpose: FilePurpose.ROOT_NOT_FOUND,
-					},
-				},
-				{
-					kind: 'upsertFile' as const,
 					path: rootPagePath,
 					options: {
 						...options,
@@ -199,13 +194,24 @@ export const repomod: Repomod<Dependencies> = {
 				},
 			];
 
-			if (rootErrorPathIncludes) {
+			if (rootErrorPathIncluded) {
 				commands.push({
 					kind: 'upsertFile' as const,
 					path: rootErrorPath,
 					options: {
 						...options,
 						filePurpose: FilePurpose.ROOT_ERROR,
+					},
+				});
+			}
+
+			if (rootNotFoundPathIncluded) {
+				commands.push({
+					kind: 'upsertFile' as const,
+					path: rootNotFoundPath,
+					options: {
+						...options,
+						filePurpose: FilePurpose.ROOT_NOT_FOUND,
 					},
 				});
 			}
@@ -231,13 +237,6 @@ export const repomod: Repomod<Dependencies> = {
 				name: 'page',
 			});
 
-			const routeLayoutPath = posix.format({
-				root: parsedPath.root,
-				dir: newDir,
-				ext: EXTENSION,
-				name: 'layout',
-			});
-
 			const oldData = await api.readFile(path);
 
 			return [
@@ -249,14 +248,6 @@ export const repomod: Repomod<Dependencies> = {
 						filePurpose: FilePurpose.ROUTE_PAGE,
 						oldPath: path,
 						oldData,
-					},
-				},
-				{
-					kind: 'upsertFile',
-					path: routeLayoutPath,
-					options: {
-						...options,
-						filePurpose: FilePurpose.ROUTE_LAYOUT,
 					},
 				},
 			];
@@ -307,10 +298,14 @@ export const repomod: Repomod<Dependencies> = {
 				if (tsmorph.Node.isImportDeclaration(statement)) {
 					const structure = statement.getStructure();
 
-					if (structure.moduleSpecifier.startsWith('./')) {
-						structure.moduleSpecifier = `.${structure.moduleSpecifier}`;
-					} else if (structure.moduleSpecifier.startsWith('../')) {
-						structure.moduleSpecifier = `../${structure.moduleSpecifier}`;
+					if (filePurpose === FilePurpose.ROUTE_PAGE) {
+						if (structure.moduleSpecifier.startsWith('./')) {
+							structure.moduleSpecifier = `.${structure.moduleSpecifier}`;
+						} else if (
+							structure.moduleSpecifier.startsWith('../')
+						) {
+							structure.moduleSpecifier = `../${structure.moduleSpecifier}`;
+						}
 					}
 
 					newSourceFile.addImportDeclaration(structure);
