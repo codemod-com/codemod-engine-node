@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { writeFile } from 'node:fs/promises';
+import { copyFile, unlink, writeFile } from 'node:fs/promises';
 import { join, extname } from 'node:path';
 import { format, resolveConfig, Options } from 'prettier';
 import { Message, MessageKind } from './messages.js';
@@ -151,8 +151,15 @@ export const buildFormattedInternalCommands = async (
 export const handleFormattedInternalCommand = async (
 	outputDirectoryPath: string,
 	command: FormattedInternalCommand,
-): Promise<Message> => {
+	dryRun: boolean,
+): Promise<Message | null> => {
 	if (command.kind === 'createFile') {
+		if (!dryRun) {
+			await writeFile(command.newPath, command.newData);
+
+			return null;
+		}
+
 		const hash = createHash('md5')
 			.update(command.kind)
 			.update(command.newPath)
@@ -161,6 +168,7 @@ export const handleFormattedInternalCommand = async (
 
 		const extName = extname(command.newPath);
 		const newDataPath = join(outputDirectoryPath, `${hash}${extName}`);
+
 		await writeFile(newDataPath, command.newData);
 
 		return {
@@ -171,6 +179,12 @@ export const handleFormattedInternalCommand = async (
 	}
 
 	if (command.kind === 'deleteFile') {
+		if (!dryRun) {
+			await unlink(command.oldPath);
+
+			return null;
+		}
+
 		return {
 			k: MessageKind.delete,
 			oldFilePath: command.oldPath,
@@ -178,6 +192,14 @@ export const handleFormattedInternalCommand = async (
 	}
 
 	if (command.kind === 'moveFile') {
+		if (!dryRun) {
+			await copyFile(command.oldPath, command.newPath);
+
+			await unlink(command.oldPath);
+
+			return null;
+		}
+
 		return {
 			k: MessageKind.move,
 			oldFilePath: command.oldPath,
@@ -186,6 +208,12 @@ export const handleFormattedInternalCommand = async (
 	}
 
 	if (command.kind === 'updateFile') {
+		if (!dryRun) {
+			await writeFile(command.oldPath, command.newData);
+
+			return null;
+		}
+
 		const hashDigest = createHash('md5')
 			.update(command.kind)
 			.update(command.oldPath)
@@ -209,6 +237,12 @@ export const handleFormattedInternalCommand = async (
 	}
 
 	if (command.kind === 'copyFile') {
+		if (!dryRun) {
+			await copyFile(command.oldPath, command.newPath);
+
+			return null;
+		}
+
 		return {
 			k: MessageKind.copy,
 			oldFilePath: command.oldPath,

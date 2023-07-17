@@ -208,6 +208,7 @@ export const executeWorkerThread = () => {
 					const message = await handleFormattedInternalCommand(
 						outputDirectoryPath,
 						formattedInternalCommand,
+						true,
 					);
 
 					parentPort?.postMessage({

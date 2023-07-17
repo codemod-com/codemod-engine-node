@@ -90,6 +90,7 @@ export const handleRepomodCliCommand = async (args: Arguments) => {
 		const message = await handleFormattedInternalCommand(
 			args.outputDirectoryPath,
 			formattedInternalCommand,
+			true,
 		);
 
 		console.log(JSON.stringify(message));
