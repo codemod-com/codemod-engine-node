@@ -4,7 +4,6 @@ import * as S from '@effect/schema/Schema';
 import { handleListNamesCommand } from './handleListCliCommand.js';
 import { glob } from 'glob';
 import * as fs from 'fs';
-import { handleGetMetadataPathCommand } from './handleGetMetadataPathCommand.js';
 import { Volume, createFsFromVolume } from 'memfs';
 import { readFile } from 'fs/promises';
 import { downloadCodemod } from './downloadCodemod.js';
@@ -60,33 +59,29 @@ export const runCodemod = async (
 	flowSettings: S.To<typeof flowSettingsSchema>,
 ) => {
 	if ('name' in codemodSettings) {
-		await downloadCodemod(codemodSettings.name);
+		const codemod = await downloadCodemod(codemodSettings.name);
 
-		
+		if (codemod.engine === 'recipe') {
+			const paths = await glob(flowSettings.includePattern.slice(), {
+				absolute: true,
+				cwd: flowSettings.inputDirectoryPath,
+				fs: fs,
+				ignore: flowSettings.excludePattern.slice(),
+			});
 
-		const paths = await glob(flowSettings.includePattern.slice(), {
-			absolute: true,
-			cwd: flowSettings.inputDirectoryPath,
-			fs: fs,
-			ignore: flowSettings.excludePattern.slice(),
-		});
-	
-		const volume = Volume.fromJSON({});
-	
-		for (const path of paths) {
-			const data = await readFile(path);
-	
-			volume.writeFileSync(path, data);
+			const volume = Volume.fromJSON({});
+
+			for (const path of paths) {
+				const data = await readFile(path);
+
+				volume.writeFileSync(path, data);
+			}
+
+			const fileSystem = createFsFromVolume(volume);
 		}
-	
-		const fileSystem = createFsFromVolume(volume);
 	} else {
-
+		throw new Error('Not implemented');
 	}
-
-	
-
-
 };
 
 export const executeMainThread = async () => {
@@ -177,7 +172,9 @@ export const executeMainThread = async () => {
 	}
 
 	if (String(argv._) === 'getMetadataPath') {
-		await handleGetMetadataPathCommand(argv.name);
+		const codemod = await downloadCodemod(argv.name);
+
+		console.log(codemod.directoryPath);
 
 		return;
 	}

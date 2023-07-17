@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { downloadFile } from './fileSystemUtilities.js';
@@ -41,14 +41,17 @@ const CODEMOD_REGISTRY_URL =
 type Codemod =
 	| Readonly<{
 			engine: 'recipe';
+			directoryPath: string;
 			codemods: ReadonlyArray<Codemod>;
 	  }>
 	| Readonly<{
 			engine: 'jscodeshift' | 'repomod-engine' | 'ts-morph';
+			directoryPath: string;
 			indexPath: string;
 	  }>
 	| Readonly<{
 			engine: 'piranha';
+			directoryPath: string;
 	  }>;
 
 export const downloadCodemod = async (name: string): Promise<Codemod> => {
@@ -59,12 +62,12 @@ export const downloadCodemod = async (name: string): Promise<Codemod> => {
 
 	// make the codemod directory
 	const hashDigest = createHash('ripemd160').update(name).digest('base64url');
-	const codemodDirectoryPath = join(intuitaDirectoryPath, hashDigest);
+	const directoryPath = join(intuitaDirectoryPath, hashDigest);
 
-	await mkdir(codemodDirectoryPath, { recursive: true });
+	await mkdir(directoryPath, { recursive: true });
 
 	// download the config
-	const configPath = join(codemodDirectoryPath, 'config.json');
+	const configPath = join(directoryPath, 'config.json');
 
 	const buffer = await downloadFile(
 		`${CODEMOD_REGISTRY_URL}/${hashDigest}/config.json`,
@@ -76,7 +79,7 @@ export const downloadCodemod = async (name: string): Promise<Codemod> => {
 	const config = S.parseSync(codemodConfigSchema)(parsedConfig);
 
 	{
-		const descriptionPath = join(codemodDirectoryPath, 'description.md');
+		const descriptionPath = join(directoryPath, 'description.md');
 
 		await downloadFile(
 			`${CODEMOD_REGISTRY_URL}/${hashDigest}/description.md`,
@@ -85,7 +88,7 @@ export const downloadCodemod = async (name: string): Promise<Codemod> => {
 	}
 
 	if (config.engine === 'piranha') {
-		const rulesPath = join(codemodDirectoryPath, 'rules.toml');
+		const rulesPath = join(directoryPath, 'rules.toml');
 
 		await downloadFile(
 			`${CODEMOD_REGISTRY_URL}/${hashDigest}/rules.toml`,
@@ -94,6 +97,7 @@ export const downloadCodemod = async (name: string): Promise<Codemod> => {
 
 		return {
 			engine: config.engine,
+			directoryPath,
 		};
 	}
 
@@ -102,7 +106,7 @@ export const downloadCodemod = async (name: string): Promise<Codemod> => {
 		config.engine === 'repomod-engine' ||
 		config.engine === 'ts-morph'
 	) {
-		const indexPath = join(codemodDirectoryPath, 'index.mjs.z');
+		const indexPath = join(directoryPath, 'index.mjs.z');
 
 		const compressedData = await downloadFile(
 			`${CODEMOD_REGISTRY_URL}/${hashDigest}/index.mjs.z`,
@@ -111,13 +115,14 @@ export const downloadCodemod = async (name: string): Promise<Codemod> => {
 
 		const inflatedData = await promisifiedInflate(compressedData);
 
-		const path = join(codemodDirectoryPath, 'index.mjs');
+		const path = join(directoryPath, 'index.mjs');
 
 		await writeFile(path, inflatedData);
 
 		return {
 			engine: config.engine,
 			indexPath,
+			directoryPath,
 		};
 	}
 
@@ -132,6 +137,7 @@ export const downloadCodemod = async (name: string): Promise<Codemod> => {
 		return {
 			engine: config.engine,
 			codemods,
+			directoryPath,
 		};
 	}
 
