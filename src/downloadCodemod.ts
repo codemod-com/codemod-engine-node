@@ -1,8 +1,12 @@
 import { createHash } from 'node:crypto';
-import { mkdir, readFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { downloadFile } from './fileSystemUtilities.js';
+import { inflate } from 'node:zlib';
+import { promisify } from 'node:util';
+
+const promisifiedInflate = promisify(inflate);
 
 import * as S from '@effect/schema/Schema';
 
@@ -73,6 +77,14 @@ export const downloadCodemod = async (name: string) => {
 			`${CODEMOD_REGISTRY_URL}/${hashDigest}/index.mjs.z`,
 			indexPath,
 		);
+
+		const compressedData = await readFile(indexPath);
+
+		const inflatedData = await promisifiedInflate(compressedData);
+
+		const path = join(codemodDirectoryPath, 'index.mjs');
+
+		await writeFile(path, inflatedData);
 	}
 
 	{
