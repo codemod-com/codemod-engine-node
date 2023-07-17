@@ -38,7 +38,20 @@ const codemodConfigSchema = S.union(
 const CODEMOD_REGISTRY_URL =
 	'https://intuita-public.s3.us-west-1.amazonaws.com/codemod-registry';
 
-export const downloadCodemod = async (name: string) => {
+type Codemod =
+	| Readonly<{
+			engine: 'recipe';
+			codemods: ReadonlyArray<Codemod>;
+	  }>
+	| Readonly<{
+			engine: 'jscodeshift' | 'repomod-engine' | 'ts-morph';
+			indexPath: string;
+	  }>
+	| Readonly<{
+			engine: 'piranha';
+	  }>;
+
+export const downloadCodemod = async (name: string): Promise<Codemod> => {
 	// make the intuita directory
 	const intuitaDirectoryPath = join(homedir(), '.intuita');
 
@@ -62,6 +75,15 @@ export const downloadCodemod = async (name: string) => {
 
 	const config = S.parseSync(codemodConfigSchema)(parsedConfig);
 
+	{
+		const descriptionPath = join(codemodDirectoryPath, 'description.md');
+
+		await downloadFile(
+			`${CODEMOD_REGISTRY_URL}/${hashDigest}/description.md`,
+			descriptionPath,
+		);
+	}
+
 	if (config.engine === 'piranha') {
 		const rulesPath = join(codemodDirectoryPath, 'rules.toml');
 
@@ -69,6 +91,10 @@ export const downloadCodemod = async (name: string) => {
 			`${CODEMOD_REGISTRY_URL}/${hashDigest}/rules.toml`,
 			rulesPath,
 		);
+
+		return {
+			engine: config.engine,
+		};
 	}
 
 	if (
@@ -88,20 +114,26 @@ export const downloadCodemod = async (name: string) => {
 		const path = join(codemodDirectoryPath, 'index.mjs');
 
 		await writeFile(path, inflatedData);
+
+		return {
+			engine: config.engine,
+			indexPath,
+		};
 	}
 
 	if (config.engine === 'recipe') {
+		const codemods: Codemod[] = [];
+
 		for (const name in config.names) {
-			await downloadCodemod(name);
+			const codemod = await downloadCodemod(name);
+			codemods.push(codemod);
 		}
+
+		return {
+			engine: config.engine,
+			codemods,
+		};
 	}
 
-	{
-		const descriptionPath = join(codemodDirectoryPath, 'description.md');
-
-		await downloadFile(
-			`${CODEMOD_REGISTRY_URL}/${hashDigest}/description.md`,
-			descriptionPath,
-		);
-	}
+	throw new Error('Unsupported engine');
 };
