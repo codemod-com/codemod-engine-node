@@ -3,7 +3,6 @@ import { parentPort } from 'node:worker_threads';
 import * as ts from 'typescript';
 import * as tsmorph from 'ts-morph';
 import { Codemod, runCodemod } from './codemodRunner.js';
-import { Filemod, runFilemod } from './filemodRunner.js';
 import {
 	buildFormattedInternalCommands,
 	handleFormattedInternalCommand,
@@ -54,7 +53,7 @@ export const executeWorkerThread = () => {
 
 		const oldData = await getOldData(filePath);
 
-		const mods: (Codemod | Filemod | CompositeMod)[] = [];
+		const mods: (Codemod | CompositeMod)[] = [];
 
 		if (codemodFilePath != null) {
 			try {
@@ -181,12 +180,6 @@ export const executeWorkerThread = () => {
 						oldData,
 						formatWithPrettier,
 					).slice();
-				} else if (
-					mod.engine === 'filemod-engine' &&
-					mod.transformer &&
-					typeof mod.transformer === 'string'
-				) {
-					commands = await runFilemod(mod, filePath);
 				} else if (mod.engine === 'composite-mod-engine') {
 					const subMods = (mod.mods as unknown as string[])
 						.map((caseTitle) =>
