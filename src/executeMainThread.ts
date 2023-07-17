@@ -5,9 +5,10 @@ import { handleListNamesCommand } from './handleListCliCommand.js';
 import { glob } from 'glob';
 import * as fs from 'fs';
 import { Volume, createFsFromVolume } from 'memfs';
-import { readFile, stat } from 'fs/promises';
+import { readFile } from 'fs/promises';
 import { downloadCodemod } from './downloadCodemod.js';
 import { dirname } from 'path';
+import { runJscodeshiftCodemod2 } from './new/runCodemod.js';
 
 const codemodSettingsSchema = S.union(
 	S.struct({
@@ -67,19 +68,17 @@ export const runCodemod = async (
 			flowSettings.useCache,
 		);
 
+		const globbedPaths = await glob(flowSettings.includePattern.slice(), {
+			absolute: true,
+			cwd: flowSettings.inputDirectoryPath,
+			fs,
+			ignore: flowSettings.excludePattern.slice(),
+			nodir: true,
+		});
+
+		const paths = globbedPaths.slice(0, flowSettings.fileLimit);
+
 		if (codemod.engine === 'recipe') {
-			const globbedPaths = await glob(
-				flowSettings.includePattern.slice(),
-				{
-					absolute: true,
-					cwd: flowSettings.inputDirectoryPath,
-					fs,
-					ignore: flowSettings.excludePattern.slice(),
-				},
-			);
-
-			const paths = globbedPaths.slice(0, flowSettings.fileLimit);
-
 			const volume = Volume.fromJSON({});
 
 			for (const path of paths) {
@@ -91,19 +90,31 @@ export const runCodemod = async (
 
 			const fileSystem = createFsFromVolume(volume);
 
-			for (const c of codemod.codemods) {
-				c.engine;
-			}
+			// fileSystem.
+			// const mypaths = await glob(
+			// 	flowSettings.includePattern.slice(),
+			// 	{
+			// 		absolute: true,
+			// 		cwd: flowSettings.inputDirectoryPath,
+			// 		fs: fileSystem,
+			// 		ignore: flowSettings.excludePattern.slice(),
+			// 	},
+			// );
 		}
 
 		if (codemod.engine === 'jscodeshift') {
-			const x = await import(codemod.indexPath);
+			console.log('HERE');
 
-			console.log(x);
+			await runJscodeshiftCodemod2(
+				codemod.indexPath,
+				paths,
+				fs,
+				flowSettings.usePrettier,
+			);
 		}
 
 		if (codemod.engine === 'ts-morph') {
-			codemod;
+			// codemod;
 		}
 	} else {
 		throw new Error('Not implemented');

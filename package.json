@@ -19,6 +19,7 @@
 		"jscodeshift": "^0.14.0",
 		"jscodeshift-add-imports": "1.0.10",
 		"memfs": "^4.2.0",
+		"path-scurry": "^1.10.1",
 		"prettier": "^2.8.7",
 		"rehype-parse": "^8.0.4",
 		"require-from-string": "2.0.2",

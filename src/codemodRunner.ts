@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import jscodeshift, { API, FileInfo } from 'jscodeshift';
+import jscodeshift, { API, FileInfo, Transform } from 'jscodeshift';
 import { buildTsMorphProject } from './buildTsMorphProject.js';
 import { ModCommand } from './modCommands.js';
 
@@ -26,7 +26,7 @@ const buildApi = (parser: string): API => ({
 });
 
 export const runJscodeshiftCodemod = (
-	codemod: Codemod & { engine: 'jscodeshift' },
+	transform: Transform,
 	oldPath: string,
 	oldData: string,
 	formatWithPrettier: boolean,
@@ -47,13 +47,9 @@ export const runJscodeshiftCodemod = (
 		source: oldData,
 	};
 
-	const newData = codemod.transformer(
-		fileInfo,
-		buildApi(codemod.withParser),
-		{
-			createFile,
-		},
-	);
+	const newData = transform(fileInfo, buildApi('tsx'), {
+		createFile,
+	});
 
 	if (typeof newData !== 'string' || oldData === newData) {
 		return commands;
