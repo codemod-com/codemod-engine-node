@@ -3,3 +3,4 @@ build-ncc
 node_modules
 pnpm-lock.yaml
 codemod-registry
+dist

@@ -1,8 +1,31 @@
 {
-	"name": "nora-node-engine",
+	"name": "codemod-engine-node",
 	"version": "0.0.1",
 	"description": "A codemod engine for Node.js libraries (e.g. jscodeshift, TSC utilities)",
-	"private": true,
+	"type": "module",
+	"dependencies": {
+		"@babel/core": "^7.20.2",
+		"@babel/preset-env": "^7.20.2",
+		"@babel/traverse": "7.20.5",
+		"@effect/schema": "0.0.5",
+		"@intuita-inc/repomod-engine-api": "1.1.2",
+		"@svgr/hast-util-to-babel-ast": "^7.0.0",
+		"ast-types": "^0.14.2",
+		"diff": "^5.1.0",
+		"fast-glob": "^3.2.12",
+		"fp-ts": "^2.13.1",
+		"io-ts": "^2.2.20",
+		"jscodeshift": "^0.14.0",
+		"jscodeshift-add-imports": "1.0.10",
+		"rehype-parse": "^8.0.4",
+		"require-from-string": "2.0.2",
+		"unified": "^10.1.2",
+		"yargs": "^17.6.2",
+		"ts-morph": "18.0.0",
+		"prettier": "^2.8.7"
+	},
+	"main": "./src/index.ts",
+	"bin": "dist/index.cjs",
 	"devDependencies": {
 		"@types/node": "18.11.9",
 		"@typescript-eslint/eslint-plugin": "^5.44.0",
@@ -10,19 +33,20 @@
 		"eslint": "^8.28.0",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-plugin-prettier": "^4.2.1",
-		"prettier": "^2.8.0",
 		"ts-node": "^10.9.1",
-		"turbo": "latest",
-		"typescript": "4.9.3"
+		"typescript": "4.9.3",
+		"@types/diff": "^5.0.2",
+		"@types/jscodeshift": "^0.11.5",
+		"@types/prettier": "^2.7.3",
+		"@types/yargs": "^17.0.13",
+		"esbuild": "^0.17.14"
 	},
-	"workspaces": [
-		"apps/*",
-		"packages/*"
-	],
-	"packageManager": "pnpm@7.17.0",
+	"packageManager": "pnpm@8.6.7",
 	"scripts": {
-		"build": "turbo build",
-		"lint": "(eslint . --fix --ext ts && prettier --write .) || echo 0",
-		"package": "turbo package"
-	}
+		"build": "esbuild ./src/index.ts --bundle --platform=node --minify --outfile=./dist/index.cjs",
+		"lint:eslint": "eslint src --fix --ext ts",
+		"lint:prettier": "prettier --write ."
+	},
+	"author": "Intuita",
+	"license": "Apache License, Version 2.0"
 }
