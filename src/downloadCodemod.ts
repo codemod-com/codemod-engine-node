@@ -53,14 +53,12 @@ export const downloadCodemod = async (name: string) => {
 	// download the config
 	const configPath = join(codemodDirectoryPath, 'config.json');
 
-	await downloadFile(
+	const buffer = await downloadFile(
 		`${CODEMOD_REGISTRY_URL}/${hashDigest}/config.json`,
 		configPath,
 	);
 
-	const stringifiedConfig = await readFile(configPath, 'utf8');
-
-	const parsedConfig = JSON.parse(stringifiedConfig);
+	const parsedConfig = JSON.parse(buffer.toString('utf8'));
 
 	const config = S.parseSync(codemodConfigSchema)(parsedConfig);
 
@@ -80,12 +78,10 @@ export const downloadCodemod = async (name: string) => {
 	) {
 		const indexPath = join(codemodDirectoryPath, 'index.mjs.z');
 
-		await downloadFile(
+		const compressedData = await downloadFile(
 			`${CODEMOD_REGISTRY_URL}/${hashDigest}/index.mjs.z`,
 			indexPath,
 		);
-
-		const compressedData = await readFile(indexPath);
 
 		const inflatedData = await promisifiedInflate(compressedData);
 
