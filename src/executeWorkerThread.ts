@@ -47,7 +47,6 @@ export const executeWorkerThread = () => {
 			codemodHashDigests,
 			filePath,
 			outputDirectoryPath,
-			executionId,
 			formatWithPrettier,
 		} = message;
 
@@ -209,7 +208,6 @@ export const executeWorkerThread = () => {
 					const message = await handleFormattedInternalCommand(
 						outputDirectoryPath,
 						formattedInternalCommand,
-						executionId,
 					);
 
 					parentPort?.postMessage({

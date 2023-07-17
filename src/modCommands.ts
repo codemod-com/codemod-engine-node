@@ -151,7 +151,6 @@ export const buildFormattedInternalCommands = async (
 export const handleFormattedInternalCommand = async (
 	outputDirectoryPath: string,
 	command: FormattedInternalCommand,
-	executionId: string,
 ): Promise<Message> => {
 	if (command.kind === 'createFile') {
 		const hash = createHash('md5')
@@ -161,10 +160,7 @@ export const handleFormattedInternalCommand = async (
 			.digest('base64url');
 
 		const extName = extname(command.newPath);
-		const newDataPath = join(
-			outputDirectoryPath,
-			`${executionId}${hash}${extName}`,
-		);
+		const newDataPath = join(outputDirectoryPath, `${hash}${extName}`);
 		await writeFile(newDataPath, command.newData);
 
 		return {
@@ -200,7 +196,7 @@ export const handleFormattedInternalCommand = async (
 
 		const newDataPath = join(
 			outputDirectoryPath,
-			`${executionId}${hashDigest}${extName}`,
+			`${hashDigest}${extName}`,
 		);
 
 		await writeFile(newDataPath, command.newData);
