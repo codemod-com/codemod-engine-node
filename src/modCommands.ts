@@ -222,35 +222,44 @@ export const handleFormattedInternalCommand = async (
 	command: FormattedInternalCommand,
 	executionId: string,
 ): Promise<Message> => {
-	switch (command.kind) {
-		case 'createFile':
-			return await handleCreateFileCommand(
-				outputDirectoryPath,
-				command,
-				executionId,
-			);
-		case 'deleteFile':
-			return {
-				k: MessageKind.delete,
-				oldFilePath: command.oldPath,
-			};
-		case 'moveFile':
-			return {
-				k: MessageKind.move,
-				oldFilePath: command.oldPath,
-				newFilePath: command.newPath,
-			};
-		case 'updateFile':
-			return await handleUpdateFileCommand(
-				outputDirectoryPath,
-				command,
-				executionId,
-			);
-		case 'copyFile':
-			return {
-				k: MessageKind.copy,
-				oldFilePath: command.oldPath,
-				newFilePath: command.newPath,
-			};
+	if (command.kind === 'createFile') {
+		return await handleCreateFileCommand(
+			outputDirectoryPath,
+			command,
+			executionId,
+		);
 	}
+
+	if (command.kind === 'deleteFile') {
+		return {
+			k: MessageKind.delete,
+			oldFilePath: command.oldPath,
+		};
+	}
+
+	if (command.kind === 'moveFile') {
+		return {
+			k: MessageKind.move,
+			oldFilePath: command.oldPath,
+			newFilePath: command.newPath,
+		};
+	}
+
+	if (command.kind === 'updateFile') {
+		return await handleUpdateFileCommand(
+			outputDirectoryPath,
+			command,
+			executionId,
+		);
+	}
+
+	if (command.kind === 'copyFile') {
+		return {
+			k: MessageKind.copy,
+			oldFilePath: command.oldPath,
+			newFilePath: command.newPath,
+		};
+	}
+
+	throw new Error('Unrecognized command kind');
 };
