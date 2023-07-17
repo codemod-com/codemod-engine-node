@@ -1,4 +1,4 @@
-import * as S from '@effect/schema';
+import * as S from '@effect/schema/Schema';
 
 const mainThreadMessageSchema = S.union(
 	S.struct({
@@ -15,6 +15,6 @@ const mainThreadMessageSchema = S.union(
 	}),
 );
 
-export type MainThreadMessage = S.Infer<typeof mainThreadMessageSchema>;
+export type MainThreadMessage = S.To<typeof mainThreadMessageSchema>;
 
-export const decodeMainThreadMessage = S.decodeOrThrow(mainThreadMessageSchema);
+export const decodeMainThreadMessage = S.parseSync(mainThreadMessageSchema);

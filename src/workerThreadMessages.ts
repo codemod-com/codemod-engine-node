@@ -1,4 +1,4 @@
-import * as S from '@effect/schema';
+import * as S from '@effect/schema/Schema';
 
 const workerThreadMessageSchema = S.union(
 	S.struct({
@@ -10,8 +10,6 @@ const workerThreadMessageSchema = S.union(
 	}),
 );
 
-export type WorkerThreadMessage = S.Infer<typeof workerThreadMessageSchema>;
+export type WorkerThreadMessage = S.To<typeof workerThreadMessageSchema>;
 
-export const decodeWorkerThreadMessage = S.decodeOrThrow(
-	workerThreadMessageSchema,
-);
+export const decodeWorkerThreadMessage = S.parseSync(workerThreadMessageSchema);

@@ -1,139 +1,159 @@
-import fastGlob from 'fast-glob';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { handleListCliCommand } from './handleListCliCommand.js';
-import { handleRepomodCliCommand } from './handleRepomodCliCommand.js';
-import { WorkerThreadManager } from './workerThreadManager.js';
-import { buildExecutionId } from './buildExecutionId.js';
+import * as S from '@effect/schema/Schema';
+import { handleListNamesCommand } from './handleListCliCommand.js';
+import { createHash } from 'node:crypto';
+import { downloadFile } from './fileSystemUtilities.js';
+import { handleGetMetadataPathCommand } from './handleGetMetadataPathCommand.js';
+
+const codemodSettingsSchema = S.union(
+	S.struct({
+		name: S.string,
+	}),
+	S.struct({
+		sourcePath: S.string,
+		engine: S.union(S.literal('jscodeshift', 'ts-morph', 'repomod-engine')),
+	}),
+);
+
+const dryRunSettingsSchema = S.union(
+	S.struct({
+		dryRun: S.literal(false),
+	}),
+	S.struct({
+		dryRun: S.literal(true),
+		outputDirectoryPath: S.string,
+	}),
+);
+
+const DEFAULT_INCLUDE_PATTERNS = ['**/*.*'] as const;
+const DEFAULT_EXCLUDE_PATTERNS = ['**/node_modules/'] as const;
+const DEFAULT_FILE_LIMIT = 1000;
+const DEFAULT_THREAD_COUNT = 4;
+const DEFAULT_USE_PRETTIER = false;
+const DEFAULT_USE_JSON = false;
+
+const flowSettingsSchema = S.struct({
+	includePattern: S.optional(S.array(S.string)).withDefault(
+		() => DEFAULT_INCLUDE_PATTERNS,
+	),
+	excludePattern: S.optional(S.array(S.string)).withDefault(
+		() => DEFAULT_EXCLUDE_PATTERNS,
+	),
+	fileLimit: S.optional(
+		S.number.pipe(S.int()).pipe(S.positive()),
+	).withDefault(() => DEFAULT_FILE_LIMIT),
+	threadCount: S.optional(
+		S.number.pipe(S.int()).pipe(S.positive()),
+	).withDefault(() => DEFAULT_THREAD_COUNT),
+	usePrettier: S.optional(S.boolean).withDefault(() => DEFAULT_USE_PRETTIER),
+	useJson: S.optional(S.boolean).withDefault(() => DEFAULT_USE_JSON),
+});
+
+export const runCodemod = async (
+	codemodSettings: S.To<typeof codemodSettingsSchema>,
+	dryRunSettings: S.To<typeof dryRunSettingsSchema>,
+	flowSettings: S.To<typeof flowSettingsSchema>,
+) => {
+	if ('name' in codemodSettings) {
+		// TODO implement
+	}
+};
 
 export const executeMainThread = async () => {
-	const executionId = buildExecutionId();
-
 	const argv = await Promise.resolve(
 		yargs(hideBin(process.argv))
-			.command('*', 'the default command', (y) => {
-				return y
-					.option('pattern', {
-						alias: 'p',
-						describe: 'Pass the glob pattern for file paths',
+			.command('run', 'run a codemod', (y) =>
+				y
+					.option('includePattern', {
+						type: 'string',
 						array: true,
-						type: 'string',
+						description: 'Glob pattern(s) for files to include',
+						default: DEFAULT_INCLUDE_PATTERNS,
 					})
-					.option('codemodHashDigests', {
-						alias: 'c',
-						describe: 'Pass the codemod hash digests for execution',
+					.option('excludePattern', {
+						type: 'string',
 						array: true,
-						type: 'string',
+						description: 'Glob pattern(s) for files to exclude',
+						default: DEFAULT_EXCLUDE_PATTERNS,
 					})
-					.option('filePath', {
-						alias: 'f',
-						describe:
-							'Pass the file path of a single codemod for execution',
-						array: false,
+					.option('name', {
 						type: 'string',
+						description: 'Name of the codemod in the registry',
 					})
-					.option('limit', {
-						alias: 'l',
-						describe:
-							'Pass the limit for the number of files to inspect',
-						array: false,
+					.option('sourcePath', {
+						type: 'string',
+						description: 'Path to the custom codemod',
+					})
+					.option('engine', {
+						type: 'string',
+						description: 'Hint for the custom codemod engine',
+					})
+					.option('fileLimit', {
 						type: 'number',
+						description: 'File limit for processing',
+						default: 1000,
+					})
+					.option('threadCount', {
+						type: 'number',
+						description: 'Number of threads to use',
+						default: 1,
+					})
+					.option('usePrettier', {
+						type: 'boolean',
+						description: 'Format output with Prettier',
+						default: DEFAULT_USE_PRETTIER,
+					})
+					.option('useJson', {
+						type: 'boolean',
+						description: 'Respond with JSON',
+						default: DEFAULT_USE_JSON,
+					})
+					.option('dryRun', {
+						type: 'boolean',
+						description: 'Perform a dry run',
 					})
 					.option('outputDirectoryPath', {
-						alias: 'o',
-						describe:
-							'Pass the output directory path to save output files within in',
 						type: 'string',
-					})
-					.option('workerThreadCount', {
-						alias: 'w',
-						describe:
-							'Pass the number of worker threads to execute',
-						type: 'number',
-					})
-					.option('formatWithPrettier', {
-						describe:
-							'Pass whether to format the output files with Prettier or not',
-						type: 'boolean',
-					})
-					.demandOption(
-						['pattern', 'outputDirectoryPath'],
-						'Please provide the pattern argument to work with nora-node-engine',
-					);
-			})
-			.command('repomod', 'run the repomod', (y) => {
-				return y
-					.option('repomodFilePath', {
-						alias: 'f',
-						describe:
-							'Pass the file path of a single repomod for execution',
-						array: false,
+						description: 'Output directory path for dry-run only',
+					}),
+			)
+			.command('listNames', 'list the codemod names', (y) =>
+				y.option('json', {
+					type: 'boolean',
+					description: 'Respond with JSON',
+					default: false,
+				}),
+			)
+			.command('getMetadataPath', 'list the codemod names', (y) =>
+				y
+					.option('name', {
 						type: 'string',
+						description: 'Name of the codemod in the registry',
 					})
-					.option('inputPath', {
-						alias: 'i',
-						describe:
-							'Pass the input path for the repomod execution',
-						type: 'string',
-					})
-					.option('outputDirectoryPath', {
-						alias: 'o',
-						describe:
-							'Pass the output directory path to save output files within in',
-						type: 'string',
-					})
-					.option('formatWithPrettier', {
-						describe:
-							'Pass whether to format the output files with Prettier or not',
-						type: 'boolean',
-					})
-					.demandOption(
-						['repomodFilePath', 'inputPath', 'outputDirectoryPath'],
-						'Please provide the repomodFilePath and outputDirectoryPath argument to work with codemod-engine-node',
-					);
-			})
-			.command('list', 'list the codemods')
+					.demandOption('name'),
+			)
 			.help()
-			.alias('help', 'h').argv,
+			.version().argv,
 	);
 
-	if (String(argv._) === 'list') {
-		handleListCliCommand();
+	if (String(argv._) === 'listNames') {
+		await handleListNamesCommand(argv.json);
 
 		return;
 	}
 
-	const formatWithPrettier = argv.formatWithPrettier ?? false;
-
-	if (String(argv._) === 'repomod') {
-		await handleRepomodCliCommand(
-			{ ...argv, formatWithPrettier },
-			executionId,
-		);
+	if (String(argv._) === 'getMetadataPath') {
+		await handleGetMetadataPathCommand(argv.name);
 
 		return;
 	}
 
-	// https://github.com/yargs/yargs/blob/main/docs/tricks.md#quotes
-	// if the codemod hash digests are created with `'"..."', for some reason
-	// yargs does not strip ", so we do it manually here
-	const codemodHashDigests = (argv.codemodHashDigests ?? []).map(
-		(hashDigest) => hashDigest.replace(/"/g, ''),
-	);
-	const filePaths = await fastGlob(argv.pattern.slice());
+	if (String(argv._) === 'run') {
+		const codemodSettings = S.parseSync(codemodSettingsSchema)(argv);
+		const dryRunSettings = S.parseSync(dryRunSettingsSchema)(argv);
+		const flowSettings = S.parseSync(flowSettingsSchema)(argv);
 
-	const newFilePaths = filePaths.slice(
-		0,
-		Math.min(argv.limit ?? filePaths.length, filePaths.length),
-	);
-
-	new WorkerThreadManager(
-		argv.workerThreadCount ?? 1,
-		newFilePaths,
-		argv.filePath ?? null,
-		argv.outputDirectoryPath,
-		codemodHashDigests,
-		executionId,
-		formatWithPrettier,
-	);
+		await runCodemod(codemodSettings, dryRunSettings, flowSettings);
+	}
 };
