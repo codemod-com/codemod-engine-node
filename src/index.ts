@@ -5,11 +5,9 @@ import { executeWorkerThread } from './executeWorkerThread.js';
 if (!isMainThread) {
 	executeWorkerThread();
 } else {
-	try {
-		await executeMainThread();
-	} catch (error) {
+	executeMainThread().catch((error) => {
 		if (error instanceof Error) {
 			console.error(JSON.stringify({ message: error.message }));
 		}
-	}
+	});
 }

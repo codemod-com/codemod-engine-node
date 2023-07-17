@@ -1,79 +1,38 @@
-import { createHash } from 'node:crypto';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+import { mkdir, readFile } from 'node:fs/promises';
+import * as S from '@effect/schema/Schema';
+import { downloadFile } from './fileSystemUtilities.js';
 
-type CodemodEntry = Readonly<{
-	kind: 'codemod';
-	engine: 'jscodeshift' | 'ts-morph' | 'repomod-engine';
-	hashDigest: string;
-	name: string;
-	description: string;
-}>;
+export const handleListNamesCommand = async (useJson: boolean) => {
+	const intuitaDirectoryPath = join(homedir(), '.intuita');
 
-export const handleListCliCommand = () => {
-	const entries: CodemodEntry[] = [];
+	await mkdir(intuitaDirectoryPath, { recursive: true });
 
-	// for (const codemod of nneCodemods) {
-	// 	const hashDigest = createHash('ripemd160')
-	// 		.update(codemod.caseTitle)
-	// 		.digest('base64url');
+	const path = join(intuitaDirectoryPath, 'names.json');
 
-	// 	entries.push({
-	// 		kind: 'codemod',
-	// 		engine: codemod.engine as CodemodEntry['engine'],
-	// 		hashDigest,
-	// 		name: codemod.caseTitle,
-	// 		description:
-	// 			'description' in codemod ? String(codemod.description) : '',
-	// 	});
-	// }
+	await downloadFile(
+		'https://intuita-public.s3.us-west-1.amazonaws.com/codemod-registry/names.json',
+		path,
+	);
 
-	// TODO: this for loop will be soon removed
-	// for (const codemod of muiCodemods) {
-	// 	const hashDigest = createHash('ripemd160')
-	// 		.update(codemod.caseTitle)
-	// 		.digest('base64url');
+	const data = await readFile(path, { encoding: 'utf8' });
 
-	// 	entries.push({
-	// 		kind: 'codemod',
-	// 		engine: 'jscodeshift',
-	// 		hashDigest,
-	// 		name: codemod.caseTitle,
-	// 		description: '',
-	// 	});
-	// }
+	if (useJson) {
+		console.log(data);
 
-	// {
-	// 	// TODO hack
-	// 	const hashDigest = createHash('ripemd160')
-	// 		.update('next/13/app-directory-boilerplate')
-	// 		.digest('base64url');
+		return;
+	}
 
-	// 	entries.push({
-	// 		kind: 'codemod',
-	// 		engine: 'repomod-engine',
-	// 		hashDigest,
-	// 		name: 'next/13/app-directory-boilerplate',
-	// 		description:
-	// 			'This codemod provides boilerplate for the app directory.',
-	// 	});
-	// }
+	try {
+		const parsedJson = JSON.parse(data);
 
-	// {
-	// 	// TODO hack
-	// 	const hashDigest = createHash('ripemd160')
-	// 		.update('next/13/remove-next-export')
-	// 		.digest('base64url');
+		const names = S.parseSync(S.array(S.string))(parsedJson);
 
-	// 	entries.push({
-	// 		kind: 'codemod',
-	// 		engine: 'repomod-engine',
-	// 		hashDigest,
-	// 		name: 'next/13/remove-next-export',
-	// 		description:
-	// 			'This codemod removes all usages of the next export command.',
-	// 	});
-	// }
-
-	// entries.sort((a, b) => a.name.localeCompare(b.name));
-
-	// console.log(JSON.stringify(entries));
+		for (const name of names) {
+			console.log(name);
+		}
+	} catch (error) {
+		console.error(error);
+	}
 };
