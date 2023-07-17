@@ -14,6 +14,7 @@ export const handleListNamesCommand = async (useJson: boolean) => {
 	const buffer = await downloadFile(
 		'https://intuita-public.s3.us-west-1.amazonaws.com/codemod-registry/names.json',
 		path,
+		false,
 	);
 
 	const data = buffer.toString('utf8');

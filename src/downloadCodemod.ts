@@ -54,9 +54,7 @@ type Codemod =
 			directoryPath: string;
 	  }>;
 
-export const downloadCodemod = async (name: string): Promise<Codemod> => {
-	console.log('downloadCodemod', name);
-
+export const downloadCodemod = async (name: string, cache: boolean): Promise<Codemod> => {
 	// make the intuita directory
 	const intuitaDirectoryPath = join(homedir(), '.intuita');
 
@@ -74,6 +72,7 @@ export const downloadCodemod = async (name: string): Promise<Codemod> => {
 	const buffer = await downloadFile(
 		`${CODEMOD_REGISTRY_URL}/${hashDigest}/config.json`,
 		configPath,
+		cache,
 	);
 
 	const parsedConfig = JSON.parse(buffer.toString('utf8'));
@@ -87,6 +86,7 @@ export const downloadCodemod = async (name: string): Promise<Codemod> => {
 			await downloadFile(
 				`${CODEMOD_REGISTRY_URL}/${hashDigest}/description.md`,
 				descriptionPath,
+				cache,
 			);
 		} catch {
 			// do nothing, descriptions might not exist
@@ -99,6 +99,7 @@ export const downloadCodemod = async (name: string): Promise<Codemod> => {
 		await downloadFile(
 			`${CODEMOD_REGISTRY_URL}/${hashDigest}/rules.toml`,
 			rulesPath,
+			cache,
 		);
 
 		return {
@@ -117,6 +118,7 @@ export const downloadCodemod = async (name: string): Promise<Codemod> => {
 		const compressedData = await downloadFile(
 			`${CODEMOD_REGISTRY_URL}/${hashDigest}/index.mjs.z`,
 			deflatedIndexPath,
+			cache,
 		);
 
 		const inflatedData = await promisifiedInflate(compressedData);
@@ -136,7 +138,7 @@ export const downloadCodemod = async (name: string): Promise<Codemod> => {
 		const codemods: Codemod[] = [];
 
 		for (const name of config.names) {
-			const codemod = await downloadCodemod(name);
+			const codemod = await downloadCodemod(name, cache);
 			codemods.push(codemod);
 		}
 

@@ -34,6 +34,7 @@ const DEFAULT_FILE_LIMIT = 1000;
 const DEFAULT_THREAD_COUNT = 4;
 const DEFAULT_USE_PRETTIER = false;
 const DEFAULT_USE_JSON = false;
+const DEFAULT_USE_CACHE = false;
 
 const flowSettingsSchema = S.struct({
 	includePattern: S.optional(S.array(S.string)).withDefault(
@@ -51,6 +52,7 @@ const flowSettingsSchema = S.struct({
 	).withDefault(() => DEFAULT_THREAD_COUNT),
 	usePrettier: S.optional(S.boolean).withDefault(() => DEFAULT_USE_PRETTIER),
 	useJson: S.optional(S.boolean).withDefault(() => DEFAULT_USE_JSON),
+	useCache: S.optional(S.boolean).withDefault(() => DEFAULT_USE_CACHE),
 });
 
 export const runCodemod = async (
@@ -59,7 +61,10 @@ export const runCodemod = async (
 	flowSettings: S.To<typeof flowSettingsSchema>,
 ) => {
 	if ('name' in codemodSettings) {
-		const codemod = await downloadCodemod(codemodSettings.name);
+		const codemod = await downloadCodemod(
+			codemodSettings.name,
+			flowSettings.useCache,
+		);
 
 		if (codemod.engine === 'recipe') {
 			const paths = await glob(flowSettings.includePattern.slice(), {
@@ -149,6 +154,11 @@ export const executeMainThread = async () => {
 						description: 'Respond with JSON',
 						default: DEFAULT_USE_JSON,
 					})
+					.option('useCache', {
+						type: 'boolean',
+						description: 'Use cache for HTTP(S) requests',
+						default: DEFAULT_USE_JSON,
+					})
 					.option('dryRun', {
 						type: 'boolean',
 						description: 'Perform a dry run',
@@ -184,7 +194,7 @@ export const executeMainThread = async () => {
 	}
 
 	if (String(argv._) === 'getMetadataPath') {
-		const codemod = await downloadCodemod(argv.name);
+		const codemod = await downloadCodemod(argv.name, false);
 
 		console.log(codemod.directoryPath);
 

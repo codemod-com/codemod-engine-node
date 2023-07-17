@@ -14,8 +14,13 @@ const getModificationTime = async (path: string): Promise<number> => {
 export const downloadFile = async (
 	url: string,
 	path: string,
+	cache: boolean,
 ): Promise<Buffer> => {
 	console.log(url, path);
+
+	if (cache) {
+		return readFile(path);
+	}
 
 	const localModificationTime = await getModificationTime(path);
 
