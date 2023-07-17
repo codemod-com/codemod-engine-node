@@ -3,6 +3,7 @@ import { writeFile } from 'node:fs/promises';
 import { join, extname } from 'node:path';
 import { format, resolveConfig, Options } from 'prettier';
 import { Message, MessageKind } from './messages.js';
+import { filterNeitherNullNorUndefined } from './executeWorkerThread.js';
 
 export type CreateFileCommand = Readonly<{
 	kind: 'createFile';
@@ -140,21 +141,11 @@ export const buildFormattedInternalCommand = async (
 export const buildFormattedInternalCommands = async (
 	commands: readonly ModCommand[],
 ): Promise<readonly FormattedInternalCommand[]> => {
-	const formattedInternalCommands: FormattedInternalCommand[] = [];
+	const formattedInternalCommands = await Promise.all(
+		commands.map((command) => buildFormattedInternalCommand(command)),
+	);
 
-	for (const command of commands) {
-		const formattedInternalCommand = await buildFormattedInternalCommand(
-			command,
-		);
-
-		if (formattedInternalCommand === null) {
-			continue;
-		}
-
-		formattedInternalCommands.push(formattedInternalCommand);
-	}
-
-	return formattedInternalCommands;
+	return formattedInternalCommands.filter(filterNeitherNullNorUndefined);
 };
 
 export const handleFormattedInternalCommand = async (
@@ -199,7 +190,7 @@ export const handleFormattedInternalCommand = async (
 	}
 
 	if (command.kind === 'updateFile') {
-		const newHashDigest = createHash('md5')
+		const hashDigest = createHash('md5')
 			.update(command.kind)
 			.update(command.oldPath)
 			.update(command.newData)
@@ -209,7 +200,7 @@ export const handleFormattedInternalCommand = async (
 
 		const newDataPath = join(
 			outputDirectoryPath,
-			`${executionId}${newHashDigest}${extName}`,
+			`${executionId}${hashDigest}${extName}`,
 		);
 
 		await writeFile(newDataPath, command.newData);
