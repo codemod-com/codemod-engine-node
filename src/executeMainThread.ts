@@ -67,8 +67,6 @@ export const runCodemod = async (
 			flowSettings.useCache,
 		);
 
-		console.log('AAA', flowSettings.includePattern);
-
 		if (codemod.engine === 'recipe') {
 			const globbedPaths = await glob(
 				flowSettings.includePattern.slice(),
@@ -82,8 +80,6 @@ export const runCodemod = async (
 
 			const paths = globbedPaths.slice(0, flowSettings.fileLimit);
 
-			console.log(paths);
-
 			const volume = Volume.fromJSON({});
 
 			for (const path of paths) {
@@ -95,7 +91,9 @@ export const runCodemod = async (
 
 			const fileSystem = createFsFromVolume(volume);
 
-			console.log('HERE');
+			for (const c of codemod.codemods) {
+				c.engine;
+			}
 		}
 
 		if (codemod.engine === 'jscodeshift') {
