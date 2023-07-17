@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import { handleGetMetadataPathCommand } from './handleGetMetadataPathCommand.js';
 import { Volume, createFsFromVolume } from 'memfs';
 import { readFile } from 'fs/promises';
+import { downloadCodemod } from './downloadCodemod.js';
 
 const codemodSettingsSchema = S.union(
 	S.struct({
@@ -59,27 +60,33 @@ export const runCodemod = async (
 	flowSettings: S.To<typeof flowSettingsSchema>,
 ) => {
 	if ('name' in codemodSettings) {
-		// TODO implement
+		await downloadCodemod(codemodSettings.name);
+
+		
+
+		const paths = await glob(flowSettings.includePattern.slice(), {
+			absolute: true,
+			cwd: flowSettings.inputDirectoryPath,
+			fs: fs,
+			ignore: flowSettings.excludePattern.slice(),
+		});
+	
+		const volume = Volume.fromJSON({});
+	
+		for (const path of paths) {
+			const data = await readFile(path);
+	
+			volume.writeFileSync(path, data);
+		}
+	
+		const fileSystem = createFsFromVolume(volume);
+	} else {
+
 	}
-
-	const paths = await glob(flowSettings.includePattern.slice(), {
-		absolute: true,
-		cwd: flowSettings.inputDirectoryPath,
-		fs: fs,
-		ignore: flowSettings.excludePattern.slice(),
-	});
-
-	const volume = Volume.fromJSON({});
-
-	for (const path of paths) {
-		const data = await readFile(path);
-
-		volume.writeFileSync(path, data);
-	}
-
-	const fileSystem = createFsFromVolume(volume);
 
 	
+
+
 };
 
 export const executeMainThread = async () => {
