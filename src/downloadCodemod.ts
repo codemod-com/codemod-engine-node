@@ -81,10 +81,14 @@ export const downloadCodemod = async (name: string): Promise<Codemod> => {
 	{
 		const descriptionPath = join(directoryPath, 'description.md');
 
-		await downloadFile(
-			`${CODEMOD_REGISTRY_URL}/${hashDigest}/description.md`,
-			descriptionPath,
-		);
+		try {
+			await downloadFile(
+				`${CODEMOD_REGISTRY_URL}/${hashDigest}/description.md`,
+				descriptionPath,
+			);
+		} catch {
+			// do nothing, descriptions might not exist
+		}
 	}
 
 	if (config.engine === 'piranha') {
@@ -106,18 +110,18 @@ export const downloadCodemod = async (name: string): Promise<Codemod> => {
 		config.engine === 'repomod-engine' ||
 		config.engine === 'ts-morph'
 	) {
-		const indexPath = join(directoryPath, 'index.mjs.z');
+		const deflatedIndexPath = join(directoryPath, 'index.mjs.z');
 
 		const compressedData = await downloadFile(
 			`${CODEMOD_REGISTRY_URL}/${hashDigest}/index.mjs.z`,
-			indexPath,
+			deflatedIndexPath,
 		);
 
 		const inflatedData = await promisifiedInflate(compressedData);
 
-		const path = join(directoryPath, 'index.mjs');
+		const indexPath = join(directoryPath, 'index.mjs');
 
-		await writeFile(path, inflatedData);
+		await writeFile(indexPath, inflatedData);
 
 		return {
 			engine: config.engine,

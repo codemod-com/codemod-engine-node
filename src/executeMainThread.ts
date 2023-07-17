@@ -79,6 +79,12 @@ export const runCodemod = async (
 
 			const fileSystem = createFsFromVolume(volume);
 		}
+
+		if (codemod.engine === 'jscodeshift') {
+			const x = await import(codemod.indexPath);
+
+			console.log(x);
+		}
 	} else {
 		throw new Error('Not implemented');
 	}

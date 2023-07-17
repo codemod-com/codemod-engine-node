@@ -15,6 +15,8 @@ export const downloadFile = async (
 	url: string,
 	path: string,
 ): Promise<Buffer> => {
+	console.log(url, path);
+
 	const localModificationTime = await getModificationTime(path);
 
 	const headResponse = await Axios.head(url, { timeout: 5000 });
