@@ -5,8 +5,9 @@ import { handleListNamesCommand } from './handleListCliCommand.js';
 import { glob } from 'glob';
 import * as fs from 'fs';
 import { Volume, createFsFromVolume } from 'memfs';
-import { readFile } from 'fs/promises';
+import { readFile, stat } from 'fs/promises';
 import { downloadCodemod } from './downloadCodemod.js';
+import { dirname } from 'path';
 
 const codemodSettingsSchema = S.union(
 	S.struct({
@@ -66,25 +67,35 @@ export const runCodemod = async (
 			flowSettings.useCache,
 		);
 
+		console.log('AAA', flowSettings.includePattern);
+
 		if (codemod.engine === 'recipe') {
-			const paths = await glob(flowSettings.includePattern.slice(), {
-				absolute: true,
-				cwd: flowSettings.inputDirectoryPath,
-				fs: fs,
-				ignore: flowSettings.excludePattern.slice(),
-			});
+			const globbedPaths = await glob(
+				flowSettings.includePattern.slice(),
+				{
+					absolute: true,
+					cwd: flowSettings.inputDirectoryPath,
+					fs,
+					ignore: flowSettings.excludePattern.slice(),
+				},
+			);
+
+			const paths = globbedPaths.slice(0, flowSettings.fileLimit);
+
+			console.log(paths);
 
 			const volume = Volume.fromJSON({});
 
 			for (const path of paths) {
 				const data = await readFile(path);
 
+				volume.mkdirSync(dirname(path), { recursive: true });
 				volume.writeFileSync(path, data);
 			}
 
 			const fileSystem = createFsFromVolume(volume);
 
-			console.log(fileSystem);
+			console.log('HERE');
 		}
 
 		if (codemod.engine === 'jscodeshift') {
