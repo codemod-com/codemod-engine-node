@@ -78,12 +78,18 @@ export const runCodemod = async (
 			}
 
 			const fileSystem = createFsFromVolume(volume);
+
+			console.log(fileSystem);
 		}
 
 		if (codemod.engine === 'jscodeshift') {
 			const x = await import(codemod.indexPath);
 
 			console.log(x);
+		}
+
+		if (codemod.engine === 'ts-morph') {
+			codemod;
 		}
 	} else {
 		throw new Error('Not implemented');

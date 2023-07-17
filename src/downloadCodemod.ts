@@ -55,6 +55,8 @@ type Codemod =
 	  }>;
 
 export const downloadCodemod = async (name: string): Promise<Codemod> => {
+	console.log('downloadCodemod', name);
+
 	// make the intuita directory
 	const intuitaDirectoryPath = join(homedir(), '.intuita');
 
@@ -133,7 +135,7 @@ export const downloadCodemod = async (name: string): Promise<Codemod> => {
 	if (config.engine === 'recipe') {
 		const codemods: Codemod[] = [];
 
-		for (const name in config.names) {
+		for (const name of config.names) {
 			const codemod = await downloadCodemod(name);
 			codemods.push(codemod);
 		}
