@@ -2,15 +2,7 @@ import { createHash } from 'node:crypto';
 import { writeFile } from 'node:fs/promises';
 import { join, extname } from 'node:path';
 import { format, resolveConfig, Options } from 'prettier';
-import {
-	CopyMessage,
-	CreateMessage,
-	DeleteMessage,
-	Message,
-	MessageKind,
-	MoveMessage,
-	RewriteMessage,
-} from './messages.js';
+import { Message, MessageKind } from './messages.js';
 
 export type CreateFileCommand = Readonly<{
 	kind: 'createFile';
@@ -104,58 +96,6 @@ export const formatText = async (
 	}
 };
 
-export const handleCreateFileCommand = async (
-	outputDirectoryPath: string,
-	command: CreateFileCommand,
-	executionId: string,
-): Promise<CreateMessage> => {
-	const hash = createHash('md5')
-		.update(command.kind)
-		.update(command.newPath)
-		.update(command.newData)
-		.digest('base64url');
-
-	const extName = extname(command.newPath);
-	const newDataPath = join(
-		outputDirectoryPath,
-		`${executionId}${hash}${extName}`,
-	);
-	await writeFile(newDataPath, command.newData);
-
-	return {
-		k: MessageKind.create,
-		newFilePath: command.newPath,
-		newContentPath: newDataPath,
-	};
-};
-
-export const handleUpdateFileCommand = async (
-	outputDirectoryPath: string,
-	command: UpdateFileCommand,
-	executionId: string,
-): Promise<RewriteMessage> => {
-	const newHashDigest = createHash('md5')
-		.update(command.kind)
-		.update(command.oldPath)
-		.update(command.newData)
-		.digest('base64url');
-
-	const extName = extname(command.oldPath);
-
-	const newDataPath = join(
-		outputDirectoryPath,
-		`${executionId}${newHashDigest}${extName}`,
-	);
-
-	await writeFile(newDataPath, command.newData);
-
-	return {
-		k: MessageKind.rewrite,
-		i: command.oldPath,
-		o: newDataPath,
-	};
-};
-
 export const buildFormattedInternalCommand = async (
 	command: ModCommand,
 ): Promise<FormattedInternalCommand | null> => {
@@ -223,11 +163,24 @@ export const handleFormattedInternalCommand = async (
 	executionId: string,
 ): Promise<Message> => {
 	if (command.kind === 'createFile') {
-		return await handleCreateFileCommand(
+		const hash = createHash('md5')
+			.update(command.kind)
+			.update(command.newPath)
+			.update(command.newData)
+			.digest('base64url');
+
+		const extName = extname(command.newPath);
+		const newDataPath = join(
 			outputDirectoryPath,
-			command,
-			executionId,
+			`${executionId}${hash}${extName}`,
 		);
+		await writeFile(newDataPath, command.newData);
+
+		return {
+			k: MessageKind.create,
+			newFilePath: command.newPath,
+			newContentPath: newDataPath,
+		};
 	}
 
 	if (command.kind === 'deleteFile') {
@@ -246,11 +199,26 @@ export const handleFormattedInternalCommand = async (
 	}
 
 	if (command.kind === 'updateFile') {
-		return await handleUpdateFileCommand(
+		const newHashDigest = createHash('md5')
+			.update(command.kind)
+			.update(command.oldPath)
+			.update(command.newData)
+			.digest('base64url');
+
+		const extName = extname(command.oldPath);
+
+		const newDataPath = join(
 			outputDirectoryPath,
-			command,
-			executionId,
+			`${executionId}${newHashDigest}${extName}`,
 		);
+
+		await writeFile(newDataPath, command.newData);
+
+		return {
+			k: MessageKind.rewrite,
+			i: command.oldPath,
+			o: newDataPath,
+		};
 	}
 
 	if (command.kind === 'copyFile') {
