@@ -2,9 +2,11 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import * as S from '@effect/schema/Schema';
 import { handleListNamesCommand } from './handleListCliCommand.js';
-import { createHash } from 'node:crypto';
-import { downloadFile } from './fileSystemUtilities.js';
+import { glob } from 'glob';
+import * as fs from 'fs';
 import { handleGetMetadataPathCommand } from './handleGetMetadataPathCommand.js';
+import { Volume, createFsFromVolume } from 'memfs';
+import { readFile } from 'fs/promises';
 
 const codemodSettingsSchema = S.union(
 	S.struct({
@@ -40,6 +42,7 @@ const flowSettingsSchema = S.struct({
 	excludePattern: S.optional(S.array(S.string)).withDefault(
 		() => DEFAULT_EXCLUDE_PATTERNS,
 	),
+	inputDirectoryPath: S.string,
 	fileLimit: S.optional(
 		S.number.pipe(S.int()).pipe(S.positive()),
 	).withDefault(() => DEFAULT_FILE_LIMIT),
@@ -58,6 +61,25 @@ export const runCodemod = async (
 	if ('name' in codemodSettings) {
 		// TODO implement
 	}
+
+	const paths = await glob(flowSettings.includePattern.slice(), {
+		absolute: true,
+		cwd: flowSettings.inputDirectoryPath,
+		fs: fs,
+		ignore: flowSettings.excludePattern.slice(),
+	});
+
+	const volume = Volume.fromJSON({});
+
+	for (const path of paths) {
+		const data = await readFile(path);
+
+		volume.writeFileSync(path, data);
+	}
+
+	const fileSystem = createFsFromVolume(volume);
+
+	
 };
 
 export const executeMainThread = async () => {
@@ -76,6 +98,10 @@ export const executeMainThread = async () => {
 						array: true,
 						description: 'Glob pattern(s) for files to exclude',
 						default: DEFAULT_EXCLUDE_PATTERNS,
+					})
+					.option('inputDirectoryPath', {
+						type: 'string',
+						description: 'Input directory path',
 					})
 					.option('name', {
 						type: 'string',
