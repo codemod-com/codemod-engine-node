@@ -106,7 +106,6 @@ export const formatText = async (
 
 export const handleCreateFileCommand = async (
 	outputDirectoryPath: string,
-	modId: string,
 	command: CreateFileCommand,
 	executionId: string,
 ): Promise<CreateMessage> => {
@@ -127,13 +126,11 @@ export const handleCreateFileCommand = async (
 		k: MessageKind.create,
 		newFilePath: command.newPath,
 		newContentPath: newDataPath,
-		modId,
 	};
 };
 
 export const handleUpdateFileCommand = async (
 	outputDirectoryPath: string,
-	modId: string,
 	command: UpdateFileCommand,
 	executionId: string,
 ): Promise<RewriteMessage> => {
@@ -156,45 +153,38 @@ export const handleUpdateFileCommand = async (
 		k: MessageKind.rewrite,
 		i: command.oldPath,
 		o: newDataPath,
-		c: modId,
 	};
 };
 
 export const handleDeleteFileCommmand = async (
 	_: string,
-	modId: string,
 	command: DeleteFileCommand,
 ): Promise<DeleteMessage> => {
 	return {
 		k: MessageKind.delete,
 		oldFilePath: command.oldPath,
-		modId,
 	};
 };
 
 export const handleMoveFileCommand = async (
 	_: string,
-	modId: string,
 	command: MoveFileCommand,
 ): Promise<MoveMessage> => {
 	return {
 		k: MessageKind.move,
 		oldFilePath: command.oldPath,
 		newFilePath: command.newPath,
-		modId,
 	};
 };
 
 export const handleCopyFileCommand = async (
 	_: string,
-	modId: string,
 	command: CopyFileCommand,
 ): Promise<CopyMessage> => {
 	return {
 		k: MessageKind.copy,
 		oldFilePath: command.oldPath,
 		newFilePath: command.newPath,
-		modId,
 	};
 };
 
@@ -261,7 +251,6 @@ export const buildFormattedInternalCommands = async (
 
 export const handleFormattedInternalCommand = async (
 	outputDirectoryPath: string,
-	modId: string,
 	command: FormattedInternalCommand,
 	executionId: string,
 ): Promise<Message> => {
@@ -269,34 +258,20 @@ export const handleFormattedInternalCommand = async (
 		case 'createFile':
 			return await handleCreateFileCommand(
 				outputDirectoryPath,
-				modId,
 				command,
 				executionId,
 			);
 		case 'deleteFile':
-			return await handleDeleteFileCommmand(
-				outputDirectoryPath,
-				modId,
-				command,
-			);
+			return await handleDeleteFileCommmand(outputDirectoryPath, command);
 		case 'moveFile':
-			return await handleMoveFileCommand(
-				outputDirectoryPath,
-				modId,
-				command,
-			);
+			return await handleMoveFileCommand(outputDirectoryPath, command);
 		case 'updateFile':
 			return await handleUpdateFileCommand(
 				outputDirectoryPath,
-				modId,
 				command,
 				executionId,
 			);
 		case 'copyFile':
-			return await handleCopyFileCommand(
-				outputDirectoryPath,
-				modId,
-				command,
-			);
+			return await handleCopyFileCommand(outputDirectoryPath, command);
 	}
 };
