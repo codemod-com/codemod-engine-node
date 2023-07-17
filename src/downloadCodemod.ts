@@ -28,6 +28,11 @@ const codemodConfigSchema = S.union(
 		schemaVersion: S.literal('1.0.0'),
 		engine: S.literal('repomod-engine'),
 	}),
+	S.struct({
+		schemaVersion: S.literal('1.0.0'),
+		engine: S.literal('recipe'),
+		names: S.array(S.string),
+	}),
 );
 
 const CODEMOD_REGISTRY_URL =
@@ -66,7 +71,9 @@ export const downloadCodemod = async (name: string) => {
 			`${CODEMOD_REGISTRY_URL}/${hashDigest}/rules.toml`,
 			rulesPath,
 		);
-	} else if (
+	}
+
+	if (
 		config.engine === 'jscodeshift' ||
 		config.engine === 'repomod-engine' ||
 		config.engine === 'ts-morph'
@@ -85,6 +92,12 @@ export const downloadCodemod = async (name: string) => {
 		const path = join(codemodDirectoryPath, 'index.mjs');
 
 		await writeFile(path, inflatedData);
+	}
+
+	if (config.engine === 'recipe') {
+		for (const name in config.names) {
+			await downloadCodemod(name);
+		}
 	}
 
 	{
