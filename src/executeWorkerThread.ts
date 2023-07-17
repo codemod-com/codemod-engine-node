@@ -1,7 +1,5 @@
 import { readFileSync } from 'node:fs';
 import { parentPort } from 'node:worker_threads';
-import { codemods as nneCodemods } from '@nne/codemods';
-import { codemods as muiCodemods } from '@nne/mui-codemods';
 import * as ts from 'typescript';
 import * as tsmorph from 'ts-morph';
 import { Codemod, runCodemod } from './codemodRunner.js';
@@ -153,9 +151,6 @@ export const executeWorkerThread = () => {
 					);
 				}
 			}
-		} else {
-			mods.push(...(nneCodemods as any));
-			mods.push(...muiCodemods);
 		}
 
 		for (const mod of mods) {

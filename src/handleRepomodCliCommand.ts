@@ -9,9 +9,6 @@ import {
 	handleFormattedInternalCommand,
 } from './modCommands.js';
 import { runRepomod } from './repomodRunner.js';
-import redwoodjsRepomod from './repomods/redwoodjs.js';
-import nextjsRepomod from './repomods/appDirectoryBoilerplate.js';
-import { repomod } from './repomods/removeNextOutput.js';
 
 type Exports =
 	| Readonly<{
@@ -38,17 +35,17 @@ const removeNextExportHashDigest = createHash('ripemd160')
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 const getRepomod = (args: Arguments): Repomod<any> | null => {
-	if (args.repomodFilePath === 'redwoodjs_experimental') {
-		return redwoodjsRepomod;
-	}
+	// if (args.repomodFilePath === 'redwoodjs_experimental') {
+	// 	return redwoodjsRepomod;
+	// }
 
-	if (args.repomodFilePath === appDirectoryBoilerplateHashDigest) {
-		return nextjsRepomod;
-	}
+	// if (args.repomodFilePath === appDirectoryBoilerplateHashDigest) {
+	// 	return nextjsRepomod;
+	// }
 
-	if (args.repomodFilePath === removeNextExportHashDigest) {
-		return repomod;
-	}
+	// if (args.repomodFilePath === removeNextExportHashDigest) {
+	// 	return repomod;
+	// }
 
 	const source = readFileSync(args.repomodFilePath, {
 		encoding: 'utf8',
