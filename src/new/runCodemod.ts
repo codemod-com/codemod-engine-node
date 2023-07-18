@@ -1,5 +1,5 @@
 import { runJscodeshiftCodemod } from '../codemodRunner.js';
-import { Codemod, downloadCodemod } from '../downloadCodemod.js';
+import { Codemod } from '../downloadCodemod.js';
 import {
 	FormattedInternalCommand,
 	buildFormattedInternalCommands,
@@ -23,15 +23,17 @@ export const runCodemod = async (
 		for (const c of codemod.codemods) {
 			await runCodemod(c, flowSettings);
 		}
+
+		return;
 	}
 
-	if (codemod.engine === 'repomod-engine') {
-		const m = await import(codemod.indexPath);
+	const indexModule = await import(codemod.indexPath);
 
+	if (codemod.engine === 'repomod-engine') {
 		const commands = await runRepomod(
-			m.default,
-			inputDirectoryPath,
-			formatWithPrettier,
+			indexModule.default,
+			flowSettings.inputDirectoryPath,
+			flowSettings.usePrettier,
 		);
 	}
 
@@ -46,8 +48,6 @@ export const runCodemod = async (
 
 		const paths = globbedPaths.slice(0, flowSettings.fileLimit);
 
-		const m = await import(codemod.indexPath);
-
 		// remodel into a map
 		const formattedInternalCommands: FormattedInternalCommand[] = [];
 
@@ -56,10 +56,10 @@ export const runCodemod = async (
 				const data = await readFile(path, 'utf8');
 
 				const modCommands = runJscodeshiftCodemod(
-					m.default,
+					indexModule.default,
 					path,
 					data,
-					formatWithPrettier,
+					flowSettings.usePrettier,
 				);
 
 				const fiCommands = await buildFormattedInternalCommands(
