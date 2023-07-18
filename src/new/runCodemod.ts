@@ -9,6 +9,9 @@ import { runRepomod } from '../repomodRunner.js';
 import { glob } from 'glob';
 import type { FlowSettings } from '../executeMainThread.js';
 import * as fs from 'fs';
+import ts from 'typescript';
+import * as tsmorph from 'ts-morph';
+import nodePath from 'node:path';
 
 export const runCodemod = async (
 	codemod: Codemod,
@@ -26,11 +29,68 @@ export const runCodemod = async (
 		return;
 	}
 
-	const indexModule = await import(codemod.indexPath);
+	// transpile the ESM code to CJS
+	const source = fs.readFileSync(codemod.indexPath, {
+		encoding: 'utf8',
+	});
+	const compiledCode = ts.transpileModule(source, {
+		compilerOptions: { module: ts.ModuleKind.CommonJS },
+	});
+
+	type Exports =
+		| {
+				__esModule?: true;
+				default?: unknown;
+				handleSourceFile?: unknown;
+				repomod?: unknown;
+		  }
+		// eslint-disable-next-line @typescript-eslint/ban-types
+		| Function;
+
+	const exports: Exports = {};
+	const module = { exports };
+	const req = (name: string) => {
+		if (name === 'ts-morph') {
+			return tsmorph;
+		}
+
+		if (name === 'node:path') {
+			return nodePath;
+		}
+	};
+
+	const keys = ['module', 'exports', 'require'];
+	const values = [module, exports, req];
+
+	// eslint-disable-next-line prefer-spread
+	new Function(...keys, compiledCode.outputText).apply(null, values);
+
+	const transformer =
+		typeof exports === 'function'
+			? exports
+			: exports.__esModule && typeof exports.default === 'function'
+			? exports.default
+			: typeof exports.handleSourceFile === 'function'
+			? exports.handleSourceFile
+			: typeof exports.repomod === 'object'
+			? exports.repomod
+			: null;
+
+	console.log(
+		exports,
+		typeof exports.default,
+		typeof exports.handleSourceFile,
+	);
+
+	if (transformer === null) {
+		throw new Error(
+			`The transformer cannot be null: ${codemod.indexPath} ${codemod.engine}`,
+		);
+	}
 
 	if (codemod.engine === 'repomod-engine') {
 		const modCommands = await runRepomod(
-			indexModule.default,
+			transformer,
 			flowSettings.inputDirectoryPath,
 			flowSettings.usePrettier,
 		);
@@ -64,13 +124,15 @@ export const runCodemod = async (
 				const modCommands =
 					codemod.engine === 'jscodeshift'
 						? runJscodeshiftCodemod(
-								indexModule.default,
+								// @ts-expect-error function type
+								transformer,
 								path,
 								data,
 								flowSettings.usePrettier,
 						  )
 						: runTsMorphCodemod(
-								indexModule.default,
+								// @ts-expect-error function type
+								transformer,
 								path,
 								data,
 								flowSettings.usePrettier,
