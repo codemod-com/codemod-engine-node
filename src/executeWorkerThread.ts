@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { parentPort } from 'node:worker_threads';
 import * as ts from 'typescript';
 import * as tsmorph from 'ts-morph';
-import { Codemod, runCodemod } from './codemodRunner.js';
+import { Codemod } from './codemodRunner.js';
 import {
 	buildFormattedInternalCommands,
 	handleFormattedInternalCommand,
@@ -47,7 +47,6 @@ export const executeWorkerThread = () => {
 			codemodHashDigests,
 			filePath,
 			outputDirectoryPath,
-			executionId,
 			formatWithPrettier,
 		} = message;
 
@@ -174,12 +173,13 @@ export const executeWorkerThread = () => {
 					typeof mod.transformer === 'function' &&
 					mod.transformer
 				) {
-					commands = runCodemod(
-						mod,
-						filePath,
-						oldData,
-						formatWithPrettier,
-					).slice();
+					commands = [];
+					// commands = runCodemod(
+					// 	mod,
+					// 	filePath,
+					// 	oldData,
+					// 	formatWithPrettier,
+					// ).slice();
 				} else if (mod.engine === 'composite-mod-engine') {
 					const subMods = (mod.mods as unknown as string[])
 						.map((caseTitle) =>
@@ -208,9 +208,8 @@ export const executeWorkerThread = () => {
 				for (const formattedInternalCommand of formattedInternalCommands) {
 					const message = await handleFormattedInternalCommand(
 						outputDirectoryPath,
-						mod.caseTitle,
 						formattedInternalCommand,
-						executionId,
+						true,
 					);
 
 					parentPort?.postMessage({

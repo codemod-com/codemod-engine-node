@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import jscodeshift, { API, FileInfo } from 'jscodeshift';
+import jscodeshift, { API, FileInfo, Transform } from 'jscodeshift';
 import { buildTsMorphProject } from './buildTsMorphProject.js';
 import { ModCommand } from './modCommands.js';
+import { SourceFile } from 'ts-morph';
 
 export type Codemod =
 	| Readonly<{
@@ -26,7 +27,7 @@ const buildApi = (parser: string): API => ({
 });
 
 export const runJscodeshiftCodemod = (
-	codemod: Codemod & { engine: 'jscodeshift' },
+	transform: Transform,
 	oldPath: string,
 	oldData: string,
 	formatWithPrettier: boolean,
@@ -47,13 +48,9 @@ export const runJscodeshiftCodemod = (
 		source: oldData,
 	};
 
-	const newData = codemod.transformer(
-		fileInfo,
-		buildApi(codemod.withParser),
-		{
-			createFile,
-		},
-	);
+	const newData = transform(fileInfo, buildApi('tsx'), {
+		createFile,
+	});
 
 	if (typeof newData !== 'string' || oldData === newData) {
 		return commands;
@@ -71,14 +68,14 @@ export const runJscodeshiftCodemod = (
 };
 
 export const runTsMorphCodemod = (
-	codemod: Codemod & { engine: 'ts-morph' },
+	transform: (sourceFile: SourceFile) => string | null | undefined,
 	oldPath: string,
 	oldData: string,
 	formatWithPrettier: boolean,
 ): readonly ModCommand[] => {
 	const project = buildTsMorphProject();
 	const sourceFile = project.createSourceFile(oldPath, oldData);
-	const newData = codemod.transformer(sourceFile);
+	const newData = transform(sourceFile);
 
 	if (typeof newData !== 'string' || oldData === newData) {
 		return [];
@@ -93,22 +90,4 @@ export const runTsMorphCodemod = (
 			formatWithPrettier,
 		},
 	];
-};
-
-export const runCodemod = (
-	codemod: Codemod,
-	oldPath: string,
-	oldData: string,
-	formatWithPrettier: boolean,
-): readonly ModCommand[] => {
-	if (codemod.engine === 'jscodeshift') {
-		return runJscodeshiftCodemod(
-			codemod,
-			oldPath,
-			oldData,
-			formatWithPrettier,
-		);
-	}
-
-	return runTsMorphCodemod(codemod, oldPath, oldData, formatWithPrettier);
 };

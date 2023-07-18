@@ -1,5 +1,5 @@
 import { Repomod } from '@intuita-inc/repomod-engine-api';
-import { Codemod, runCodemod } from './codemodRunner.js';
+import { Codemod } from './codemodRunner.js';
 import { ModCommand } from './modCommands.js';
 import { Dependencies } from './repomodRunner.js';
 
@@ -122,7 +122,7 @@ export const runCompositeMod = async (
 	data: string,
 	formatWithPrettier: boolean,
 ): Promise<ModCommand[]> => {
-	let files: File[] = [
+	const files: File[] = [
 		{
 			path,
 			oldData: data,
@@ -145,14 +145,14 @@ export const runCompositeMod = async (
 					continue;
 				}
 
-				const modCommands = runCodemod(
-					mod,
-					file.path,
-					file.newData,
-					formatWithPrettier,
-				);
+				// const modCommands = runCodemod(
+				// 	mod,
+				// 	file.path,
+				// 	file.newData,
+				// 	formatWithPrettier,
+				// );
 
-				files = handleModCommands(files, modCommands).slice();
+				// files = handleModCommands(files, modCommands).slice();
 			}
 		}
 	}

@@ -1,6 +1,6 @@
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { mkdir, readFile } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
 import * as S from '@effect/schema/Schema';
 import { downloadFile } from './fileSystemUtilities.js';
 
@@ -11,12 +11,13 @@ export const handleListNamesCommand = async (useJson: boolean) => {
 
 	const path = join(intuitaDirectoryPath, 'names.json');
 
-	await downloadFile(
+	const buffer = await downloadFile(
 		'https://intuita-public.s3.us-west-1.amazonaws.com/codemod-registry/names.json',
 		path,
+		false,
 	);
 
-	const data = await readFile(path, { encoding: 'utf8' });
+	const data = buffer.toString('utf8');
 
 	if (useJson) {
 		console.log(data);

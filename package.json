@@ -13,11 +13,13 @@
 		"ast-types": "^0.14.2",
 		"axios": "^1.4.0",
 		"diff": "^5.1.0",
-		"fast-glob": "^3.2.12",
 		"fp-ts": "^2.13.1",
+		"glob": "^10.3.3",
 		"io-ts": "^2.2.20",
 		"jscodeshift": "^0.14.0",
 		"jscodeshift-add-imports": "1.0.10",
+		"memfs": "^4.2.0",
+		"path-scurry": "^1.10.1",
 		"prettier": "^2.8.7",
 		"rehype-parse": "^8.0.4",
 		"require-from-string": "2.0.2",
@@ -44,7 +46,7 @@
 	},
 	"packageManager": "pnpm@8.6.7",
 	"scripts": {
-		"build": "esbuild ./src/index.ts --bundle --platform=node --minify --outfile=./dist/index.cjs",
+		"build": "esbuild ./src/index.ts --bundle --platform=node --minify --format=cjs --legal-comments=inline --outfile=./dist/index.cjs",
 		"lint:eslint": "eslint src --fix --ext ts",
 		"lint:prettier": "prettier --write ."
 	},

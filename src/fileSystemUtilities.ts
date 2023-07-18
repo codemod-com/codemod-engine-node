@@ -1,5 +1,5 @@
 import Axios from 'axios';
-import { stat, writeFile } from 'fs/promises';
+import { readFile, stat, writeFile } from 'fs/promises';
 
 const getModificationTime = async (path: string): Promise<number> => {
 	try {
@@ -14,32 +14,33 @@ const getModificationTime = async (path: string): Promise<number> => {
 export const downloadFile = async (
 	url: string,
 	path: string,
-): Promise<void> => {
+	cache: boolean,
+): Promise<Buffer> => {
+	if (cache) {
+		return readFile(path);
+	}
+
 	const localModificationTime = await getModificationTime(path);
 
-	try {
-		const headResponse = await Axios.head(url, { timeout: 5000 });
+	const headResponse = await Axios.head(url, { timeout: 5000 });
 
-		const lastModified = headResponse?.headers['last-modified'] ?? null;
+	const lastModified = headResponse?.headers['last-modified'] ?? null;
 
-		const remoteModificationTime = lastModified
-			? Date.parse(lastModified)
-			: localModificationTime;
+	const remoteModificationTime = lastModified
+		? Date.parse(lastModified)
+		: localModificationTime;
 
-		if (localModificationTime >= remoteModificationTime) {
-			return;
-		}
-
-		const getResponse = await Axios.get(url, {
-			responseType: 'arraybuffer',
-		});
-
-		await writeFile(path, new Uint8Array(getResponse.data));
-	} catch (error) {
-		if (localModificationTime > 0) {
-			return;
-		}
-
-		throw error;
+	if (localModificationTime >= remoteModificationTime) {
+		return readFile(path);
 	}
+
+	const getResponse = await Axios.get(url, {
+		responseType: 'arraybuffer',
+	});
+
+	const buffer = Buffer.from(getResponse.data);
+
+	await writeFile(path, buffer);
+
+	return buffer;
 };

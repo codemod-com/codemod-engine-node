@@ -12,7 +12,6 @@ export type RewriteMessage = Readonly<{
 	k: MessageKind.rewrite; // kind
 	i: string; // (input) file path
 	o: string; // output file path (newDataPath)
-	c: string;
 }>;
 
 export type FinishMessage = Readonly<{
@@ -28,28 +27,24 @@ export type ProgressMessage = Readonly<{
 export type DeleteMessage = Readonly<{
 	k: MessageKind.delete;
 	oldFilePath: string;
-	modId: string;
 }>;
 
 export type MoveMessage = Readonly<{
 	k: MessageKind.move;
 	oldFilePath: string;
 	newFilePath: string;
-	modId: string;
 }>;
 
 export type CreateMessage = Readonly<{
 	k: MessageKind.create;
 	newFilePath: string;
 	newContentPath: string;
-	modId: string;
 }>;
 
 export type CopyMessage = Readonly<{
 	k: MessageKind.copy;
 	oldFilePath: string;
 	newFilePath: string;
-	modId: string;
 }>;
 
 export type Message =

@@ -1,16 +1,9 @@
 import { createHash } from 'node:crypto';
-import { writeFile } from 'node:fs/promises';
+import { copyFile, unlink, writeFile } from 'node:fs/promises';
 import { join, extname } from 'node:path';
 import { format, resolveConfig, Options } from 'prettier';
-import {
-	CopyMessage,
-	CreateMessage,
-	DeleteMessage,
-	Message,
-	MessageKind,
-	MoveMessage,
-	RewriteMessage,
-} from './messages.js';
+import { Message, MessageKind } from './messages.js';
+import { filterNeitherNullNorUndefined } from './executeWorkerThread.js';
 
 export type CreateFileCommand = Readonly<{
 	kind: 'createFile';
@@ -104,100 +97,6 @@ export const formatText = async (
 	}
 };
 
-export const handleCreateFileCommand = async (
-	outputDirectoryPath: string,
-	modId: string,
-	command: CreateFileCommand,
-	executionId: string,
-): Promise<CreateMessage> => {
-	const hash = createHash('md5')
-		.update(command.kind)
-		.update(command.newPath)
-		.update(command.newData)
-		.digest('base64url');
-
-	const extName = extname(command.newPath);
-	const newDataPath = join(
-		outputDirectoryPath,
-		`${executionId}${hash}${extName}`,
-	);
-	await writeFile(newDataPath, command.newData);
-
-	return {
-		k: MessageKind.create,
-		newFilePath: command.newPath,
-		newContentPath: newDataPath,
-		modId,
-	};
-};
-
-export const handleUpdateFileCommand = async (
-	outputDirectoryPath: string,
-	modId: string,
-	command: UpdateFileCommand,
-	executionId: string,
-): Promise<RewriteMessage> => {
-	const newHashDigest = createHash('md5')
-		.update(command.kind)
-		.update(command.oldPath)
-		.update(command.newData)
-		.digest('base64url');
-
-	const extName = extname(command.oldPath);
-
-	const newDataPath = join(
-		outputDirectoryPath,
-		`${executionId}${newHashDigest}${extName}`,
-	);
-
-	await writeFile(newDataPath, command.newData);
-
-	return {
-		k: MessageKind.rewrite,
-		i: command.oldPath,
-		o: newDataPath,
-		c: modId,
-	};
-};
-
-export const handleDeleteFileCommmand = async (
-	_: string,
-	modId: string,
-	command: DeleteFileCommand,
-): Promise<DeleteMessage> => {
-	return {
-		k: MessageKind.delete,
-		oldFilePath: command.oldPath,
-		modId,
-	};
-};
-
-export const handleMoveFileCommand = async (
-	_: string,
-	modId: string,
-	command: MoveFileCommand,
-): Promise<MoveMessage> => {
-	return {
-		k: MessageKind.move,
-		oldFilePath: command.oldPath,
-		newFilePath: command.newPath,
-		modId,
-	};
-};
-
-export const handleCopyFileCommand = async (
-	_: string,
-	modId: string,
-	command: CopyFileCommand,
-): Promise<CopyMessage> => {
-	return {
-		k: MessageKind.copy,
-		oldFilePath: command.oldPath,
-		newFilePath: command.newPath,
-		modId,
-	};
-};
-
 export const buildFormattedInternalCommand = async (
 	command: ModCommand,
 ): Promise<FormattedInternalCommand | null> => {
@@ -242,61 +141,114 @@ export const buildFormattedInternalCommand = async (
 export const buildFormattedInternalCommands = async (
 	commands: readonly ModCommand[],
 ): Promise<readonly FormattedInternalCommand[]> => {
-	const formattedInternalCommands: FormattedInternalCommand[] = [];
+	const formattedInternalCommands = await Promise.all(
+		commands.map((command) => buildFormattedInternalCommand(command)),
+	);
 
-	for (const command of commands) {
-		const formattedInternalCommand = await buildFormattedInternalCommand(
-			command,
-		);
-
-		if (formattedInternalCommand === null) {
-			continue;
-		}
-
-		formattedInternalCommands.push(formattedInternalCommand);
-	}
-
-	return formattedInternalCommands;
+	return formattedInternalCommands.filter(filterNeitherNullNorUndefined);
 };
 
 export const handleFormattedInternalCommand = async (
 	outputDirectoryPath: string,
-	modId: string,
 	command: FormattedInternalCommand,
-	executionId: string,
-): Promise<Message> => {
-	switch (command.kind) {
-		case 'createFile':
-			return await handleCreateFileCommand(
-				outputDirectoryPath,
-				modId,
-				command,
-				executionId,
-			);
-		case 'deleteFile':
-			return await handleDeleteFileCommmand(
-				outputDirectoryPath,
-				modId,
-				command,
-			);
-		case 'moveFile':
-			return await handleMoveFileCommand(
-				outputDirectoryPath,
-				modId,
-				command,
-			);
-		case 'updateFile':
-			return await handleUpdateFileCommand(
-				outputDirectoryPath,
-				modId,
-				command,
-				executionId,
-			);
-		case 'copyFile':
-			return await handleCopyFileCommand(
-				outputDirectoryPath,
-				modId,
-				command,
-			);
+	dryRun: boolean,
+): Promise<Message | null> => {
+	if (command.kind === 'createFile') {
+		if (!dryRun) {
+			await writeFile(command.newPath, command.newData);
+
+			return null;
+		}
+
+		const hash = createHash('md5')
+			.update(command.kind)
+			.update(command.newPath)
+			.update(command.newData)
+			.digest('base64url');
+
+		const extName = extname(command.newPath);
+		const newDataPath = join(outputDirectoryPath, `${hash}${extName}`);
+
+		await writeFile(newDataPath, command.newData);
+
+		return {
+			k: MessageKind.create,
+			newFilePath: command.newPath,
+			newContentPath: newDataPath,
+		};
 	}
+
+	if (command.kind === 'deleteFile') {
+		if (!dryRun) {
+			await unlink(command.oldPath);
+
+			return null;
+		}
+
+		return {
+			k: MessageKind.delete,
+			oldFilePath: command.oldPath,
+		};
+	}
+
+	if (command.kind === 'moveFile') {
+		if (!dryRun) {
+			await copyFile(command.oldPath, command.newPath);
+
+			await unlink(command.oldPath);
+
+			return null;
+		}
+
+		return {
+			k: MessageKind.move,
+			oldFilePath: command.oldPath,
+			newFilePath: command.newPath,
+		};
+	}
+
+	if (command.kind === 'updateFile') {
+		if (!dryRun) {
+			await writeFile(command.oldPath, command.newData);
+
+			return null;
+		}
+
+		const hashDigest = createHash('md5')
+			.update(command.kind)
+			.update(command.oldPath)
+			.update(command.newData)
+			.digest('base64url');
+
+		const extName = extname(command.oldPath);
+
+		const newDataPath = join(
+			outputDirectoryPath,
+			`${hashDigest}${extName}`,
+		);
+
+		await writeFile(newDataPath, command.newData);
+
+		return {
+			k: MessageKind.rewrite,
+			i: command.oldPath,
+			o: newDataPath,
+		};
+	}
+
+	if (command.kind === 'copyFile') {
+		if (!dryRun) {
+			await copyFile(command.oldPath, command.newPath);
+
+			return null;
+		}
+
+		return {
+			k: MessageKind.copy,
+			oldFilePath: command.oldPath,
+			newFilePath: command.newPath,
+		};
+	}
+
+	throw new Error('Unrecognized command kind');
 };

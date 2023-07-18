@@ -1,6 +1,5 @@
 import * as readline from 'node:readline';
 import { Repomod } from '@intuita-inc/repomod-engine-api';
-import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import ts from 'typescript';
 import { FinishMessage, MessageKind } from './messages.js';
@@ -25,28 +24,8 @@ type Arguments = Readonly<{
 	formatWithPrettier: boolean;
 }>;
 
-const appDirectoryBoilerplateHashDigest = createHash('ripemd160')
-	.update('next/13/app-directory-boilerplate')
-	.digest('base64url');
-
-const removeNextExportHashDigest = createHash('ripemd160')
-	.update('next/13/remove-next-export')
-	.digest('base64url');
-
 // eslint-disable-next-line @typescript-eslint/ban-types
 const getRepomod = (args: Arguments): Repomod<any> | null => {
-	// if (args.repomodFilePath === 'redwoodjs_experimental') {
-	// 	return redwoodjsRepomod;
-	// }
-
-	// if (args.repomodFilePath === appDirectoryBoilerplateHashDigest) {
-	// 	return nextjsRepomod;
-	// }
-
-	// if (args.repomodFilePath === removeNextExportHashDigest) {
-	// 	return repomod;
-	// }
-
 	const source = readFileSync(args.repomodFilePath, {
 		encoding: 'utf8',
 	});
@@ -77,10 +56,7 @@ const finishMessage: FinishMessage = {
 	k: MessageKind.finish,
 };
 
-export const handleRepomodCliCommand = async (
-	args: Arguments,
-	executionId: string,
-) => {
+export const handleRepomodCliCommand = async (args: Arguments) => {
 	const repomod = getRepomod(args);
 
 	if (repomod === null) {
@@ -110,18 +86,11 @@ export const handleRepomodCliCommand = async (
 		commands,
 	);
 
-	const modId =
-		// this is a hacky solution to render a proper name for the boilerplate codemod
-		args.repomodFilePath === 'QKEdp-pofR9UnglrKAGDm1Oj6W0'
-			? 'next/13/app-directory-boilerplate'
-			: args.repomodFilePath;
-
 	for (const formattedInternalCommand of formattedInternalCommands) {
 		const message = await handleFormattedInternalCommand(
 			args.outputDirectoryPath,
-			modId,
 			formattedInternalCommand,
-			executionId,
+			true,
 		);
 
 		console.log(JSON.stringify(message));

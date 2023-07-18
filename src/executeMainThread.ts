@@ -2,36 +2,22 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import * as S from '@effect/schema/Schema';
 import { handleListNamesCommand } from './handleListCliCommand.js';
-import { createHash } from 'node:crypto';
-import { downloadFile } from './fileSystemUtilities.js';
-import { handleGetMetadataPathCommand } from './handleGetMetadataPathCommand.js';
+import { downloadCodemod } from './downloadCodemod.js';
+import { runCodemod } from './new/runCodemod.js';
 
-const codemodSettingsSchema = S.union(
-	S.struct({
-		name: S.string,
-	}),
-	S.struct({
-		sourcePath: S.string,
-		engine: S.union(S.literal('jscodeshift', 'ts-morph', 'repomod-engine')),
-	}),
-);
+const codemodSettingsSchema = S.struct({
+	name: S.string,
+});
 
-const dryRunSettingsSchema = S.union(
-	S.struct({
-		dryRun: S.literal(false),
-	}),
-	S.struct({
-		dryRun: S.literal(true),
-		outputDirectoryPath: S.string,
-	}),
-);
+export type CodemodSettings = S.To<typeof codemodSettingsSchema>;
 
-const DEFAULT_INCLUDE_PATTERNS = ['**/*.*'] as const;
+const DEFAULT_INCLUDE_PATTERNS = ['**/*.*(ts|tsx)'] as const;
 const DEFAULT_EXCLUDE_PATTERNS = ['**/node_modules/'] as const;
 const DEFAULT_FILE_LIMIT = 1000;
 const DEFAULT_THREAD_COUNT = 4;
 const DEFAULT_USE_PRETTIER = false;
 const DEFAULT_USE_JSON = false;
+const DEFAULT_USE_CACHE = false;
 
 const flowSettingsSchema = S.struct({
 	includePattern: S.optional(S.array(S.string)).withDefault(
@@ -40,6 +26,7 @@ const flowSettingsSchema = S.struct({
 	excludePattern: S.optional(S.array(S.string)).withDefault(
 		() => DEFAULT_EXCLUDE_PATTERNS,
 	),
+	inputDirectoryPath: S.string,
 	fileLimit: S.optional(
 		S.number.pipe(S.int()).pipe(S.positive()),
 	).withDefault(() => DEFAULT_FILE_LIMIT),
@@ -48,17 +35,10 @@ const flowSettingsSchema = S.struct({
 	).withDefault(() => DEFAULT_THREAD_COUNT),
 	usePrettier: S.optional(S.boolean).withDefault(() => DEFAULT_USE_PRETTIER),
 	useJson: S.optional(S.boolean).withDefault(() => DEFAULT_USE_JSON),
+	useCache: S.optional(S.boolean).withDefault(() => DEFAULT_USE_CACHE),
 });
 
-export const runCodemod = async (
-	codemodSettings: S.To<typeof codemodSettingsSchema>,
-	dryRunSettings: S.To<typeof dryRunSettingsSchema>,
-	flowSettings: S.To<typeof flowSettingsSchema>,
-) => {
-	if ('name' in codemodSettings) {
-		// TODO implement
-	}
-};
+export type FlowSettings = S.To<typeof flowSettingsSchema>;
 
 export const executeMainThread = async () => {
 	const argv = await Promise.resolve(
@@ -77,18 +57,22 @@ export const executeMainThread = async () => {
 						description: 'Glob pattern(s) for files to exclude',
 						default: DEFAULT_EXCLUDE_PATTERNS,
 					})
+					.option('inputDirectoryPath', {
+						type: 'string',
+						description: 'Input directory path',
+					})
 					.option('name', {
 						type: 'string',
 						description: 'Name of the codemod in the registry',
 					})
-					.option('sourcePath', {
-						type: 'string',
-						description: 'Path to the custom codemod',
-					})
-					.option('engine', {
-						type: 'string',
-						description: 'Hint for the custom codemod engine',
-					})
+					// .option('sourcePath', {
+					// 	type: 'string',
+					// 	description: 'Path to the custom codemod',
+					// })
+					// .option('engine', {
+					// 	type: 'string',
+					// 	description: 'Hint for the custom codemod engine',
+					// })
 					.option('fileLimit', {
 						type: 'number',
 						description: 'File limit for processing',
@@ -109,6 +93,11 @@ export const executeMainThread = async () => {
 						description: 'Respond with JSON',
 						default: DEFAULT_USE_JSON,
 					})
+					.option('useCache', {
+						type: 'boolean',
+						description: 'Use cache for HTTP(S) requests',
+						default: DEFAULT_USE_JSON,
+					})
 					.option('dryRun', {
 						type: 'boolean',
 						description: 'Perform a dry run',
@@ -116,7 +105,8 @@ export const executeMainThread = async () => {
 					.option('outputDirectoryPath', {
 						type: 'string',
 						description: 'Output directory path for dry-run only',
-					}),
+					})
+					.demandOption('name'),
 			)
 			.command('listNames', 'list the codemod names', (y) =>
 				y.option('json', {
@@ -144,16 +134,22 @@ export const executeMainThread = async () => {
 	}
 
 	if (String(argv._) === 'getMetadataPath') {
-		await handleGetMetadataPathCommand(argv.name);
+		const codemod = await downloadCodemod(argv.name, false);
+
+		console.log(codemod.directoryPath);
 
 		return;
 	}
 
 	if (String(argv._) === 'run') {
 		const codemodSettings = S.parseSync(codemodSettingsSchema)(argv);
-		const dryRunSettings = S.parseSync(dryRunSettingsSchema)(argv);
 		const flowSettings = S.parseSync(flowSettingsSchema)(argv);
 
-		await runCodemod(codemodSettings, dryRunSettings, flowSettings);
+		const codemod = await downloadCodemod(
+			codemodSettings.name,
+			flowSettings.useCache,
+		);
+
+		await runCodemod(codemod, flowSettings);
 	}
 };
