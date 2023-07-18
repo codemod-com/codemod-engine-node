@@ -1,6 +1,6 @@
 {
 	"name": "@intuita-inc/intuita",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "A codemod engine for Node.js libraries (e.g. jscodeshift, TSC utilities)",
 	"type": "module",
 	"exports": null,
