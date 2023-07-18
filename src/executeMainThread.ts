@@ -4,33 +4,14 @@ import * as S from '@effect/schema/Schema';
 import { handleListNamesCommand } from './handleListCliCommand.js';
 import { glob } from 'glob';
 import * as fs from 'fs';
-import { Volume, createFsFromVolume } from 'memfs';
-import { readFile } from 'fs/promises';
 import { downloadCodemod } from './downloadCodemod.js';
-import { dirname } from 'path';
 import { runJscodeshiftCodemod2 } from './new/runCodemod.js';
 
-const codemodSettingsSchema = S.union(
-	S.struct({
-		name: S.string,
-	}),
-	S.struct({
-		sourcePath: S.string,
-		engine: S.union(S.literal('jscodeshift', 'ts-morph', 'repomod-engine')),
-	}),
-);
+const codemodSettingsSchema = S.struct({
+	name: S.string,
+});
 
-const dryRunSettingsSchema = S.union(
-	S.struct({
-		dryRun: S.literal(false),
-	}),
-	S.struct({
-		dryRun: S.literal(true),
-		outputDirectoryPath: S.string,
-	}),
-);
-
-const DEFAULT_INCLUDE_PATTERNS = ['**/*.*'] as const;
+const DEFAULT_INCLUDE_PATTERNS = ['**/*.*(ts|tsx)'] as const;
 const DEFAULT_EXCLUDE_PATTERNS = ['**/node_modules/'] as const;
 const DEFAULT_FILE_LIMIT = 1000;
 const DEFAULT_THREAD_COUNT = 4;
@@ -59,50 +40,24 @@ const flowSettingsSchema = S.struct({
 
 export const runCodemod = async (
 	codemodSettings: S.To<typeof codemodSettingsSchema>,
-	dryRunSettings: S.To<typeof dryRunSettingsSchema>,
 	flowSettings: S.To<typeof flowSettingsSchema>,
 ) => {
-	if ('name' in codemodSettings) {
-		const codemod = await downloadCodemod(
-			codemodSettings.name,
-			flowSettings.useCache,
-		);
+	const codemod = await downloadCodemod(
+		codemodSettings.name,
+		flowSettings.useCache,
+	);
 
-		const globbedPaths = await glob(flowSettings.includePattern.slice(), {
-			absolute: true,
-			cwd: flowSettings.inputDirectoryPath,
-			fs,
-			ignore: flowSettings.excludePattern.slice(),
-			nodir: true,
-		});
+	const globbedPaths = await glob(flowSettings.includePattern.slice(), {
+		absolute: true,
+		cwd: flowSettings.inputDirectoryPath,
+		fs,
+		ignore: flowSettings.excludePattern.slice(),
+		nodir: true,
+	});
 
-		const paths = globbedPaths.slice(0, flowSettings.fileLimit);
+	const paths = globbedPaths.slice(0, flowSettings.fileLimit);
 
-		if (codemod.engine === 'recipe') {
-			// const volume = Volume.fromJSON({});
-			// for (const path of paths) {
-			// 	const data = await readFile(path);
-			// 	volume.mkdirSync(dirname(path), { recursive: true });
-			// 	volume.writeFileSync(path, data);
-			// }
-			// const fileSystem = createFsFromVolume(volume);
-			// fileSystem.
-		}
-
-		if (codemod.engine === 'jscodeshift') {
-			await runJscodeshiftCodemod2(
-				codemod.indexPath,
-				paths,
-				flowSettings.usePrettier,
-			);
-		}
-
-		if (codemod.engine === 'ts-morph') {
-			// codemod;
-		}
-	} else {
-		throw new Error('Not implemented');
-	}
+	await runJscodeshiftCodemod2(codemod, paths, flowSettings.usePrettier);
 };
 
 export const executeMainThread = async () => {
@@ -130,14 +85,14 @@ export const executeMainThread = async () => {
 						type: 'string',
 						description: 'Name of the codemod in the registry',
 					})
-					.option('sourcePath', {
-						type: 'string',
-						description: 'Path to the custom codemod',
-					})
-					.option('engine', {
-						type: 'string',
-						description: 'Hint for the custom codemod engine',
-					})
+					// .option('sourcePath', {
+					// 	type: 'string',
+					// 	description: 'Path to the custom codemod',
+					// })
+					// .option('engine', {
+					// 	type: 'string',
+					// 	description: 'Hint for the custom codemod engine',
+					// })
 					.option('fileLimit', {
 						type: 'number',
 						description: 'File limit for processing',
@@ -170,7 +125,8 @@ export const executeMainThread = async () => {
 					.option('outputDirectoryPath', {
 						type: 'string',
 						description: 'Output directory path for dry-run only',
-					}),
+					})
+					.demandOption('name'),
 			)
 			.command('listNames', 'list the codemod names', (y) =>
 				y.option('json', {
@@ -207,9 +163,8 @@ export const executeMainThread = async () => {
 
 	if (String(argv._) === 'run') {
 		const codemodSettings = S.parseSync(codemodSettingsSchema)(argv);
-		const dryRunSettings = S.parseSync(dryRunSettingsSchema)(argv);
 		const flowSettings = S.parseSync(flowSettingsSchema)(argv);
 
-		await runCodemod(codemodSettings, dryRunSettings, flowSettings);
+		await runCodemod(codemodSettings, flowSettings);
 	}
 };

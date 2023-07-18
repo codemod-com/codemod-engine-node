@@ -38,7 +38,7 @@ const codemodConfigSchema = S.union(
 const CODEMOD_REGISTRY_URL =
 	'https://intuita-public.s3.us-west-1.amazonaws.com/codemod-registry';
 
-type Codemod =
+export type Codemod =
 	| Readonly<{
 			engine: 'recipe';
 			directoryPath: string;
