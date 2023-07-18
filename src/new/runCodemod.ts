@@ -142,8 +142,8 @@ export const runCodemod = async (
 						false,
 					);
 				}
-			} catch {
-				//
+			} catch (error) {
+				console.error(error);
 			}
 		}
 	}
