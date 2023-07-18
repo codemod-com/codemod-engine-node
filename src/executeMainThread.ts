@@ -13,6 +13,7 @@ export type CodemodSettings = S.To<typeof codemodSettingsSchema>;
 
 const DEFAULT_INCLUDE_PATTERNS = ['**/*.*(ts|tsx)'] as const;
 const DEFAULT_EXCLUDE_PATTERNS = ['**/node_modules/'] as const;
+const DEFAULT_INPUT_DIRECTORY_PATH = process.cwd();
 const DEFAULT_FILE_LIMIT = 1000;
 const DEFAULT_THREAD_COUNT = 4;
 const DEFAULT_USE_PRETTIER = false;
@@ -26,7 +27,9 @@ const flowSettingsSchema = S.struct({
 	excludePattern: S.optional(S.array(S.string)).withDefault(
 		() => DEFAULT_EXCLUDE_PATTERNS,
 	),
-	inputDirectoryPath: S.string,
+	inputDirectoryPath: S.optional(S.string).withDefault(
+		() => DEFAULT_INPUT_DIRECTORY_PATH,
+	),
 	fileLimit: S.optional(
 		S.number.pipe(S.int()).pipe(S.positive()),
 	).withDefault(() => DEFAULT_FILE_LIMIT),
@@ -61,6 +64,7 @@ export const executeMainThread = async () => {
 					.option('inputDirectoryPath', {
 						type: 'string',
 						description: 'Input directory path',
+						default: DEFAULT_INPUT_DIRECTORY_PATH,
 					})
 					.option('name', {
 						type: 'string',
