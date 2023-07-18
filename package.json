@@ -52,5 +52,10 @@
 		"lint:prettier": "prettier --write ."
 	},
 	"author": "Caartaa, Inc.",
-	"license": "Apache License, Version 2.0"
+	"license": "Apache License, Version 2.0",
+	"files": [
+		"./dist",
+		"LICENSE",
+		"README.md"
+	]
 }
