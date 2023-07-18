@@ -43,6 +43,7 @@ export type FlowSettings = S.To<typeof flowSettingsSchema>;
 export const executeMainThread = async () => {
 	const argv = await Promise.resolve(
 		yargs(hideBin(process.argv))
+			.scriptName('intuita')
 			.command('run', 'run a codemod', (y) =>
 				y
 					.option('includePattern', {

@@ -1,8 +1,9 @@
 {
-	"name": "codemod-engine-node",
+	"name": "@intuita-inc/intuita",
 	"version": "0.0.1",
 	"description": "A codemod engine for Node.js libraries (e.g. jscodeshift, TSC utilities)",
 	"type": "module",
+	"exports": null,
 	"dependencies": {
 		"@babel/core": "^7.20.2",
 		"@babel/preset-env": "^7.20.2",
@@ -50,6 +51,6 @@
 		"lint:eslint": "eslint src --fix --ext ts",
 		"lint:prettier": "prettier --write ."
 	},
-	"author": "Intuita",
+	"author": "Caartaa, Inc.",
 	"license": "Apache License, Version 2.0"
 }
