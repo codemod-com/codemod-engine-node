@@ -1,7 +1,7 @@
-import { runJscodeshiftCodemod } from '../codemodRunner.js';
+import { runJscodeshiftCodemod, runTsMorphCodemod } from '../codemodRunner.js';
 import { Codemod } from '../downloadCodemod.js';
 import {
-	FormattedInternalCommand,
+	ModCommand,
 	buildFormattedInternalCommands,
 	handleFormattedInternalCommand,
 } from '../modCommands.js';
@@ -29,15 +29,15 @@ export const runCodemod = async (
 
 	const indexModule = await import(codemod.indexPath);
 
+	let modCommands: ReadonlyArray<ModCommand>;
+
 	if (codemod.engine === 'repomod-engine') {
-		const commands = await runRepomod(
+		modCommands = await runRepomod(
 			indexModule.default,
 			flowSettings.inputDirectoryPath,
 			flowSettings.usePrettier,
 		);
-	}
-
-	if (codemod.engine === 'jscodeshift' || codemod.engine === 'ts-morph') {
+	} else {
 		const globbedPaths = await glob(flowSettings.includePattern.slice(), {
 			absolute: true,
 			cwd: flowSettings.inputDirectoryPath,
@@ -48,36 +48,44 @@ export const runCodemod = async (
 
 		const paths = globbedPaths.slice(0, flowSettings.fileLimit);
 
-		// remodel into a map
-		const formattedInternalCommands: FormattedInternalCommand[] = [];
+		const _commands: ModCommand[] = [];
 
 		for (const path of paths) {
 			try {
 				const data = await readFile(path, 'utf8');
 
-				const modCommands = runJscodeshiftCodemod(
-					indexModule.default,
-					path,
-					data,
-					flowSettings.usePrettier,
+				_commands.push(
+					...(codemod.engine === 'jscodeshift'
+						? runJscodeshiftCodemod(
+								indexModule.default,
+								path,
+								data,
+								flowSettings.usePrettier,
+						  )
+						: runTsMorphCodemod(
+								indexModule.default,
+								path,
+								data,
+								flowSettings.usePrettier,
+						  )),
 				);
-
-				const fiCommands = await buildFormattedInternalCommands(
-					modCommands,
-				);
-
-				formattedInternalCommands.push(...fiCommands);
 			} catch {
 				//
 			}
 		}
 
-		for (const command of formattedInternalCommands) {
-			await handleFormattedInternalCommand(
-				'', // TODO fix me
-				command,
-				false,
-			);
-		}
+		modCommands = _commands;
+	}
+
+	const formattedInternalCommands = await buildFormattedInternalCommands(
+		modCommands,
+	);
+
+	for (const command of formattedInternalCommands) {
+		await handleFormattedInternalCommand(
+			'', // TODO fix me
+			command,
+			false,
+		);
 	}
 };

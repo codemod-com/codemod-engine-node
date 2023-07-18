@@ -150,6 +150,6 @@ export const executeMainThread = async () => {
 			flowSettings.useCache,
 		);
 
-		await runCodemod(codemodSettings, flowSettings);
+		await runCodemod(codemod, flowSettings);
 	}
 };
