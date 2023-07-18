@@ -1,15 +1,14 @@
 import { runJscodeshiftCodemod } from '../codemodRunner.js';
-import { FSOption } from 'path-scurry';
 import {
 	FormattedInternalCommand,
 	buildFormattedInternalCommands,
+	handleFormattedInternalCommand,
 } from '../modCommands.js';
 import { readFile } from 'fs/promises';
 
 export const runJscodeshiftCodemod2 = async (
 	indexPath: string,
 	paths: ReadonlyArray<string>,
-	fs: FSOption,
 	formatWithPrettier: boolean,
 ) => {
 	const m = await import(indexPath);
@@ -38,5 +37,12 @@ export const runJscodeshiftCodemod2 = async (
 		}
 	}
 
-	console.log(formattedInternalCommands);
+	for (const command of formattedInternalCommands) {
+		await handleFormattedInternalCommand(
+			'', // TODO fix me
+			command,
+			false,
+		);
+	}
 };
+

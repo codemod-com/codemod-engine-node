@@ -79,36 +79,20 @@ export const runCodemod = async (
 		const paths = globbedPaths.slice(0, flowSettings.fileLimit);
 
 		if (codemod.engine === 'recipe') {
-			const volume = Volume.fromJSON({});
-
-			for (const path of paths) {
-				const data = await readFile(path);
-
-				volume.mkdirSync(dirname(path), { recursive: true });
-				volume.writeFileSync(path, data);
-			}
-
-			const fileSystem = createFsFromVolume(volume);
-
+			// const volume = Volume.fromJSON({});
+			// for (const path of paths) {
+			// 	const data = await readFile(path);
+			// 	volume.mkdirSync(dirname(path), { recursive: true });
+			// 	volume.writeFileSync(path, data);
+			// }
+			// const fileSystem = createFsFromVolume(volume);
 			// fileSystem.
-			// const mypaths = await glob(
-			// 	flowSettings.includePattern.slice(),
-			// 	{
-			// 		absolute: true,
-			// 		cwd: flowSettings.inputDirectoryPath,
-			// 		fs: fileSystem,
-			// 		ignore: flowSettings.excludePattern.slice(),
-			// 	},
-			// );
 		}
 
 		if (codemod.engine === 'jscodeshift') {
-			console.log('HERE');
-
 			await runJscodeshiftCodemod2(
 				codemod.indexPath,
 				paths,
-				fs,
 				flowSettings.usePrettier,
 			);
 		}

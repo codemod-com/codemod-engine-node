@@ -2,6 +2,7 @@
 import jscodeshift, { API, FileInfo, Transform } from 'jscodeshift';
 import { buildTsMorphProject } from './buildTsMorphProject.js';
 import { ModCommand } from './modCommands.js';
+import { SourceFile } from 'ts-morph';
 
 export type Codemod =
 	| Readonly<{
@@ -67,14 +68,14 @@ export const runJscodeshiftCodemod = (
 };
 
 export const runTsMorphCodemod = (
-	codemod: Codemod & { engine: 'ts-morph' },
+	transform: (sourceFile: SourceFile) => string | null | undefined,
 	oldPath: string,
 	oldData: string,
 	formatWithPrettier: boolean,
 ): readonly ModCommand[] => {
 	const project = buildTsMorphProject();
 	const sourceFile = project.createSourceFile(oldPath, oldData);
-	const newData = codemod.transformer(sourceFile);
+	const newData = transform(sourceFile);
 
 	if (typeof newData !== 'string' || oldData === newData) {
 		return [];
@@ -89,22 +90,4 @@ export const runTsMorphCodemod = (
 			formatWithPrettier,
 		},
 	];
-};
-
-export const runCodemod = (
-	codemod: Codemod,
-	oldPath: string,
-	oldData: string,
-	formatWithPrettier: boolean,
-): readonly ModCommand[] => {
-	if (codemod.engine === 'jscodeshift') {
-		return runJscodeshiftCodemod(
-			codemod,
-			oldPath,
-			oldData,
-			formatWithPrettier,
-		);
-	}
-
-	return runTsMorphCodemod(codemod, oldPath, oldData, formatWithPrettier);
 };
