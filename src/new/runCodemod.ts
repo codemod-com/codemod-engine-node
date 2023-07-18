@@ -17,6 +17,12 @@ export const runCodemod = async (
 	codemod: Codemod,
 	flowSettings: FlowSettings,
 ) => {
+	console.log(
+		'Running the "%s" codemod using "%s"',
+		codemod.name,
+		codemod.engine,
+	);
+
 	if (codemod.engine === 'piranha') {
 		throw new Error('Piranha not supported');
 	}
@@ -112,6 +118,12 @@ export const runCodemod = async (
 		const paths = globbedPaths.slice(0, flowSettings.fileLimit);
 
 		for (const path of paths) {
+			console.log(
+				'Running the "%s" codemod against "%s"',
+				codemod.name,
+				path,
+			);
+
 			try {
 				const data = await readFile(path, 'utf8');
 

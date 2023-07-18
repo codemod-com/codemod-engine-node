@@ -150,6 +150,12 @@ export const executeMainThread = async () => {
 		const codemodSettings = S.parseSync(codemodSettingsSchema)(argv);
 		const flowSettings = S.parseSync(flowSettingsSchema)(argv);
 
+		console.log(
+			'Executing the "%s" codemod against "%s"',
+			codemodSettings.name,
+			flowSettings.inputDirectoryPath,
+		);
+
 		const codemod = await downloadCodemod(
 			codemodSettings.name,
 			flowSettings.useCache,
