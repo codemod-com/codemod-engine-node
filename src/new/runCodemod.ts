@@ -1,5 +1,5 @@
 import { runJscodeshiftCodemod } from '../codemodRunner.js';
-import { Codemod } from '../downloadCodemod.js';
+import { Codemod, downloadCodemod } from '../downloadCodemod.js';
 import {
 	FormattedInternalCommand,
 	buildFormattedInternalCommands,
@@ -7,12 +7,13 @@ import {
 } from '../modCommands.js';
 import { readFile } from 'fs/promises';
 import { runRepomod } from '../repomodRunner.js';
+import { glob } from 'glob';
+import type { FlowSettings } from '../executeMainThread.js';
+import * as fs from 'fs';
 
-export const runJscodeshiftCodemod2 = async (
+export const runCodemod = async (
 	codemod: Codemod,
-	paths: ReadonlyArray<string>,
-	inputDirectoryPath: string,
-	formatWithPrettier: boolean,
+	flowSettings: FlowSettings,
 ) => {
 	if (codemod.engine === 'piranha') {
 		throw new Error('Piranha not supported');
@@ -20,12 +21,7 @@ export const runJscodeshiftCodemod2 = async (
 
 	if (codemod.engine === 'recipe') {
 		for (const c of codemod.codemods) {
-			await runJscodeshiftCodemod2(
-				c,
-				paths,
-				inputDirectoryPath,
-				formatWithPrettier,
-			);
+			await runCodemod(c, flowSettings);
 		}
 	}
 
@@ -40,6 +36,16 @@ export const runJscodeshiftCodemod2 = async (
 	}
 
 	if (codemod.engine === 'jscodeshift' || codemod.engine === 'ts-morph') {
+		const globbedPaths = await glob(flowSettings.includePattern.slice(), {
+			absolute: true,
+			cwd: flowSettings.inputDirectoryPath,
+			fs,
+			ignore: flowSettings.excludePattern.slice(),
+			nodir: true,
+		});
+
+		const paths = globbedPaths.slice(0, flowSettings.fileLimit);
+
 		const m = await import(codemod.indexPath);
 
 		// remodel into a map

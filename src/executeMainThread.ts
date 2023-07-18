@@ -2,14 +2,14 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import * as S from '@effect/schema/Schema';
 import { handleListNamesCommand } from './handleListCliCommand.js';
-import { glob } from 'glob';
-import * as fs from 'fs';
 import { downloadCodemod } from './downloadCodemod.js';
-import { runJscodeshiftCodemod2 } from './new/runCodemod.js';
+import { runCodemod } from './new/runCodemod.js';
 
 const codemodSettingsSchema = S.struct({
 	name: S.string,
 });
+
+export type CodemodSettings = S.To<typeof codemodSettingsSchema>;
 
 const DEFAULT_INCLUDE_PATTERNS = ['**/*.*(ts|tsx)'] as const;
 const DEFAULT_EXCLUDE_PATTERNS = ['**/node_modules/'] as const;
@@ -38,27 +38,7 @@ const flowSettingsSchema = S.struct({
 	useCache: S.optional(S.boolean).withDefault(() => DEFAULT_USE_CACHE),
 });
 
-export const runCodemod = async (
-	codemodSettings: S.To<typeof codemodSettingsSchema>,
-	flowSettings: S.To<typeof flowSettingsSchema>,
-) => {
-	const codemod = await downloadCodemod(
-		codemodSettings.name,
-		flowSettings.useCache,
-	);
-
-	const globbedPaths = await glob(flowSettings.includePattern.slice(), {
-		absolute: true,
-		cwd: flowSettings.inputDirectoryPath,
-		fs,
-		ignore: flowSettings.excludePattern.slice(),
-		nodir: true,
-	});
-
-	const paths = globbedPaths.slice(0, flowSettings.fileLimit);
-
-	await runJscodeshiftCodemod2(codemod, paths, flowSettings.usePrettier);
-};
+export type FlowSettings = S.To<typeof flowSettingsSchema>;
 
 export const executeMainThread = async () => {
 	const argv = await Promise.resolve(
@@ -164,6 +144,11 @@ export const executeMainThread = async () => {
 	if (String(argv._) === 'run') {
 		const codemodSettings = S.parseSync(codemodSettingsSchema)(argv);
 		const flowSettings = S.parseSync(flowSettingsSchema)(argv);
+
+		const codemod = await downloadCodemod(
+			codemodSettings.name,
+			flowSettings.useCache,
+		);
 
 		await runCodemod(codemodSettings, flowSettings);
 	}
