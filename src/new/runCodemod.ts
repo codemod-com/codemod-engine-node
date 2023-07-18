@@ -76,12 +76,6 @@ export const runCodemod = async (
 			? exports.repomod
 			: null;
 
-	console.log(
-		exports,
-		typeof exports.default,
-		typeof exports.handleSourceFile,
-	);
-
 	if (transformer === null) {
 		throw new Error(
 			`The transformer cannot be null: ${codemod.indexPath} ${codemod.engine}`,
