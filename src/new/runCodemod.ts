@@ -6,10 +6,12 @@ import {
 	handleFormattedInternalCommand,
 } from '../modCommands.js';
 import { readFile } from 'fs/promises';
+import { runRepomod } from '../repomodRunner.js';
 
 export const runJscodeshiftCodemod2 = async (
 	codemod: Codemod,
 	paths: ReadonlyArray<string>,
+	inputDirectoryPath: string,
 	formatWithPrettier: boolean,
 ) => {
 	if (codemod.engine === 'piranha') {
@@ -18,13 +20,23 @@ export const runJscodeshiftCodemod2 = async (
 
 	if (codemod.engine === 'recipe') {
 		for (const c of codemod.codemods) {
-			// TODO it doesn't take care of removed or added paths
-			await runJscodeshiftCodemod2(c, paths, formatWithPrettier);
+			await runJscodeshiftCodemod2(
+				c,
+				paths,
+				inputDirectoryPath,
+				formatWithPrettier,
+			);
 		}
 	}
 
 	if (codemod.engine === 'repomod-engine') {
-		return;
+		const m = await import(codemod.indexPath);
+
+		const commands = await runRepomod(
+			m.default,
+			inputDirectoryPath,
+			formatWithPrettier,
+		);
 	}
 
 	if (codemod.engine === 'jscodeshift' || codemod.engine === 'ts-morph') {
