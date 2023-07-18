@@ -16,8 +16,6 @@ export const downloadFile = async (
 	path: string,
 	cache: boolean,
 ): Promise<Buffer> => {
-	console.log(url, path);
-
 	if (cache) {
 		return readFile(path);
 	}
