@@ -1,7 +1,6 @@
 import { runJscodeshiftCodemod, runTsMorphCodemod } from '../codemodRunner.js';
 import { Codemod } from '../downloadCodemod.js';
 import {
-	ModCommand,
 	buildFormattedInternalCommands,
 	handleFormattedInternalCommand,
 } from '../modCommands.js';
@@ -29,14 +28,24 @@ export const runCodemod = async (
 
 	const indexModule = await import(codemod.indexPath);
 
-	let modCommands: ReadonlyArray<ModCommand>;
-
 	if (codemod.engine === 'repomod-engine') {
-		modCommands = await runRepomod(
+		const modCommands = await runRepomod(
 			indexModule.default,
 			flowSettings.inputDirectoryPath,
 			flowSettings.usePrettier,
 		);
+
+		const formattedInternalCommands = await buildFormattedInternalCommands(
+			modCommands,
+		);
+
+		for (const command of formattedInternalCommands) {
+			await handleFormattedInternalCommand(
+				'', // TODO fix me
+				command,
+				false,
+			);
+		}
 	} else {
 		const globbedPaths = await glob(flowSettings.includePattern.slice(), {
 			absolute: true,
@@ -48,14 +57,12 @@ export const runCodemod = async (
 
 		const paths = globbedPaths.slice(0, flowSettings.fileLimit);
 
-		const _commands: ModCommand[] = [];
-
 		for (const path of paths) {
 			try {
 				const data = await readFile(path, 'utf8');
 
-				_commands.push(
-					...(codemod.engine === 'jscodeshift'
+				const modCommands =
+					codemod.engine === 'jscodeshift'
 						? runJscodeshiftCodemod(
 								indexModule.default,
 								path,
@@ -67,25 +74,21 @@ export const runCodemod = async (
 								path,
 								data,
 								flowSettings.usePrettier,
-						  )),
-				);
+						  );
+
+				const formattedInternalCommands =
+					await buildFormattedInternalCommands(modCommands);
+
+				for (const command of formattedInternalCommands) {
+					await handleFormattedInternalCommand(
+						'', // TODO fix me
+						command,
+						false,
+					);
+				}
 			} catch {
 				//
 			}
 		}
-
-		modCommands = _commands;
-	}
-
-	const formattedInternalCommands = await buildFormattedInternalCommands(
-		modCommands,
-	);
-
-	for (const command of formattedInternalCommands) {
-		await handleFormattedInternalCommand(
-			'', // TODO fix me
-			command,
-			false,
-		);
 	}
 };
