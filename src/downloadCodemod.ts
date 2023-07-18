@@ -40,21 +40,33 @@ const CODEMOD_REGISTRY_URL =
 
 export type Codemod =
 	| Readonly<{
+			name: string;
 			engine: 'recipe';
 			directoryPath: string;
 			codemods: ReadonlyArray<Codemod>;
 	  }>
 	| Readonly<{
+			name: string;
 			engine: 'jscodeshift' | 'repomod-engine' | 'ts-morph';
 			directoryPath: string;
 			indexPath: string;
 	  }>
 	| Readonly<{
+			name: string;
 			engine: 'piranha';
 			directoryPath: string;
 	  }>;
 
-export const downloadCodemod = async (name: string, cache: boolean): Promise<Codemod> => {
+export const downloadCodemod = async (
+	name: string,
+	cache: boolean,
+): Promise<Codemod> => {
+	console.log(
+		'Downloading the "%s" codemod, %susing cache',
+		name,
+		cache ? '' : 'not ',
+	);
+
 	// make the intuita directory
 	const intuitaDirectoryPath = join(homedir(), '.intuita');
 
@@ -103,6 +115,7 @@ export const downloadCodemod = async (name: string, cache: boolean): Promise<Cod
 		);
 
 		return {
+			name,
 			engine: config.engine,
 			directoryPath,
 		};
@@ -128,6 +141,7 @@ export const downloadCodemod = async (name: string, cache: boolean): Promise<Cod
 		await writeFile(indexPath, inflatedData);
 
 		return {
+			name,
 			engine: config.engine,
 			indexPath,
 			directoryPath,
@@ -143,6 +157,7 @@ export const downloadCodemod = async (name: string, cache: boolean): Promise<Cod
 		}
 
 		return {
+			name,
 			engine: config.engine,
 			codemods,
 			directoryPath,

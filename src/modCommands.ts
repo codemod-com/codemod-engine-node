@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
-import { copyFile, unlink, writeFile } from 'node:fs/promises';
-import { join, extname } from 'node:path';
+import { copyFile, mkdir, unlink, writeFile } from 'node:fs/promises';
+import { join, extname, dirname } from 'node:path';
 import { format, resolveConfig, Options } from 'prettier';
 import { Message, MessageKind } from './messages.js';
 import { filterNeitherNullNorUndefined } from './executeWorkerThread.js';
@@ -155,6 +155,10 @@ export const handleFormattedInternalCommand = async (
 ): Promise<Message | null> => {
 	if (command.kind === 'createFile') {
 		if (!dryRun) {
+			const directoryPath = dirname(command.newPath);
+
+			await mkdir(directoryPath, { recursive: true });
+
 			await writeFile(command.newPath, command.newData);
 
 			return null;
@@ -238,6 +242,10 @@ export const handleFormattedInternalCommand = async (
 
 	if (command.kind === 'copyFile') {
 		if (!dryRun) {
+			const directoryPath = dirname(command.newPath);
+
+			await mkdir(directoryPath, { recursive: true });
+
 			await copyFile(command.oldPath, command.newPath);
 
 			return null;
