@@ -9,7 +9,6 @@ import { Dependencies, runRepomod } from '../repomodRunner.js';
 import { escape, glob } from 'glob';
 import type { FlowSettings } from '../executeMainThread.js';
 import * as fs from 'fs';
-import ts from 'typescript';
 import * as tsmorph from 'ts-morph';
 import nodePath from 'node:path';
 import { Repomod } from '@intuita-inc/repomod-engine-api';
@@ -36,12 +35,8 @@ export const runCodemod = async (
 		return;
 	}
 
-	// transpile the ESM code to CJS
 	const source = fs.readFileSync(codemod.indexPath, {
 		encoding: 'utf8',
-	});
-	const compiledCode = ts.transpileModule(source, {
-		compilerOptions: { module: ts.ModuleKind.CommonJS },
 	});
 
 	type Exports =
@@ -70,17 +65,18 @@ export const runCodemod = async (
 	const values = [module, exports, req];
 
 	// eslint-disable-next-line prefer-spread
-	new Function(...keys, compiledCode.outputText).apply(null, values);
+	new Function(...keys, source).apply(null, values);
 
 	const transformer =
-		typeof exports === 'function'
-			? exports
-			: exports.__esModule && typeof exports.default === 'function'
-			? exports.default
-			: typeof exports.handleSourceFile === 'function'
-			? exports.handleSourceFile
-			: exports.repomod !== undefined
-			? exports.repomod
+		typeof module.exports === 'function'
+			? module.exports
+			: module.exports.__esModule &&
+			  typeof module.exports.default === 'function'
+			? module.exports.default
+			: typeof module.exports.handleSourceFile === 'function'
+			? module.exports.handleSourceFile
+			: module.exports.repomod !== undefined
+			? module.exports.repomod
 			: null;
 
 	if (transformer === null) {
@@ -90,7 +86,7 @@ export const runCodemod = async (
 	}
 
 	if (codemod.engine === 'repomod-engine') {
-		const repomod = exports.repomod ?? null;
+		const repomod = module.exports.repomod ?? null;
 
 		if (repomod === null) {
 			throw new Error(

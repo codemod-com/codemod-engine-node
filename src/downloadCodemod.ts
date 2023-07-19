@@ -126,17 +126,17 @@ export const downloadCodemod = async (
 		config.engine === 'repomod-engine' ||
 		config.engine === 'ts-morph'
 	) {
-		const deflatedIndexPath = join(directoryPath, 'index.mjs.z');
+		const deflatedIndexPath = join(directoryPath, 'index.cjs.z');
 
 		const compressedData = await downloadFile(
-			`${CODEMOD_REGISTRY_URL}/${hashDigest}/index.mjs.z`,
+			`${CODEMOD_REGISTRY_URL}/${hashDigest}/index.cjs.z`,
 			deflatedIndexPath,
 			cache,
 		);
 
 		const inflatedData = await promisifiedInflate(compressedData);
 
-		const indexPath = join(directoryPath, 'index.mjs');
+		const indexPath = join(directoryPath, 'index.cjs');
 
 		await writeFile(indexPath, inflatedData);
 
