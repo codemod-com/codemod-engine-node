@@ -5,13 +5,14 @@ import {
 	handleFormattedInternalCommand,
 } from '../modCommands.js';
 import { readFile } from 'fs/promises';
-import { runRepomod } from '../repomodRunner.js';
-import { glob } from 'glob';
+import { Dependencies, runRepomod } from '../repomodRunner.js';
+import { escape, glob } from 'glob';
 import type { FlowSettings } from '../executeMainThread.js';
 import * as fs from 'fs';
 import ts from 'typescript';
 import * as tsmorph from 'ts-morph';
 import nodePath from 'node:path';
+import { Repomod } from '@intuita-inc/repomod-engine-api';
 
 export const runCodemod = async (
 	codemod: Codemod,
@@ -48,7 +49,7 @@ export const runCodemod = async (
 				__esModule?: true;
 				default?: unknown;
 				handleSourceFile?: unknown;
-				repomod?: unknown;
+				repomod?: Repomod<Dependencies>;
 		  }
 		// eslint-disable-next-line @typescript-eslint/ban-types
 		| Function;
@@ -78,7 +79,7 @@ export const runCodemod = async (
 			? exports.default
 			: typeof exports.handleSourceFile === 'function'
 			? exports.handleSourceFile
-			: typeof exports.repomod === 'object'
+			: exports.repomod !== undefined
 			? exports.repomod
 			: null;
 
@@ -89,8 +90,37 @@ export const runCodemod = async (
 	}
 
 	if (codemod.engine === 'repomod-engine') {
+		const repomod = exports.repomod ?? null;
+
+		if (repomod === null) {
+			throw new Error(
+				'Could not find the repomod object exported from the CommonJS module',
+			);
+		}
+
+		const repomodPaths = await glob(
+			repomod.includePatterns?.slice() ?? [],
+			{
+				absolute: true,
+				cwd: flowSettings.inputDirectoryPath,
+				fs,
+				ignore: repomod.excludePatterns?.slice(),
+			},
+		);
+
+		const flowPaths = await glob(flowSettings.includePattern.slice(), {
+			absolute: true,
+			cwd: flowSettings.inputDirectoryPath,
+			fs,
+			ignore: flowSettings.excludePattern.slice(),
+		});
+
+		const paths = repomodPaths
+			.filter((path) => flowPaths.includes(path))
+			.map((path) => escape(path));
+
 		const modCommands = await runRepomod(
-			transformer,
+			{ ...repomod, includePatterns: paths, excludePatterns: [] },
 			flowSettings.inputDirectoryPath,
 			flowSettings.usePrettier,
 		);
