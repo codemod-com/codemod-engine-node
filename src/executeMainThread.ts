@@ -11,8 +11,8 @@ const codemodSettingsSchema = S.struct({
 
 export type CodemodSettings = S.To<typeof codemodSettingsSchema>;
 
-const DEFAULT_INCLUDE_PATTERNS = ['**/*.*(ts|tsx)'] as const;
-const DEFAULT_EXCLUDE_PATTERNS = ['**/node_modules/'] as const;
+const DEFAULT_INCLUDE_PATTERNS = ['**/*.*{ts,tsx,js,jsx,mjs,cjs}'] as const;
+const DEFAULT_EXCLUDE_PATTERNS = ['**/node_modules/**/*.*'] as const;
 const DEFAULT_INPUT_DIRECTORY_PATH = process.cwd();
 const DEFAULT_FILE_LIMIT = 1000;
 const DEFAULT_THREAD_COUNT = 4;
@@ -47,7 +47,7 @@ export const executeMainThread = async () => {
 	const argv = await Promise.resolve(
 		yargs(hideBin(process.argv))
 			.scriptName('intuita')
-			.command('run', 'run a codemod', (y) =>
+			.command('*', 'run a codemod', (y) =>
 				y
 					.option('includePattern', {
 						type: 'string',
@@ -146,21 +146,19 @@ export const executeMainThread = async () => {
 		return;
 	}
 
-	if (String(argv._) === 'run') {
-		const codemodSettings = S.parseSync(codemodSettingsSchema)(argv);
-		const flowSettings = S.parseSync(flowSettingsSchema)(argv);
+	const codemodSettings = S.parseSync(codemodSettingsSchema)(argv);
+	const flowSettings = S.parseSync(flowSettingsSchema)(argv);
 
-		console.log(
-			'Executing the "%s" codemod against "%s"',
-			codemodSettings.name,
-			flowSettings.inputDirectoryPath,
-		);
+	console.log(
+		'Executing the "%s" codemod against "%s"',
+		codemodSettings.name,
+		flowSettings.inputDirectoryPath,
+	);
 
-		const codemod = await downloadCodemod(
-			codemodSettings.name,
-			flowSettings.useCache,
-		);
+	const codemod = await downloadCodemod(
+		codemodSettings.name,
+		flowSettings.useCache,
+	);
 
-		await runCodemod(codemod, flowSettings);
-	}
+	await runCodemod(codemod, flowSettings);
 };
