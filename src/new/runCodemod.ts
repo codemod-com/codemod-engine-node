@@ -49,8 +49,7 @@ export const runCodemod = async (
 		// eslint-disable-next-line @typescript-eslint/ban-types
 		| Function;
 
-	const exports: Exports = {};
-	const module = { exports };
+	const module = { exports: {} as Exports };
 	const req = (name: string) => {
 		if (name === 'ts-morph') {
 			return tsmorph;
@@ -61,8 +60,8 @@ export const runCodemod = async (
 		}
 	};
 
-	const keys = ['module', 'exports', 'require'];
-	const values = [module, exports, req];
+	const keys = ['module', 'require'];
+	const values = [module, req];
 
 	// eslint-disable-next-line prefer-spread
 	new Function(...keys, source).apply(null, values);
@@ -86,7 +85,8 @@ export const runCodemod = async (
 	}
 
 	if (codemod.engine === 'repomod-engine') {
-		const repomod = module.exports.repomod ?? null;
+		const repomod =
+			'repomod' in module.exports ? module.exports.repomod ?? null : null;
 
 		if (repomod === null) {
 			throw new Error(
