@@ -15,7 +15,6 @@ const DEFAULT_INCLUDE_PATTERNS = ['**/*.*{ts,tsx,js,jsx,mjs,cjs}'] as const;
 const DEFAULT_EXCLUDE_PATTERNS = ['**/node_modules/**/*.*'] as const;
 const DEFAULT_INPUT_DIRECTORY_PATH = process.cwd();
 const DEFAULT_FILE_LIMIT = 1000;
-const DEFAULT_THREAD_COUNT = 4;
 const DEFAULT_USE_PRETTIER = false;
 const DEFAULT_USE_JSON = false;
 const DEFAULT_USE_CACHE = false;
@@ -33,11 +32,7 @@ const flowSettingsSchema = S.struct({
 	fileLimit: S.optional(
 		S.number.pipe(S.int()).pipe(S.positive()),
 	).withDefault(() => DEFAULT_FILE_LIMIT),
-	threadCount: S.optional(
-		S.number.pipe(S.int()).pipe(S.positive()),
-	).withDefault(() => DEFAULT_THREAD_COUNT),
 	usePrettier: S.optional(S.boolean).withDefault(() => DEFAULT_USE_PRETTIER),
-	useJson: S.optional(S.boolean).withDefault(() => DEFAULT_USE_JSON),
 	useCache: S.optional(S.boolean).withDefault(() => DEFAULT_USE_CACHE),
 });
 
@@ -70,46 +65,20 @@ export const executeMainThread = async () => {
 						type: 'string',
 						description: 'Name of the codemod in the registry',
 					})
-					// .option('sourcePath', {
-					// 	type: 'string',
-					// 	description: 'Path to the custom codemod',
-					// })
-					// .option('engine', {
-					// 	type: 'string',
-					// 	description: 'Hint for the custom codemod engine',
-					// })
 					.option('fileLimit', {
 						type: 'number',
 						description: 'File limit for processing',
 						default: 1000,
-					})
-					.option('threadCount', {
-						type: 'number',
-						description: 'Number of threads to use',
-						default: 1,
 					})
 					.option('usePrettier', {
 						type: 'boolean',
 						description: 'Format output with Prettier',
 						default: DEFAULT_USE_PRETTIER,
 					})
-					.option('useJson', {
-						type: 'boolean',
-						description: 'Respond with JSON',
-						default: DEFAULT_USE_JSON,
-					})
 					.option('useCache', {
 						type: 'boolean',
 						description: 'Use cache for HTTP(S) requests',
 						default: DEFAULT_USE_JSON,
-					})
-					.option('dryRun', {
-						type: 'boolean',
-						description: 'Perform a dry run',
-					})
-					.option('outputDirectoryPath', {
-						type: 'string',
-						description: 'Output directory path for dry-run only',
 					})
 					.demandOption('name'),
 			)
