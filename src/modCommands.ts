@@ -3,7 +3,7 @@ import { copyFile, mkdir, unlink, writeFile } from 'node:fs/promises';
 import { join, extname, dirname } from 'node:path';
 import { format, resolveConfig, Options } from 'prettier';
 import { Message, MessageKind } from './messages.js';
-import { filterNeitherNullNorUndefined } from './executeWorkerThread.js';
+import { filterNeitherNullNorUndefined } from './filterNeitherNullNorUndefined.js';
 
 export type CreateFileCommand = Readonly<{
 	kind: 'createFile';

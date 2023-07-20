@@ -4,21 +4,6 @@ import { buildTsMorphProject } from './buildTsMorphProject.js';
 import { ModCommand } from './modCommands.js';
 import { SourceFile } from 'ts-morph';
 
-export type Codemod =
-	| Readonly<{
-			engine: 'jscodeshift';
-			caseTitle: string;
-			// eslint-disable-next-line @typescript-eslint/ban-types
-			transformer: Function;
-			withParser: string;
-	  }>
-	| Readonly<{
-			engine: 'ts-morph';
-			caseTitle: string;
-			// eslint-disable-next-line @typescript-eslint/ban-types
-			transformer: Function;
-	  }>;
-
 const buildApi = (parser: string): API => ({
 	j: jscodeshift.withParser(parser),
 	jscodeshift: jscodeshift.withParser(parser),
