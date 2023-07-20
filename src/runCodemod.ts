@@ -1,13 +1,13 @@
-import { runJscodeshiftCodemod, runTsMorphCodemod } from '../codemodRunner.js';
-import { Codemod } from '../downloadCodemod.js';
+import { runJscodeshiftCodemod, runTsMorphCodemod } from './codemodRunner.js';
+import { Codemod } from './downloadCodemod.js';
 import {
 	buildFormattedInternalCommands,
 	handleFormattedInternalCommand,
-} from '../modCommands.js';
+} from './modCommands.js';
 import { readFile } from 'fs/promises';
-import { Dependencies, runRepomod } from '../repomodRunner.js';
+import { Dependencies, runRepomod } from './repomodRunner.js';
 import { escape, glob } from 'glob';
-import type { FlowSettings } from '../executeMainThread.js';
+import type { FlowSettings } from './executeMainThread.js';
 import * as fs from 'fs';
 import * as tsmorph from 'ts-morph';
 import nodePath from 'node:path';

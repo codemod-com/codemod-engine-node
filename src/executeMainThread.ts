@@ -3,7 +3,7 @@ import { hideBin } from 'yargs/helpers';
 import * as S from '@effect/schema/Schema';
 import { handleListNamesCommand } from './handleListCliCommand.js';
 import { downloadCodemod } from './downloadCodemod.js';
-import { runCodemod } from './new/runCodemod.js';
+import { runCodemod } from './runCodemod.js';
 
 const codemodSettingsSchema = S.struct({
 	name: S.string,
