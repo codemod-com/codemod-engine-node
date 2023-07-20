@@ -1,7 +1,7 @@
 {
 	"name": "@intuita-inc/intuita",
-	"version": "0.0.6",
-	"description": "A codemod engine for Node.js libraries (e.g. jscodeshift, TSC utilities)",
+	"version": "0.0.7",
+	"description": "A codemod engine for Node.js libraries (jscodeshift, ts-morph, etc.)",
 	"type": "module",
 	"exports": null,
 	"dependencies": {
@@ -13,16 +13,10 @@
 		"@svgr/hast-util-to-babel-ast": "^7.0.0",
 		"ast-types": "^0.14.2",
 		"axios": "^1.4.0",
-		"diff": "^5.1.0",
-		"fp-ts": "^2.13.1",
 		"glob": "^10.3.3",
-		"io-ts": "^2.2.20",
 		"jscodeshift": "^0.14.0",
-		"memfs": "^4.2.0",
-		"path-scurry": "^1.10.1",
 		"prettier": "^2.8.7",
 		"rehype-parse": "^8.0.4",
-		"require-from-string": "2.0.2",
 		"ts-morph": "18.0.0",
 		"unified": "^10.1.2",
 		"yargs": "^17.6.2"
@@ -30,7 +24,6 @@
 	"main": "./src/index.ts",
 	"bin": "dist/index.cjs",
 	"devDependencies": {
-		"@types/diff": "^5.0.2",
 		"@types/jscodeshift": "^0.11.5",
 		"@types/node": "18.11.9",
 		"@types/prettier": "^2.7.3",
