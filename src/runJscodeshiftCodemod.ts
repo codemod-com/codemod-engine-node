@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import jscodeshift, { API, FileInfo, Transform } from 'jscodeshift';
-import { buildTsMorphProject } from './buildTsMorphProject.js';
-import { ModCommand } from './modCommands.js';
-import { SourceFile } from 'ts-morph';
+import type { FileCommand } from './fileCommands.js';
 
 const buildApi = (parser: string): API => ({
 	j: jscodeshift.withParser(parser),
@@ -16,8 +14,8 @@ export const runJscodeshiftCodemod = (
 	oldPath: string,
 	oldData: string,
 	formatWithPrettier: boolean,
-): readonly ModCommand[] => {
-	const commands: ModCommand[] = [];
+): readonly FileCommand[] => {
+	const commands: FileCommand[] = [];
 
 	const createFile = (newPath: string, newData: string): void => {
 		commands.push({
@@ -50,29 +48,4 @@ export const runJscodeshiftCodemod = (
 	});
 
 	return commands;
-};
-
-export const runTsMorphCodemod = (
-	transform: (sourceFile: SourceFile) => string | null | undefined,
-	oldPath: string,
-	oldData: string,
-	formatWithPrettier: boolean,
-): readonly ModCommand[] => {
-	const project = buildTsMorphProject();
-	const sourceFile = project.createSourceFile(oldPath, oldData);
-	const newData = transform(sourceFile);
-
-	if (typeof newData !== 'string' || oldData === newData) {
-		return [];
-	}
-
-	return [
-		{
-			kind: 'updateFile',
-			oldPath,
-			oldData,
-			newData,
-			formatWithPrettier,
-		},
-	];
 };

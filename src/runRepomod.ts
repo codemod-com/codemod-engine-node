@@ -9,7 +9,7 @@ import rehypeParse from 'rehype-parse';
 import { unified } from 'unified';
 import hastToBabelAst from '@svgr/hast-util-to-babel-ast';
 import tsmorph from 'ts-morph';
-import { ModCommand } from './modCommands.js';
+import { FileCommand } from './fileCommands.js';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { toMarkdown } from 'mdast-util-to-markdown';
 import { mdxjs } from 'micromark-extension-mdxjs';
@@ -42,7 +42,7 @@ export const runRepomod = async (
 	repomod: Repomod<Dependencies>,
 	inputPath: string,
 	formatWithPrettier: boolean,
-): Promise<readonly ModCommand[]> => {
+): Promise<readonly FileCommand[]> => {
 	const fileSystemManager = new FileSystemManager(
 		fsPromises.readdir,
 		fsPromises.readFile,

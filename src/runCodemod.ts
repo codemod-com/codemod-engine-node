@@ -1,17 +1,18 @@
-import { runJscodeshiftCodemod, runTsMorphCodemod } from './codemodRunner.js';
+import { runJscodeshiftCodemod } from './runJscodeshiftCodemod.js';
 import { Codemod } from './downloadCodemod.js';
 import {
-	buildFormattedInternalCommands,
-	handleFormattedInternalCommand,
-} from './modCommands.js';
+	buildFormattedFileCommands,
+	handleFormattedFileCommand,
+} from './fileCommands.js';
 import { readFile } from 'fs/promises';
-import { Dependencies, runRepomod } from './repomodRunner.js';
+import { Dependencies, runRepomod } from './runRepomod.js';
 import { escape, glob } from 'glob';
 import type { FlowSettings } from './executeMainThread.js';
 import * as fs from 'fs';
 import * as tsmorph from 'ts-morph';
 import nodePath from 'node:path';
 import { Repomod } from '@intuita-inc/repomod-engine-api';
+import { runTsMorphCodemod } from './runTsMorphCodemod.js';
 
 export const runCodemod = async (
 	codemod: Codemod,
@@ -121,12 +122,12 @@ export const runCodemod = async (
 			flowSettings.usePrettier,
 		);
 
-		const formattedInternalCommands = await buildFormattedInternalCommands(
+		const formattedInternalCommands = await buildFormattedFileCommands(
 			modCommands,
 		);
 
 		for (const command of formattedInternalCommands) {
-			await handleFormattedInternalCommand(
+			await handleFormattedFileCommand(
 				'', // TODO fix me
 				command,
 				false,
@@ -171,10 +172,10 @@ export const runCodemod = async (
 						  );
 
 				const formattedInternalCommands =
-					await buildFormattedInternalCommands(modCommands);
+					await buildFormattedFileCommands(modCommands);
 
 				for (const command of formattedInternalCommands) {
-					await handleFormattedInternalCommand(
+					await handleFormattedFileCommand(
 						'', // TODO fix me
 						command,
 						false,
