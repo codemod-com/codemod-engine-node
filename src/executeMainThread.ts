@@ -16,7 +16,6 @@ const DEFAULT_EXCLUDE_PATTERNS = ['**/node_modules/**/*.*'] as const;
 const DEFAULT_INPUT_DIRECTORY_PATH = process.cwd();
 const DEFAULT_FILE_LIMIT = 1000;
 const DEFAULT_USE_PRETTIER = false;
-const DEFAULT_USE_JSON = false;
 const DEFAULT_USE_CACHE = false;
 
 const flowSettingsSchema = S.struct({
@@ -37,6 +36,20 @@ const flowSettingsSchema = S.struct({
 });
 
 export type FlowSettings = S.To<typeof flowSettingsSchema>;
+
+const DEFAULT_DRY_RUN = false;
+
+const runSettingsSchema = S.union(
+	S.struct({
+		dryRun: S.literal(false),
+	}),
+	S.struct({
+		dryRun: S.literal(true),
+		outputDirectoryPath: S.string,
+	}),
+);
+
+export type RunSettings = S.To<typeof runSettingsSchema>;
 
 export const executeMainThread = async () => {
 	const argv = await Promise.resolve(
@@ -78,7 +91,16 @@ export const executeMainThread = async () => {
 					.option('useCache', {
 						type: 'boolean',
 						description: 'Use cache for HTTP(S) requests',
-						default: DEFAULT_USE_JSON,
+						default: DEFAULT_USE_CACHE,
+					})
+					.option('dryRun', {
+						type: 'boolean',
+						description: 'Perform a dry run',
+						default: DEFAULT_DRY_RUN,
+					})
+					.option('outputDirectoryPath', {
+						type: 'string',
+						description: 'Output directory path for dry-run only',
 					})
 					.demandOption('name'),
 			)
@@ -117,6 +139,7 @@ export const executeMainThread = async () => {
 
 	const codemodSettings = S.parseSync(codemodSettingsSchema)(argv);
 	const flowSettings = S.parseSync(flowSettingsSchema)(argv);
+	const runSettings = S.parseSync(runSettingsSchema)(argv);
 
 	console.log(
 		'Executing the "%s" codemod against "%s"',
@@ -129,5 +152,5 @@ export const executeMainThread = async () => {
 		flowSettings.useCache,
 	);
 
-	await runCodemod(codemod, flowSettings);
+	await runCodemod(codemod, flowSettings, runSettings);
 };

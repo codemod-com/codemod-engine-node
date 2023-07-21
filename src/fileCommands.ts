@@ -4,6 +4,7 @@ import { join, extname, dirname } from 'node:path';
 import { format, resolveConfig, Options } from 'prettier';
 import { Message } from './messages.js';
 import { filterNeitherNullNorUndefined } from './filterNeitherNullNorUndefined.js';
+import { RunSettings } from './executeMainThread.js';
 
 export type CreateFileCommand = Readonly<{
 	kind: 'createFile';
@@ -149,12 +150,11 @@ export const buildFormattedFileCommands = async (
 };
 
 export const handleFormattedFileCommand = async (
-	outputDirectoryPath: string,
+	runSettings: RunSettings,
 	command: FormattedFileCommand,
-	dryRun: boolean,
 ): Promise<Message | null> => {
 	if (command.kind === 'createFile') {
-		if (!dryRun) {
+		if (!runSettings.dryRun) {
 			const directoryPath = dirname(command.newPath);
 
 			await mkdir(directoryPath, { recursive: true });
@@ -171,7 +171,10 @@ export const handleFormattedFileCommand = async (
 			.digest('base64url');
 
 		const extName = extname(command.newPath);
-		const newDataPath = join(outputDirectoryPath, `${hash}${extName}`);
+		const newDataPath = join(
+			runSettings.outputDirectoryPath,
+			`${hash}${extName}`,
+		);
 
 		await writeFile(newDataPath, command.newData);
 
@@ -183,7 +186,7 @@ export const handleFormattedFileCommand = async (
 	}
 
 	if (command.kind === 'deleteFile') {
-		if (!dryRun) {
+		if (!runSettings.dryRun) {
 			await unlink(command.oldPath);
 
 			return null;
@@ -196,7 +199,7 @@ export const handleFormattedFileCommand = async (
 	}
 
 	if (command.kind === 'moveFile') {
-		if (!dryRun) {
+		if (!runSettings.dryRun) {
 			await copyFile(command.oldPath, command.newPath);
 
 			await unlink(command.oldPath);
@@ -212,7 +215,7 @@ export const handleFormattedFileCommand = async (
 	}
 
 	if (command.kind === 'updateFile') {
-		if (!dryRun) {
+		if (!runSettings.dryRun) {
 			await writeFile(command.oldPath, command.newData);
 
 			return null;
@@ -227,7 +230,7 @@ export const handleFormattedFileCommand = async (
 		const extName = extname(command.oldPath);
 
 		const newDataPath = join(
-			outputDirectoryPath,
+			runSettings.outputDirectoryPath,
 			`${hashDigest}${extName}`,
 		);
 
@@ -241,7 +244,7 @@ export const handleFormattedFileCommand = async (
 	}
 
 	if (command.kind === 'copyFile') {
-		if (!dryRun) {
+		if (!runSettings.dryRun) {
 			const directoryPath = dirname(command.newPath);
 
 			await mkdir(directoryPath, { recursive: true });
