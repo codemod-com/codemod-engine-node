@@ -1,5 +1,3 @@
-import * as fs from 'fs';
-import * as fsPromises from 'fs/promises';
 import { Repomod, executeRepomod } from '@intuita-inc/repomod-engine-api';
 import { buildApi } from '@intuita-inc/repomod-engine-api';
 import { UnifiedFileSystem } from '@intuita-inc/repomod-engine-api';
@@ -15,6 +13,7 @@ import { toMarkdown } from 'mdast-util-to-markdown';
 import { mdxjs } from 'micromark-extension-mdxjs';
 import { mdxFromMarkdown, mdxToMarkdown } from 'mdast-util-mdx';
 import { visit } from 'unist-util-visit';
+import { IFs } from 'memfs';
 
 const parseMdx = (data: string) =>
 	fromMarkdown(data, {
@@ -39,16 +38,22 @@ export type Dependencies = Readonly<{
 }>;
 
 export const runRepomod = async (
+	fileSystem: IFs,
 	repomod: Repomod<Dependencies>,
 	inputPath: string,
 	formatWithPrettier: boolean,
 ): Promise<readonly FileCommand[]> => {
 	const fileSystemManager = new FileSystemManager(
-		fsPromises.readdir,
-		fsPromises.readFile,
-		fsPromises.stat,
+		// @ts-expect-error type inconsistency
+		fileSystem.promises.readdir,
+		fileSystem.promises.readFile,
+		fileSystem.promises.stat,
 	);
-	const unifiedFileSystem = new UnifiedFileSystem(fs, fileSystemManager);
+	const unifiedFileSystem = new UnifiedFileSystem(
+		// @ts-expect-error type inconsistency
+		fileSystem,
+		fileSystemManager,
+	);
 
 	const api = buildApi<Dependencies>(unifiedFileSystem, () => ({
 		jscodeshift,
@@ -72,7 +77,7 @@ export const runRepomod = async (
 		externalFileCommands.map(async (externalFileCommand) => {
 			if (externalFileCommand.kind === 'upsertFile') {
 				try {
-					await fsPromises.stat(externalFileCommand.path);
+					await fileSystem.promises.stat(externalFileCommand.path);
 
 					return {
 						kind: 'updateFile',

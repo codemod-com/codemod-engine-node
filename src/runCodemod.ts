@@ -3,7 +3,6 @@ import {
 	buildFormattedFileCommands,
 	handleFormattedFileCommand,
 } from './fileCommands.js';
-import { readFile } from 'fs/promises';
 import { Dependencies, runRepomod } from './runRepomod.js';
 import { escape, glob } from 'glob';
 import type { FlowSettings, RunSettings } from './executeMainThread.js';
@@ -155,6 +154,7 @@ export const runCodemod = async (
 		);
 
 		const fileCommands = await runRepomod(
+			fileSystem,
 			{ ...repomod, includePatterns: paths, excludePatterns: [] },
 			flowSettings.inputDirectoryPath,
 			flowSettings.usePrettier,
@@ -174,7 +174,7 @@ export const runCodemod = async (
 			printer.info('Running the "%s" codemod against "%s"', name, path);
 
 			try {
-				const data = await readFile(path, 'utf8');
+				const data = await fileSystem.promises.readFile(path, 'utf8');
 
 				const modCommands =
 					codemod.engine === 'jscodeshift'
