@@ -14,6 +14,7 @@ import { Repomod } from '@intuita-inc/repomod-engine-api';
 import { runTsMorphCodemod } from './runTsMorphCodemod.js';
 import { Printer } from './printer.js';
 import { Codemod } from './codemod.js';
+import { Volume, createFsFromVolume } from 'memfs';
 
 const buildPaths = async (
 	fs: NonNullable<GlobOptions['fs']>,
@@ -56,7 +57,10 @@ const buildPaths = async (
 	}
 };
 
+type FSOption = NonNullable<GlobOptions['fs']>;
+
 export const runCodemod = async (
+	fsOption: FSOption,
 	printer: Printer,
 	codemod: Codemod,
 	flowSettings: FlowSettings,
@@ -71,8 +75,14 @@ export const runCodemod = async (
 	}
 
 	if (codemod.engine === 'recipe') {
+		// establish a in-memory file system
+
+		const volume = Volume.fromJSON({});
+		const mfs = createFsFromVolume(volume);
+
 		for (const c of codemod.codemods) {
-			await runCodemod(printer, c, flowSettings, runSettings);
+			// @ts-expect-error type inconsistency
+			await runCodemod(mfs, printer, c, flowSettings, runSettings);
 		}
 
 		return;
@@ -137,7 +147,12 @@ export const runCodemod = async (
 			);
 		}
 
-		const paths = await buildPaths(fs, flowSettings, codemod, repomod);
+		const paths = await buildPaths(
+			fsOption,
+			flowSettings,
+			codemod,
+			repomod,
+		);
 
 		const fileCommands = await runRepomod(
 			{ ...repomod, includePatterns: paths, excludePatterns: [] },
@@ -153,7 +168,7 @@ export const runCodemod = async (
 			await handleFormattedFileCommand(printer, runSettings, command);
 		}
 	} else {
-		const paths = await buildPaths(fs, flowSettings, codemod, null);
+		const paths = await buildPaths(fsOption, flowSettings, codemod, null);
 
 		for (const path of paths) {
 			printer.info('Running the "%s" codemod against "%s"', name, path);

@@ -5,6 +5,7 @@ import { handleListNamesCommand } from './handleListCliCommand.js';
 import { CodemodDownloader } from './downloadCodemod.js';
 import { runCodemod } from './runCodemod.js';
 import { Printer } from './printer.js';
+import * as fs from 'fs';
 
 const codemodSettingsSchema = S.union(
 	S.struct({
@@ -215,7 +216,7 @@ export const executeMainThread = async () => {
 				flowSettings.useCache,
 			);
 
-			await runCodemod(printer, codemod, flowSettings, runSettings);
+			await runCodemod(fs, printer, codemod, flowSettings, runSettings);
 		} else {
 			const codemod = {
 				source: 'fileSystem' as const,
@@ -223,7 +224,7 @@ export const executeMainThread = async () => {
 				indexPath: codemodSettings.sourcePath,
 			};
 
-			await runCodemod(printer, codemod, flowSettings, runSettings);
+			await runCodemod(fs, printer, codemod, flowSettings, runSettings);
 		}
 	} catch (error) {
 		if (!(error instanceof Error)) {
