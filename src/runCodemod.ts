@@ -77,9 +77,16 @@ export const runCodemod = async (
 
 	if (codemod.engine === 'recipe') {
 		// establish a in-memory file system
-
 		const volume = Volume.fromJSON({});
 		const mfs = createFsFromVolume(volume);
+
+		const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
+
+		for (const path of paths) {
+			const data = await fs.promises.readFile(path, { encoding: 'utf8' });
+
+			await mfs.promises.writeFile(path, data);
+		}
 
 		for (const c of codemod.codemods) {
 			await runCodemod(mfs, printer, c, flowSettings, runSettings, true);
