@@ -16,7 +16,7 @@ import { Codemod } from './codemod.js';
 import { IFs, Volume, createFsFromVolume } from 'memfs';
 
 const buildPaths = async (
-	fs: IFs,
+	fileSystem: IFs,
 	flowSettings: FlowSettings,
 	codemod: Codemod,
 	repomod: Repomod<Dependencies> | null,
@@ -28,7 +28,7 @@ const buildPaths = async (
 				absolute: true,
 				cwd: flowSettings.inputDirectoryPath,
 				// @ts-expect-error type inconsistency
-				fs,
+				fs: fileSystem,
 				ignore: repomod.excludePatterns?.slice(),
 			},
 		);
@@ -37,7 +37,7 @@ const buildPaths = async (
 			absolute: true,
 			cwd: flowSettings.inputDirectoryPath,
 			// @ts-expect-error type inconsistency
-			fs,
+			fs: fileSystem,
 			ignore: flowSettings.excludePattern.slice(),
 		});
 
@@ -50,7 +50,7 @@ const buildPaths = async (
 			absolute: true,
 			cwd: flowSettings.inputDirectoryPath,
 			// @ts-expect-error type inconsistency
-			fs,
+			fs: fileSystem,
 			ignore: flowSettings.excludePattern.slice(),
 			nodir: true,
 		});
