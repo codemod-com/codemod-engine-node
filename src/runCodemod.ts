@@ -5,7 +5,7 @@ import {
 } from './fileCommands.js';
 import { readFile } from 'fs/promises';
 import { Dependencies, runRepomod } from './runRepomod.js';
-import { escape, glob } from 'glob';
+import { GlobOptions, escape, glob } from 'glob';
 import type { FlowSettings, RunSettings } from './executeMainThread.js';
 import * as fs from 'fs';
 import * as tsmorph from 'ts-morph';
@@ -16,6 +16,7 @@ import { Printer } from './printer.js';
 import { Codemod } from './codemod.js';
 
 const buildPaths = async (
+	fs: NonNullable<GlobOptions['fs']>,
 	flowSettings: FlowSettings,
 	codemod: Codemod,
 	repomod: Repomod<Dependencies> | null,
@@ -136,26 +137,7 @@ export const runCodemod = async (
 			);
 		}
 
-		const repomodPaths = await glob(
-			repomod.includePatterns?.slice() ?? [],
-			{
-				absolute: true,
-				cwd: flowSettings.inputDirectoryPath,
-				fs,
-				ignore: repomod.excludePatterns?.slice(),
-			},
-		);
-
-		const flowPaths = await glob(flowSettings.includePattern.slice(), {
-			absolute: true,
-			cwd: flowSettings.inputDirectoryPath,
-			fs,
-			ignore: flowSettings.excludePattern.slice(),
-		});
-
-		const paths = repomodPaths
-			.filter((path) => flowPaths.includes(path))
-			.map((path) => escape(path));
+		const paths = await buildPaths(fs, flowSettings, codemod, repomod);
 
 		const fileCommands = await runRepomod(
 			{ ...repomod, includePatterns: paths, excludePatterns: [] },
@@ -171,15 +153,7 @@ export const runCodemod = async (
 			await handleFormattedFileCommand(printer, runSettings, command);
 		}
 	} else {
-		const globbedPaths = await glob(flowSettings.includePattern.slice(), {
-			absolute: true,
-			cwd: flowSettings.inputDirectoryPath,
-			fs,
-			ignore: flowSettings.excludePattern.slice(),
-			nodir: true,
-		});
-
-		const paths = globbedPaths.slice(0, flowSettings.fileLimit);
+		const paths = await buildPaths(fs, flowSettings, codemod, null);
 
 		for (const path of paths) {
 			printer.info('Running the "%s" codemod against "%s"', name, path);
