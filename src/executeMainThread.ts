@@ -216,8 +216,15 @@ export const executeMainThread = async () => {
 				flowSettings.useCache,
 			);
 
-			// @ts-expect-error type inconsistency
-			await runCodemod(fs, printer, codemod, flowSettings, runSettings);
+			await runCodemod(
+				// @ts-expect-error type inconsistency
+				fs,
+				printer,
+				codemod,
+				flowSettings,
+				runSettings,
+				false,
+			);
 		} else {
 			const codemod = {
 				source: 'fileSystem' as const,
@@ -225,8 +232,15 @@ export const executeMainThread = async () => {
 				indexPath: codemodSettings.sourcePath,
 			};
 
-			// @ts-expect-error type inconsistency
-			await runCodemod(fs, printer, codemod, flowSettings, runSettings);
+			await runCodemod(
+				// @ts-expect-error type inconsistency
+				fs,
+				printer,
+				codemod,
+				flowSettings,
+				runSettings,
+				false,
+			);
 		}
 	} catch (error) {
 		if (!(error instanceof Error)) {

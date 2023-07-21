@@ -154,6 +154,7 @@ export const handleFormattedFileCommand = async (
 	printer: Printer,
 	runSettings: RunSettings,
 	command: FormattedFileCommand,
+	memoryFileSystemUsed: boolean,
 ): Promise<void> => {
 	if (command.kind === 'createFile') {
 		if (!runSettings.dryRun) {
@@ -183,11 +184,13 @@ export const handleFormattedFileCommand = async (
 
 		await fileSystem.promises.writeFile(newDataPath, command.newData);
 
-		printer.log({
-			kind: 'create',
-			newFilePath: command.newPath,
-			newContentPath: newDataPath,
-		});
+		if (!memoryFileSystemUsed) {
+			printer.log({
+				kind: 'create',
+				newFilePath: command.newPath,
+				newContentPath: newDataPath,
+			});
+		}
 
 		return;
 	}
@@ -199,10 +202,12 @@ export const handleFormattedFileCommand = async (
 			return;
 		}
 
-		printer.log({
-			kind: 'delete',
-			oldFilePath: command.oldPath,
-		});
+		if (!memoryFileSystemUsed) {
+			printer.log({
+				kind: 'delete',
+				oldFilePath: command.oldPath,
+			});
+		}
 
 		return;
 	}
@@ -219,11 +224,13 @@ export const handleFormattedFileCommand = async (
 			return;
 		}
 
-		printer.log({
-			kind: 'move',
-			oldFilePath: command.oldPath,
-			newFilePath: command.newPath,
-		});
+		if (!memoryFileSystemUsed) {
+			printer.log({
+				kind: 'move',
+				oldFilePath: command.oldPath,
+				newFilePath: command.newPath,
+			});
+		}
 
 		return;
 	}
@@ -253,11 +260,13 @@ export const handleFormattedFileCommand = async (
 
 		await fileSystem.promises.writeFile(newDataPath, command.newData);
 
-		printer.log({
-			kind: 'rewrite',
-			oldPath: command.oldPath,
-			newDataPath,
-		});
+		if (!memoryFileSystemUsed) {
+			printer.log({
+				kind: 'rewrite',
+				oldPath: command.oldPath,
+				newDataPath,
+			});
+		}
 
 		return;
 	}
@@ -276,11 +285,13 @@ export const handleFormattedFileCommand = async (
 			return;
 		}
 
-		printer.log({
-			kind: 'copy',
-			oldFilePath: command.oldPath,
-			newFilePath: command.newPath,
-		});
+		if (!memoryFileSystemUsed) {
+			printer.log({
+				kind: 'copy',
+				oldFilePath: command.oldPath,
+				newFilePath: command.newPath,
+			});
+		}
 
 		return;
 	}

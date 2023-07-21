@@ -65,6 +65,7 @@ export const runCodemod = async (
 	codemod: Codemod,
 	flowSettings: FlowSettings,
 	runSettings: RunSettings,
+	memoryFileSystemUsed: boolean,
 ) => {
 	const name = 'name' in codemod ? codemod.name : codemod.indexPath;
 
@@ -81,7 +82,7 @@ export const runCodemod = async (
 		const mfs = createFsFromVolume(volume);
 
 		for (const c of codemod.codemods) {
-			await runCodemod(mfs, printer, c, flowSettings, runSettings);
+			await runCodemod(mfs, printer, c, flowSettings, runSettings, true);
 		}
 
 		return;
@@ -170,6 +171,7 @@ export const runCodemod = async (
 				printer,
 				runSettings,
 				command,
+				memoryFileSystemUsed,
 			);
 		}
 	} else {
@@ -208,6 +210,7 @@ export const runCodemod = async (
 						printer,
 						runSettings,
 						command,
+						memoryFileSystemUsed,
 					);
 				}
 			} catch (error) {
