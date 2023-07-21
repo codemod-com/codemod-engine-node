@@ -5,7 +5,9 @@ export class Printer {
 
 	public error(error: Error) {
 		if (this.__useJson) {
-			console.error(JSON.stringify({ message: error.message }));
+			console.error(
+				JSON.stringify({ kind: 'error', message: error.message }),
+			);
 			return;
 		}
 

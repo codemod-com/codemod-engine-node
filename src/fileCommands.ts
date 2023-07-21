@@ -184,6 +184,8 @@ export const handleFormattedFileCommand = async (
 			newFilePath: command.newPath,
 			newContentPath: newDataPath,
 		});
+
+		return;
 	}
 
 	if (command.kind === 'deleteFile') {
@@ -197,6 +199,8 @@ export const handleFormattedFileCommand = async (
 			kind: 'delete',
 			oldFilePath: command.oldPath,
 		});
+
+		return;
 	}
 
 	if (command.kind === 'moveFile') {
@@ -213,6 +217,8 @@ export const handleFormattedFileCommand = async (
 			oldFilePath: command.oldPath,
 			newFilePath: command.newPath,
 		});
+
+		return;
 	}
 
 	if (command.kind === 'updateFile') {
@@ -242,6 +248,8 @@ export const handleFormattedFileCommand = async (
 			oldPath: command.oldPath,
 			newDataPath,
 		});
+
+		return;
 	}
 
 	if (command.kind === 'copyFile') {
@@ -260,6 +268,8 @@ export const handleFormattedFileCommand = async (
 			oldFilePath: command.oldPath,
 			newFilePath: command.newPath,
 		});
+
+		return;
 	}
 
 	throw new Error('Unrecognized command kind');
