@@ -7,7 +7,7 @@ import {
 import { readFile } from 'fs/promises';
 import { Dependencies, runRepomod } from './runRepomod.js';
 import { escape, glob } from 'glob';
-import type { FlowSettings } from './executeMainThread.js';
+import type { FlowSettings, RunSettings } from './executeMainThread.js';
 import * as fs from 'fs';
 import * as tsmorph from 'ts-morph';
 import nodePath from 'node:path';
@@ -17,6 +17,7 @@ import { runTsMorphCodemod } from './runTsMorphCodemod.js';
 export const runCodemod = async (
 	codemod: Codemod,
 	flowSettings: FlowSettings,
+	runSettings: RunSettings,
 ) => {
 	console.log(
 		'Running the "%s" codemod using "%s"',
@@ -30,7 +31,7 @@ export const runCodemod = async (
 
 	if (codemod.engine === 'recipe') {
 		for (const c of codemod.codemods) {
-			await runCodemod(c, flowSettings);
+			await runCodemod(c, flowSettings, runSettings);
 		}
 
 		return;
@@ -116,22 +117,18 @@ export const runCodemod = async (
 			.filter((path) => flowPaths.includes(path))
 			.map((path) => escape(path));
 
-		const modCommands = await runRepomod(
+		const fileCommands = await runRepomod(
 			{ ...repomod, includePatterns: paths, excludePatterns: [] },
 			flowSettings.inputDirectoryPath,
 			flowSettings.usePrettier,
 		);
 
-		const formattedInternalCommands = await buildFormattedFileCommands(
-			modCommands,
+		const formattedFileCommands = await buildFormattedFileCommands(
+			fileCommands,
 		);
 
-		for (const command of formattedInternalCommands) {
-			await handleFormattedFileCommand(
-				'', // TODO fix me
-				command,
-				false,
-			);
+		for (const command of formattedFileCommands) {
+			await handleFormattedFileCommand(runSettings, command);
 		}
 	} else {
 		const globbedPaths = await glob(flowSettings.includePattern.slice(), {
@@ -175,11 +172,7 @@ export const runCodemod = async (
 					await buildFormattedFileCommands(modCommands);
 
 				for (const command of formattedInternalCommands) {
-					await handleFormattedFileCommand(
-						'', // TODO fix me
-						command,
-						false,
-					);
+					await handleFormattedFileCommand(runSettings, command);
 				}
 			} catch (error) {
 				console.error(error);
