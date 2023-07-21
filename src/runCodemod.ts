@@ -1,5 +1,4 @@
 import { runJscodeshiftCodemod } from './runJscodeshiftCodemod.js';
-import { Codemod } from './downloadCodemod.js';
 import {
 	buildFormattedFileCommands,
 	handleFormattedFileCommand,
@@ -14,6 +13,7 @@ import nodePath from 'node:path';
 import { Repomod } from '@intuita-inc/repomod-engine-api';
 import { runTsMorphCodemod } from './runTsMorphCodemod.js';
 import { Printer } from './printer.js';
+import { Codemod } from './codemod.js';
 
 export const runCodemod = async (
 	printer: Printer,
@@ -21,11 +21,9 @@ export const runCodemod = async (
 	flowSettings: FlowSettings,
 	runSettings: RunSettings,
 ) => {
-	printer.info(
-		'Running the "%s" codemod using "%s"',
-		codemod.name,
-		codemod.engine,
-	);
+	const name = 'name' in codemod ? codemod.name : codemod.indexPath;
+
+	printer.info('Running the "%s" codemod using "%s"', name, codemod.engine);
 
 	if (codemod.engine === 'piranha') {
 		throw new Error('Piranha not supported');
@@ -144,11 +142,7 @@ export const runCodemod = async (
 		const paths = globbedPaths.slice(0, flowSettings.fileLimit);
 
 		for (const path of paths) {
-			printer.info(
-				'Running the "%s" codemod against "%s"',
-				codemod.name,
-				path,
-			);
+			printer.info('Running the "%s" codemod against "%s"', name, path);
 
 			try {
 				const data = await readFile(path, 'utf8');

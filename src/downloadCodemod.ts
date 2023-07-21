@@ -6,62 +6,22 @@ import { downloadFile } from './fileSystemUtilities.js';
 import { inflate } from 'node:zlib';
 import { promisify } from 'node:util';
 
-const promisifiedInflate = promisify(inflate);
+import { Printer } from './printer.js';
+import { Codemod, codemodConfigSchema } from './codemod.js';
 
 import * as S from '@effect/schema/Schema';
-import { Printer } from './printer.js';
 
-const codemodConfigSchema = S.union(
-	S.struct({
-		schemaVersion: S.literal('1.0.0'),
-		engine: S.literal('piranha'),
-		language: S.literal('java'),
-	}),
-	S.struct({
-		schemaVersion: S.literal('1.0.0'),
-		engine: S.literal('jscodeshift'),
-	}),
-	S.struct({
-		schemaVersion: S.literal('1.0.0'),
-		engine: S.literal('ts-morph'),
-	}),
-	S.struct({
-		schemaVersion: S.literal('1.0.0'),
-		engine: S.literal('repomod-engine'),
-	}),
-	S.struct({
-		schemaVersion: S.literal('1.0.0'),
-		engine: S.literal('recipe'),
-		names: S.array(S.string),
-	}),
-);
-
+const promisifiedInflate = promisify(inflate);
 const CODEMOD_REGISTRY_URL =
 	'https://intuita-public.s3.us-west-1.amazonaws.com/codemod-registry';
-
-export type Codemod =
-	| Readonly<{
-			name: string;
-			engine: 'recipe';
-			directoryPath: string;
-			codemods: ReadonlyArray<Codemod>;
-	  }>
-	| Readonly<{
-			name: string;
-			engine: 'jscodeshift' | 'repomod-engine' | 'ts-morph';
-			directoryPath: string;
-			indexPath: string;
-	  }>
-	| Readonly<{
-			name: string;
-			engine: 'piranha';
-			directoryPath: string;
-	  }>;
 
 export class CodemodDownloader {
 	public constructor(private readonly __printer: Printer) {}
 
-	public async download(name: string, cache: boolean): Promise<Codemod> {
+	public async download(
+		name: string,
+		cache: boolean,
+	): Promise<Codemod & { source: 'registry' }> {
 		this.__printer.info(
 			'Downloading the "%s" codemod, %susing cache',
 			name,
@@ -118,6 +78,7 @@ export class CodemodDownloader {
 			);
 
 			return {
+				source: 'registry',
 				name,
 				engine: config.engine,
 				directoryPath,
@@ -144,6 +105,7 @@ export class CodemodDownloader {
 			await writeFile(indexPath, inflatedData);
 
 			return {
+				source: 'registry',
 				name,
 				engine: config.engine,
 				indexPath,
@@ -160,6 +122,7 @@ export class CodemodDownloader {
 			}
 
 			return {
+				source: 'registry',
 				name,
 				engine: config.engine,
 				codemods,
