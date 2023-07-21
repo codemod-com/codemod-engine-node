@@ -62,7 +62,7 @@ export class CodemodDownloader {
 	public constructor(private readonly __printer: Printer) {}
 
 	public async download(name: string, cache: boolean): Promise<Codemod> {
-		this.__printer.trace(
+		this.__printer.info(
 			'Downloading the "%s" codemod, %susing cache',
 			name,
 			cache ? '' : 'not ',

@@ -21,7 +21,7 @@ export const runCodemod = async (
 	flowSettings: FlowSettings,
 	runSettings: RunSettings,
 ) => {
-	printer.trace(
+	printer.info(
 		'Running the "%s" codemod using "%s"',
 		codemod.name,
 		codemod.engine,
@@ -144,7 +144,7 @@ export const runCodemod = async (
 		const paths = globbedPaths.slice(0, flowSettings.fileLimit);
 
 		for (const path of paths) {
-			printer.trace(
+			printer.info(
 				'Running the "%s" codemod against "%s"',
 				codemod.name,
 				path,

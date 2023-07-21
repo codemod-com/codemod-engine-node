@@ -185,7 +185,7 @@ export const executeMainThread = async () => {
 		const flowSettings = S.parseSync(flowSettingsSchema)(argv);
 		const runSettings = S.parseSync(runSettingsSchema)(argv);
 
-		printer.trace(
+		printer.info(
 			'Executing the "%s" codemod against "%s"',
 			codemodSettings.name,
 			flowSettings.inputDirectoryPath,

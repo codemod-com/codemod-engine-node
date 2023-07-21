@@ -6,6 +6,7 @@ export class Printer {
 	public error(error: Error) {
 		if (this.__useJson) {
 			console.error(JSON.stringify({ message: error.message }));
+			return;
 		}
 
 		console.error(error);
@@ -14,17 +15,18 @@ export class Printer {
 	public log(message: Message) {
 		if (this.__useJson) {
 			console.log(JSON.stringify(message));
+			return;
 		}
 
 		console.log(message);
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	public trace(message: string, ...optionalParams: any[]) {
+	public info(message: string, ...optionalParams: any[]) {
 		if (this.__useJson) {
 			return;
 		}
 
-		console.trace(message, ...optionalParams);
+		console.info(message, ...optionalParams);
 	}
 }
