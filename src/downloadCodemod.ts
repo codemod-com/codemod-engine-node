@@ -9,6 +9,7 @@ import { promisify } from 'node:util';
 const promisifiedInflate = promisify(inflate);
 
 import * as S from '@effect/schema/Schema';
+import { Printer } from './printer.js';
 
 const codemodConfigSchema = S.union(
 	S.struct({
@@ -57,112 +58,115 @@ export type Codemod =
 			directoryPath: string;
 	  }>;
 
-export const downloadCodemod = async (
-	name: string,
-	cache: boolean,
-): Promise<Codemod> => {
-	console.log(
-		'Downloading the "%s" codemod, %susing cache',
-		name,
-		cache ? '' : 'not ',
-	);
+export class CodemodDownloader {
+	public constructor(private readonly __printer: Printer) {}
 
-	// make the intuita directory
-	const intuitaDirectoryPath = join(homedir(), '.intuita');
+	public async download(name: string, cache: boolean): Promise<Codemod> {
+		this.__printer.trace(
+			'Downloading the "%s" codemod, %susing cache',
+			name,
+			cache ? '' : 'not ',
+		);
 
-	await mkdir(intuitaDirectoryPath, { recursive: true });
+		// make the intuita directory
+		const intuitaDirectoryPath = join(homedir(), '.intuita');
 
-	// make the codemod directory
-	const hashDigest = createHash('ripemd160').update(name).digest('base64url');
-	const directoryPath = join(intuitaDirectoryPath, hashDigest);
+		await mkdir(intuitaDirectoryPath, { recursive: true });
 
-	await mkdir(directoryPath, { recursive: true });
+		// make the codemod directory
+		const hashDigest = createHash('ripemd160')
+			.update(name)
+			.digest('base64url');
+		const directoryPath = join(intuitaDirectoryPath, hashDigest);
 
-	// download the config
-	const configPath = join(directoryPath, 'config.json');
+		await mkdir(directoryPath, { recursive: true });
 
-	const buffer = await downloadFile(
-		`${CODEMOD_REGISTRY_URL}/${hashDigest}/config.json`,
-		configPath,
-		cache,
-	);
+		// download the config
+		const configPath = join(directoryPath, 'config.json');
 
-	const parsedConfig = JSON.parse(buffer.toString('utf8'));
+		const buffer = await downloadFile(
+			`${CODEMOD_REGISTRY_URL}/${hashDigest}/config.json`,
+			configPath,
+			cache,
+		);
 
-	const config = S.parseSync(codemodConfigSchema)(parsedConfig);
+		const parsedConfig = JSON.parse(buffer.toString('utf8'));
 
-	{
-		const descriptionPath = join(directoryPath, 'description.md');
+		const config = S.parseSync(codemodConfigSchema)(parsedConfig);
 
-		try {
+		{
+			const descriptionPath = join(directoryPath, 'description.md');
+
+			try {
+				await downloadFile(
+					`${CODEMOD_REGISTRY_URL}/${hashDigest}/description.md`,
+					descriptionPath,
+					cache,
+				);
+			} catch {
+				// do nothing, descriptions might not exist
+			}
+		}
+
+		if (config.engine === 'piranha') {
+			const rulesPath = join(directoryPath, 'rules.toml');
+
 			await downloadFile(
-				`${CODEMOD_REGISTRY_URL}/${hashDigest}/description.md`,
-				descriptionPath,
+				`${CODEMOD_REGISTRY_URL}/${hashDigest}/rules.toml`,
+				rulesPath,
 				cache,
 			);
-		} catch {
-			// do nothing, descriptions might not exist
-		}
-	}
 
-	if (config.engine === 'piranha') {
-		const rulesPath = join(directoryPath, 'rules.toml');
-
-		await downloadFile(
-			`${CODEMOD_REGISTRY_URL}/${hashDigest}/rules.toml`,
-			rulesPath,
-			cache,
-		);
-
-		return {
-			name,
-			engine: config.engine,
-			directoryPath,
-		};
-	}
-
-	if (
-		config.engine === 'jscodeshift' ||
-		config.engine === 'repomod-engine' ||
-		config.engine === 'ts-morph'
-	) {
-		const deflatedIndexPath = join(directoryPath, 'index.cjs.z');
-
-		const compressedData = await downloadFile(
-			`${CODEMOD_REGISTRY_URL}/${hashDigest}/index.cjs.z`,
-			deflatedIndexPath,
-			cache,
-		);
-
-		const inflatedData = await promisifiedInflate(compressedData);
-
-		const indexPath = join(directoryPath, 'index.cjs');
-
-		await writeFile(indexPath, inflatedData);
-
-		return {
-			name,
-			engine: config.engine,
-			indexPath,
-			directoryPath,
-		};
-	}
-
-	if (config.engine === 'recipe') {
-		const codemods: Codemod[] = [];
-
-		for (const name of config.names) {
-			const codemod = await downloadCodemod(name, cache);
-			codemods.push(codemod);
+			return {
+				name,
+				engine: config.engine,
+				directoryPath,
+			};
 		}
 
-		return {
-			name,
-			engine: config.engine,
-			codemods,
-			directoryPath,
-		};
-	}
+		if (
+			config.engine === 'jscodeshift' ||
+			config.engine === 'repomod-engine' ||
+			config.engine === 'ts-morph'
+		) {
+			const deflatedIndexPath = join(directoryPath, 'index.cjs.z');
 
-	throw new Error('Unsupported engine');
-};
+			const compressedData = await downloadFile(
+				`${CODEMOD_REGISTRY_URL}/${hashDigest}/index.cjs.z`,
+				deflatedIndexPath,
+				cache,
+			);
+
+			const inflatedData = await promisifiedInflate(compressedData);
+
+			const indexPath = join(directoryPath, 'index.cjs');
+
+			await writeFile(indexPath, inflatedData);
+
+			return {
+				name,
+				engine: config.engine,
+				indexPath,
+				directoryPath,
+			};
+		}
+
+		if (config.engine === 'recipe') {
+			const codemods: Codemod[] = [];
+
+			for (const name of config.names) {
+				const codemod = await this.download(name, cache);
+				codemods.push(codemod);
+			}
+
+			return {
+				name,
+				engine: config.engine,
+				codemods,
+				directoryPath,
+			};
+		}
+
+		throw new Error('Unsupported engine');
+	}
+}

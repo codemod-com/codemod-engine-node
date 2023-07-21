@@ -2,9 +2,9 @@ import { createHash } from 'node:crypto';
 import { copyFile, mkdir, unlink, writeFile } from 'node:fs/promises';
 import { join, extname, dirname } from 'node:path';
 import { format, resolveConfig, Options } from 'prettier';
-import { Message } from './messages.js';
 import { filterNeitherNullNorUndefined } from './filterNeitherNullNorUndefined.js';
 import { RunSettings } from './executeMainThread.js';
+import { Printer } from './printer.js';
 
 export type CreateFileCommand = Readonly<{
 	kind: 'createFile';
@@ -150,9 +150,10 @@ export const buildFormattedFileCommands = async (
 };
 
 export const handleFormattedFileCommand = async (
+	printer: Printer,
 	runSettings: RunSettings,
 	command: FormattedFileCommand,
-): Promise<Message | null> => {
+): Promise<void> => {
 	if (command.kind === 'createFile') {
 		if (!runSettings.dryRun) {
 			const directoryPath = dirname(command.newPath);
@@ -161,7 +162,7 @@ export const handleFormattedFileCommand = async (
 
 			await writeFile(command.newPath, command.newData);
 
-			return null;
+			return;
 		}
 
 		const hash = createHash('md5')
@@ -178,24 +179,24 @@ export const handleFormattedFileCommand = async (
 
 		await writeFile(newDataPath, command.newData);
 
-		return {
+		printer.log({
 			kind: 'create',
 			newFilePath: command.newPath,
 			newContentPath: newDataPath,
-		};
+		});
 	}
 
 	if (command.kind === 'deleteFile') {
 		if (!runSettings.dryRun) {
 			await unlink(command.oldPath);
 
-			return null;
+			return;
 		}
 
-		return {
+		printer.log({
 			kind: 'delete',
 			oldFilePath: command.oldPath,
-		};
+		});
 	}
 
 	if (command.kind === 'moveFile') {
@@ -204,21 +205,21 @@ export const handleFormattedFileCommand = async (
 
 			await unlink(command.oldPath);
 
-			return null;
+			return;
 		}
 
-		return {
+		printer.log({
 			kind: 'move',
 			oldFilePath: command.oldPath,
 			newFilePath: command.newPath,
-		};
+		});
 	}
 
 	if (command.kind === 'updateFile') {
 		if (!runSettings.dryRun) {
 			await writeFile(command.oldPath, command.newData);
 
-			return null;
+			return;
 		}
 
 		const hashDigest = createHash('md5')
@@ -236,11 +237,11 @@ export const handleFormattedFileCommand = async (
 
 		await writeFile(newDataPath, command.newData);
 
-		return {
+		printer.log({
 			kind: 'rewrite',
 			oldPath: command.oldPath,
 			newDataPath,
-		};
+		});
 	}
 
 	if (command.kind === 'copyFile') {
@@ -251,14 +252,14 @@ export const handleFormattedFileCommand = async (
 
 			await copyFile(command.oldPath, command.newPath);
 
-			return null;
+			return;
 		}
 
-		return {
+		printer.log({
 			kind: 'copy',
 			oldFilePath: command.oldPath,
 			newFilePath: command.newPath,
-		};
+		});
 	}
 
 	throw new Error('Unrecognized command kind');

@@ -2,8 +2,9 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import * as S from '@effect/schema/Schema';
 import { handleListNamesCommand } from './handleListCliCommand.js';
-import { downloadCodemod } from './downloadCodemod.js';
+import { CodemodDownloader } from './downloadCodemod.js';
 import { runCodemod } from './runCodemod.js';
+import { Printer } from './printer.js';
 
 const codemodSettingsSchema = S.struct({
 	name: S.string,
@@ -17,6 +18,7 @@ const DEFAULT_INPUT_DIRECTORY_PATH = process.cwd();
 const DEFAULT_FILE_LIMIT = 1000;
 const DEFAULT_USE_PRETTIER = false;
 const DEFAULT_USE_CACHE = false;
+const DEFAULT_USE_JSON = false;
 
 const flowSettingsSchema = S.struct({
 	includePattern: S.optional(S.array(S.string)).withDefault(
@@ -33,6 +35,7 @@ const flowSettingsSchema = S.struct({
 	).withDefault(() => DEFAULT_FILE_LIMIT),
 	usePrettier: S.optional(S.boolean).withDefault(() => DEFAULT_USE_PRETTIER),
 	useCache: S.optional(S.boolean).withDefault(() => DEFAULT_USE_CACHE),
+	useJson: S.optional(S.boolean).withDefault(() => DEFAULT_USE_JSON),
 });
 
 export type FlowSettings = S.To<typeof flowSettingsSchema>;
@@ -93,6 +96,11 @@ export const executeMainThread = async () => {
 						description: 'Use cache for HTTP(S) requests',
 						default: DEFAULT_USE_CACHE,
 					})
+					.option('useJson', {
+						type: 'boolean',
+						description: 'Use JSON responses in the console',
+						default: DEFAULT_USE_JSON,
+					})
 					.option('dryRun', {
 						type: 'boolean',
 						description: 'Perform a dry run',
@@ -105,52 +113,95 @@ export const executeMainThread = async () => {
 					.demandOption('name'),
 			)
 			.command('listNames', 'list the codemod names', (y) =>
-				y.option('json', {
+				y.option('useJson', {
 					type: 'boolean',
 					description: 'Respond with JSON',
-					default: false,
+					default: DEFAULT_USE_JSON,
 				}),
 			)
-			.command('getMetadataPath', 'list the codemod names', (y) =>
-				y
-					.option('name', {
-						type: 'string',
-						description: 'Name of the codemod in the registry',
-					})
-					.demandOption('name'),
+			.command(
+				'getMetadataPath',
+				'get the metadata path for a json',
+				(y) =>
+					y
+						.option('name', {
+							type: 'string',
+							description: 'Name of the codemod in the registry',
+						})
+						.option('useJson', {
+							type: 'boolean',
+							description: 'Respond with JSON',
+							default: DEFAULT_USE_JSON,
+						})
+						.demandOption('name'),
 			)
 			.help()
 			.version().argv,
 	);
 
 	if (String(argv._) === 'listNames') {
-		await handleListNamesCommand(argv.json);
+		const printer = new Printer(argv.useJson);
+
+		try {
+			await handleListNamesCommand(printer);
+		} catch (error) {
+			if (!(error instanceof Error)) {
+				return;
+			}
+
+			printer.error(error);
+		}
 
 		return;
 	}
 
 	if (String(argv._) === 'getMetadataPath') {
-		const codemod = await downloadCodemod(argv.name, false);
+		const printer = new Printer(argv.useJson);
 
-		console.log(codemod.directoryPath);
+		try {
+			const codemodDownloader = new CodemodDownloader(printer);
 
-		return;
+			const codemod = await codemodDownloader.download(argv.name, false);
+
+			printer.log({
+				kind: 'metadataPath',
+				path: codemod.directoryPath,
+			});
+		} catch (error) {
+			if (!(error instanceof Error)) {
+				return;
+			}
+
+			printer.error(error);
+		}
 	}
 
-	const codemodSettings = S.parseSync(codemodSettingsSchema)(argv);
-	const flowSettings = S.parseSync(flowSettingsSchema)(argv);
-	const runSettings = S.parseSync(runSettingsSchema)(argv);
+	const printer = new Printer(argv.useJson);
 
-	console.log(
-		'Executing the "%s" codemod against "%s"',
-		codemodSettings.name,
-		flowSettings.inputDirectoryPath,
-	);
+	try {
+		const codemodDownloader = new CodemodDownloader(printer);
 
-	const codemod = await downloadCodemod(
-		codemodSettings.name,
-		flowSettings.useCache,
-	);
+		const codemodSettings = S.parseSync(codemodSettingsSchema)(argv);
+		const flowSettings = S.parseSync(flowSettingsSchema)(argv);
+		const runSettings = S.parseSync(runSettingsSchema)(argv);
 
-	await runCodemod(codemod, flowSettings, runSettings);
+		printer.trace(
+			'Executing the "%s" codemod against "%s"',
+			codemodSettings.name,
+			flowSettings.inputDirectoryPath,
+		);
+
+		const codemod = await codemodDownloader.download(
+			codemodSettings.name,
+			flowSettings.useCache,
+		);
+
+		await runCodemod(printer, codemod, flowSettings, runSettings);
+	} catch (error) {
+		if (!(error instanceof Error)) {
+			return;
+		}
+
+		printer.error(error);
+	}
 };
