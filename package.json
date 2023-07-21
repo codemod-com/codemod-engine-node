@@ -1,6 +1,6 @@
 {
 	"name": "@intuita-inc/intuita",
-	"version": "0.0.7",
+	"version": "0.0.8",
 	"description": "A codemod engine for Node.js libraries (jscodeshift, ts-morph, etc.)",
 	"type": "module",
 	"exports": null,
@@ -15,10 +15,15 @@
 		"axios": "^1.4.0",
 		"glob": "^10.3.3",
 		"jscodeshift": "^0.14.0",
+		"mdast-util-from-markdown": "^2.0.0",
+		"mdast-util-mdx": "^3.0.0",
+		"mdast-util-to-markdown": "^2.1.0",
+		"micromark-extension-mdxjs": "^2.0.0",
 		"prettier": "^2.8.7",
 		"rehype-parse": "^8.0.4",
 		"ts-morph": "18.0.0",
 		"unified": "^10.1.2",
+		"unist-util-visit": "^5.0.0",
 		"yargs": "^17.6.2"
 	},
 	"main": "./src/index.ts",
