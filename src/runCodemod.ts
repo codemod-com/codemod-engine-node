@@ -60,7 +60,7 @@ const buildPaths = async (
 type FSOption = NonNullable<GlobOptions['fs']>;
 
 export const runCodemod = async (
-	fsOption: FSOption,
+	fileSystem: FSOption,
 	printer: Printer,
 	codemod: Codemod,
 	flowSettings: FlowSettings,
@@ -148,7 +148,7 @@ export const runCodemod = async (
 		}
 
 		const paths = await buildPaths(
-			fsOption,
+			fileSystem,
 			flowSettings,
 			codemod,
 			repomod,
@@ -168,7 +168,7 @@ export const runCodemod = async (
 			await handleFormattedFileCommand(printer, runSettings, command);
 		}
 	} else {
-		const paths = await buildPaths(fsOption, flowSettings, codemod, null);
+		const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
 
 		for (const path of paths) {
 			printer.info('Running the "%s" codemod against "%s"', name, path);
