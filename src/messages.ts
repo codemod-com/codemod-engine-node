@@ -37,6 +37,16 @@ export type CopyMessage = Readonly<{
 	newFilePath: string;
 }>;
 
+export type MetadataPathMessage = Readonly<{
+	kind: 'metadataPath';
+	path: string;
+}>;
+
+export type NamesMessage = Readonly<{
+	kind: 'names';
+	names: ReadonlyArray<string>;
+}>;
+
 export type Message =
 	| RewriteMessage
 	| FinishMessage
@@ -44,4 +54,6 @@ export type Message =
 	| DeleteMessage
 	| MoveMessage
 	| CreateMessage
-	| CopyMessage;
+	| CopyMessage
+	| MetadataPathMessage
+	| NamesMessage;

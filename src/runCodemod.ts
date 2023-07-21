@@ -13,13 +13,15 @@ import * as tsmorph from 'ts-morph';
 import nodePath from 'node:path';
 import { Repomod } from '@intuita-inc/repomod-engine-api';
 import { runTsMorphCodemod } from './runTsMorphCodemod.js';
+import { Printer } from './printer.js';
 
 export const runCodemod = async (
+	printer: Printer,
 	codemod: Codemod,
 	flowSettings: FlowSettings,
 	runSettings: RunSettings,
 ) => {
-	console.log(
+	printer.info(
 		'Running the "%s" codemod using "%s"',
 		codemod.name,
 		codemod.engine,
@@ -31,7 +33,7 @@ export const runCodemod = async (
 
 	if (codemod.engine === 'recipe') {
 		for (const c of codemod.codemods) {
-			await runCodemod(c, flowSettings, runSettings);
+			await runCodemod(printer, c, flowSettings, runSettings);
 		}
 
 		return;
@@ -128,7 +130,7 @@ export const runCodemod = async (
 		);
 
 		for (const command of formattedFileCommands) {
-			await handleFormattedFileCommand(runSettings, command);
+			await handleFormattedFileCommand(printer, runSettings, command);
 		}
 	} else {
 		const globbedPaths = await glob(flowSettings.includePattern.slice(), {
@@ -142,7 +144,7 @@ export const runCodemod = async (
 		const paths = globbedPaths.slice(0, flowSettings.fileLimit);
 
 		for (const path of paths) {
-			console.log(
+			printer.info(
 				'Running the "%s" codemod against "%s"',
 				codemod.name,
 				path,
@@ -168,14 +170,23 @@ export const runCodemod = async (
 								flowSettings.usePrettier,
 						  );
 
-				const formattedInternalCommands =
-					await buildFormattedFileCommands(modCommands);
+				const formattedFileCommands = await buildFormattedFileCommands(
+					modCommands,
+				);
 
-				for (const command of formattedInternalCommands) {
-					await handleFormattedFileCommand(runSettings, command);
+				for (const command of formattedFileCommands) {
+					await handleFormattedFileCommand(
+						printer,
+						runSettings,
+						command,
+					);
 				}
 			} catch (error) {
-				console.error(error);
+				if (!(error instanceof Error)) {
+					return;
+				}
+
+				printer.error(error);
 			}
 		}
 	}

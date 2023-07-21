@@ -3,8 +3,9 @@ import { join } from 'node:path';
 import { mkdir } from 'node:fs/promises';
 import * as S from '@effect/schema/Schema';
 import { downloadFile } from './fileSystemUtilities.js';
+import { Printer } from './printer.js';
 
-export const handleListNamesCommand = async (useJson: boolean) => {
+export const handleListNamesCommand = async (printer: Printer) => {
 	const intuitaDirectoryPath = join(homedir(), '.intuita');
 
 	await mkdir(intuitaDirectoryPath, { recursive: true });
@@ -19,21 +20,9 @@ export const handleListNamesCommand = async (useJson: boolean) => {
 
 	const data = buffer.toString('utf8');
 
-	if (useJson) {
-		console.log(data);
+	const parsedJson = JSON.parse(data);
 
-		return;
-	}
+	const names = S.parseSync(S.array(S.string))(parsedJson);
 
-	try {
-		const parsedJson = JSON.parse(data);
-
-		const names = S.parseSync(S.array(S.string))(parsedJson);
-
-		for (const name of names) {
-			console.log(name);
-		}
-	} catch (error) {
-		console.error(error);
-	}
+	printer.log({ kind: 'names', names });
 };
