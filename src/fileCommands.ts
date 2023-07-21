@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { copyFile, mkdir, unlink, writeFile } from 'node:fs/promises';
 import { join, extname, dirname } from 'node:path';
 import { format, resolveConfig, Options } from 'prettier';
-import { Message, MessageKind } from './messages.js';
+import { Message } from './messages.js';
 import { filterNeitherNullNorUndefined } from './filterNeitherNullNorUndefined.js';
 
 export type CreateFileCommand = Readonly<{
@@ -37,14 +37,14 @@ export type CopyFileCommand = Readonly<{
 	newPath: string;
 }>;
 
-export type ModCommand =
+export type FileCommand =
 	| CreateFileCommand
 	| UpdateFileCommand
 	| DeleteFileCommand
 	| MoveFileCommand
 	| CopyFileCommand;
 
-export type FormattedInternalCommand = ModCommand & { formatted: true };
+export type FormattedFileCommand = FileCommand & { formatted: true };
 
 export const DEFAULT_PRETTIER_OPTIONS: Options = {
 	tabWidth: 4,
@@ -97,9 +97,9 @@ export const formatText = async (
 	}
 };
 
-export const buildFormattedInternalCommand = async (
-	command: ModCommand,
-): Promise<FormattedInternalCommand | null> => {
+const buildFormattedFileCommand = async (
+	command: FileCommand,
+): Promise<FormattedFileCommand | null> => {
 	if (command.kind === 'createFile') {
 		const newData = await formatText(
 			command.newPath,
@@ -138,19 +138,19 @@ export const buildFormattedInternalCommand = async (
 	};
 };
 
-export const buildFormattedInternalCommands = async (
-	commands: readonly ModCommand[],
-): Promise<readonly FormattedInternalCommand[]> => {
-	const formattedInternalCommands = await Promise.all(
-		commands.map((command) => buildFormattedInternalCommand(command)),
+export const buildFormattedFileCommands = async (
+	commands: readonly FileCommand[],
+): Promise<readonly FormattedFileCommand[]> => {
+	const formattedFileCommands = await Promise.all(
+		commands.map((command) => buildFormattedFileCommand(command)),
 	);
 
-	return formattedInternalCommands.filter(filterNeitherNullNorUndefined);
+	return formattedFileCommands.filter(filterNeitherNullNorUndefined);
 };
 
-export const handleFormattedInternalCommand = async (
+export const handleFormattedFileCommand = async (
 	outputDirectoryPath: string,
-	command: FormattedInternalCommand,
+	command: FormattedFileCommand,
 	dryRun: boolean,
 ): Promise<Message | null> => {
 	if (command.kind === 'createFile') {
@@ -176,7 +176,7 @@ export const handleFormattedInternalCommand = async (
 		await writeFile(newDataPath, command.newData);
 
 		return {
-			k: MessageKind.create,
+			kind: 'create',
 			newFilePath: command.newPath,
 			newContentPath: newDataPath,
 		};
@@ -190,7 +190,7 @@ export const handleFormattedInternalCommand = async (
 		}
 
 		return {
-			k: MessageKind.delete,
+			kind: 'delete',
 			oldFilePath: command.oldPath,
 		};
 	}
@@ -205,7 +205,7 @@ export const handleFormattedInternalCommand = async (
 		}
 
 		return {
-			k: MessageKind.move,
+			kind: 'move',
 			oldFilePath: command.oldPath,
 			newFilePath: command.newPath,
 		};
@@ -234,9 +234,9 @@ export const handleFormattedInternalCommand = async (
 		await writeFile(newDataPath, command.newData);
 
 		return {
-			k: MessageKind.rewrite,
-			i: command.oldPath,
-			o: newDataPath,
+			kind: 'rewrite',
+			oldPath: command.oldPath,
+			newDataPath,
 		};
 	}
 
@@ -252,7 +252,7 @@ export const handleFormattedInternalCommand = async (
 		}
 
 		return {
-			k: MessageKind.copy,
+			kind: 'copy',
 			oldFilePath: command.oldPath,
 			newFilePath: command.newPath,
 		};
