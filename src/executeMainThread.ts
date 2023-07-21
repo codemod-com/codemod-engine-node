@@ -216,6 +216,7 @@ export const executeMainThread = async () => {
 				flowSettings.useCache,
 			);
 
+			// @ts-expect-error type inconsistency
 			await runCodemod(fs, printer, codemod, flowSettings, runSettings);
 		} else {
 			const codemod = {
@@ -224,6 +225,7 @@ export const executeMainThread = async () => {
 				indexPath: codemodSettings.sourcePath,
 			};
 
+			// @ts-expect-error type inconsistency
 			await runCodemod(fs, printer, codemod, flowSettings, runSettings);
 		}
 	} catch (error) {

@@ -5,7 +5,7 @@ import {
 } from './fileCommands.js';
 import { readFile } from 'fs/promises';
 import { Dependencies, runRepomod } from './runRepomod.js';
-import { GlobOptions, escape, glob } from 'glob';
+import { escape, glob } from 'glob';
 import type { FlowSettings, RunSettings } from './executeMainThread.js';
 import * as fs from 'fs';
 import * as tsmorph from 'ts-morph';
@@ -14,10 +14,10 @@ import { Repomod } from '@intuita-inc/repomod-engine-api';
 import { runTsMorphCodemod } from './runTsMorphCodemod.js';
 import { Printer } from './printer.js';
 import { Codemod } from './codemod.js';
-import { Volume, createFsFromVolume } from 'memfs';
+import { IFs, Volume, createFsFromVolume } from 'memfs';
 
 const buildPaths = async (
-	fs: NonNullable<GlobOptions['fs']>,
+	fs: IFs,
 	flowSettings: FlowSettings,
 	codemod: Codemod,
 	repomod: Repomod<Dependencies> | null,
@@ -28,6 +28,7 @@ const buildPaths = async (
 			{
 				absolute: true,
 				cwd: flowSettings.inputDirectoryPath,
+				// @ts-expect-error type inconsistency
 				fs,
 				ignore: repomod.excludePatterns?.slice(),
 			},
@@ -36,6 +37,7 @@ const buildPaths = async (
 		const flowPaths = await glob(flowSettings.includePattern.slice(), {
 			absolute: true,
 			cwd: flowSettings.inputDirectoryPath,
+			// @ts-expect-error type inconsistency
 			fs,
 			ignore: flowSettings.excludePattern.slice(),
 		});
@@ -48,6 +50,7 @@ const buildPaths = async (
 		const paths = await glob(flowSettings.includePattern.slice(), {
 			absolute: true,
 			cwd: flowSettings.inputDirectoryPath,
+			// @ts-expect-error type inconsistency
 			fs,
 			ignore: flowSettings.excludePattern.slice(),
 			nodir: true,
@@ -57,10 +60,8 @@ const buildPaths = async (
 	}
 };
 
-type FSOption = NonNullable<GlobOptions['fs']>;
-
 export const runCodemod = async (
-	fileSystem: FSOption,
+	fileSystem: IFs,
 	printer: Printer,
 	codemod: Codemod,
 	flowSettings: FlowSettings,
@@ -81,7 +82,6 @@ export const runCodemod = async (
 		const mfs = createFsFromVolume(volume);
 
 		for (const c of codemod.codemods) {
-			// @ts-expect-error type inconsistency
 			await runCodemod(mfs, printer, c, flowSettings, runSettings);
 		}
 
