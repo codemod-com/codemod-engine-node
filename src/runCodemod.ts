@@ -165,7 +165,12 @@ export const runCodemod = async (
 		);
 
 		for (const command of formattedFileCommands) {
-			await handleFormattedFileCommand(printer, runSettings, command);
+			await handleFormattedFileCommand(
+				fileSystem,
+				printer,
+				runSettings,
+				command,
+			);
 		}
 	} else {
 		const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
@@ -199,6 +204,7 @@ export const runCodemod = async (
 
 				for (const command of formattedFileCommands) {
 					await handleFormattedFileCommand(
+						fileSystem,
 						printer,
 						runSettings,
 						command,

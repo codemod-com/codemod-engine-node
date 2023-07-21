@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
-import { copyFile, mkdir, unlink, writeFile } from 'node:fs/promises';
 import { join, extname, dirname } from 'node:path';
 import { format, resolveConfig, Options } from 'prettier';
+import { IFs } from 'memfs';
 import { filterNeitherNullNorUndefined } from './filterNeitherNullNorUndefined.js';
 import { RunSettings } from './executeMainThread.js';
 import { Printer } from './printer.js';
@@ -150,6 +150,7 @@ export const buildFormattedFileCommands = async (
 };
 
 export const handleFormattedFileCommand = async (
+	fileSystem: IFs,
 	printer: Printer,
 	runSettings: RunSettings,
 	command: FormattedFileCommand,
@@ -158,9 +159,12 @@ export const handleFormattedFileCommand = async (
 		if (!runSettings.dryRun) {
 			const directoryPath = dirname(command.newPath);
 
-			await mkdir(directoryPath, { recursive: true });
+			await fileSystem.promises.mkdir(directoryPath, { recursive: true });
 
-			await writeFile(command.newPath, command.newData);
+			await fileSystem.promises.writeFile(
+				command.newPath,
+				command.newData,
+			);
 
 			return;
 		}
@@ -177,7 +181,7 @@ export const handleFormattedFileCommand = async (
 			`${hash}${extName}`,
 		);
 
-		await writeFile(newDataPath, command.newData);
+		await fileSystem.promises.writeFile(newDataPath, command.newData);
 
 		printer.log({
 			kind: 'create',
@@ -190,7 +194,7 @@ export const handleFormattedFileCommand = async (
 
 	if (command.kind === 'deleteFile') {
 		if (!runSettings.dryRun) {
-			await unlink(command.oldPath);
+			await fileSystem.promises.unlink(command.oldPath);
 
 			return;
 		}
@@ -205,9 +209,12 @@ export const handleFormattedFileCommand = async (
 
 	if (command.kind === 'moveFile') {
 		if (!runSettings.dryRun) {
-			await copyFile(command.oldPath, command.newPath);
+			await fileSystem.promises.copyFile(
+				command.oldPath,
+				command.newPath,
+			);
 
-			await unlink(command.oldPath);
+			await fileSystem.promises.unlink(command.oldPath);
 
 			return;
 		}
@@ -223,7 +230,10 @@ export const handleFormattedFileCommand = async (
 
 	if (command.kind === 'updateFile') {
 		if (!runSettings.dryRun) {
-			await writeFile(command.oldPath, command.newData);
+			await fileSystem.promises.writeFile(
+				command.oldPath,
+				command.newData,
+			);
 
 			return;
 		}
@@ -241,7 +251,7 @@ export const handleFormattedFileCommand = async (
 			`${hashDigest}${extName}`,
 		);
 
-		await writeFile(newDataPath, command.newData);
+		await fileSystem.promises.writeFile(newDataPath, command.newData);
 
 		printer.log({
 			kind: 'rewrite',
@@ -256,9 +266,12 @@ export const handleFormattedFileCommand = async (
 		if (!runSettings.dryRun) {
 			const directoryPath = dirname(command.newPath);
 
-			await mkdir(directoryPath, { recursive: true });
+			await fileSystem.promises.mkdir(directoryPath, { recursive: true });
 
-			await copyFile(command.oldPath, command.newPath);
+			await fileSystem.promises.copyFile(
+				command.oldPath,
+				command.newPath,
+			);
 
 			return;
 		}
