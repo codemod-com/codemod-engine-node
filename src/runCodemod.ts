@@ -15,6 +15,46 @@ import { runTsMorphCodemod } from './runTsMorphCodemod.js';
 import { Printer } from './printer.js';
 import { Codemod } from './codemod.js';
 
+const buildPaths = async (
+	flowSettings: FlowSettings,
+	codemod: Codemod,
+	repomod: Repomod<Dependencies> | null,
+): Promise<ReadonlyArray<string>> => {
+	if (codemod.engine === 'repomod-engine' && repomod !== null) {
+		const repomodPaths = await glob(
+			repomod.includePatterns?.slice() ?? [],
+			{
+				absolute: true,
+				cwd: flowSettings.inputDirectoryPath,
+				fs,
+				ignore: repomod.excludePatterns?.slice(),
+			},
+		);
+
+		const flowPaths = await glob(flowSettings.includePattern.slice(), {
+			absolute: true,
+			cwd: flowSettings.inputDirectoryPath,
+			fs,
+			ignore: flowSettings.excludePattern.slice(),
+		});
+
+		return repomodPaths
+			.filter((path) => flowPaths.includes(path))
+			.map((path) => escape(path))
+			.slice(0, flowSettings.fileLimit);
+	} else {
+		const paths = await glob(flowSettings.includePattern.slice(), {
+			absolute: true,
+			cwd: flowSettings.inputDirectoryPath,
+			fs,
+			ignore: flowSettings.excludePattern.slice(),
+			nodir: true,
+		});
+
+		return paths.slice(0, flowSettings.fileLimit);
+	}
+};
+
 export const runCodemod = async (
 	printer: Printer,
 	codemod: Codemod,
