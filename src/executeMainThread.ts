@@ -11,7 +11,7 @@ const codemodSettingsSchema = S.struct({
 
 export type CodemodSettings = S.To<typeof codemodSettingsSchema>;
 
-const DEFAULT_INCLUDE_PATTERNS = ['**/*.*{ts,tsx,js,jsx,mjs,cjs}'] as const;
+const DEFAULT_INCLUDE_PATTERNS = ['**/*.*{ts,tsx,js,jsx,mjs,cjs,mdx}'] as const;
 const DEFAULT_EXCLUDE_PATTERNS = ['**/node_modules/**/*.*'] as const;
 const DEFAULT_INPUT_DIRECTORY_PATH = process.cwd();
 const DEFAULT_FILE_LIMIT = 1000;

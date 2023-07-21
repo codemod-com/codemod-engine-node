@@ -10,6 +10,22 @@ import { unified } from 'unified';
 import hastToBabelAst from '@svgr/hast-util-to-babel-ast';
 import tsmorph from 'ts-morph';
 import { ModCommand } from './modCommands.js';
+import { fromMarkdown } from 'mdast-util-from-markdown';
+import { toMarkdown } from 'mdast-util-to-markdown';
+import { mdxjs } from 'micromark-extension-mdxjs';
+import { mdxFromMarkdown, mdxToMarkdown } from 'mdast-util-mdx';
+import { visit } from 'unist-util-visit';
+
+const parseMdx = (data: string) =>
+	fromMarkdown(data, {
+		extensions: [mdxjs()],
+		mdastExtensions: [mdxFromMarkdown()],
+	});
+
+const stringifyMdx = (tree: Root) =>
+	toMarkdown(tree, { extensions: [mdxToMarkdown()] });
+
+type Root = ReturnType<typeof fromMarkdown>;
 
 export type Dependencies = Readonly<{
 	jscodeshift: typeof jscodeshift;
@@ -17,6 +33,9 @@ export type Dependencies = Readonly<{
 	rehypeParse: typeof rehypeParse;
 	hastToBabelAst: typeof hastToBabelAst;
 	tsmorph: typeof tsmorph;
+	parseMdx: typeof parseMdx;
+	stringifyMdx: typeof stringifyMdx;
+	visitMdxAst: typeof visit;
 }>;
 
 export const runRepomod = async (
@@ -37,6 +56,9 @@ export const runRepomod = async (
 		rehypeParse,
 		hastToBabelAst,
 		tsmorph,
+		parseMdx,
+		stringifyMdx,
+		visitMdxAst: visit,
 	}));
 
 	const externalFileCommands = await executeRepomod(
