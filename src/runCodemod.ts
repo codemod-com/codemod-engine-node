@@ -89,6 +89,8 @@ export const runCodemod = async (
 					memoryFileSystemUsed,
 				);
 			}
+
+			return;
 		}
 
 		// establish a in-memory file system
