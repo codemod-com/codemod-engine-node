@@ -195,8 +195,6 @@ export const runCodemod = async (
 			});
 		}
 
-		console.log('FF', fileCommands.length);
-
 		return buildFormattedFileCommands(fileCommands);
 	}
 
