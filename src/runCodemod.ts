@@ -1,8 +1,8 @@
 import { runJscodeshiftCodemod } from './runJscodeshiftCodemod.js';
 import {
 	FileCommand,
+	FormattedFileCommand,
 	buildFormattedFileCommands,
-	buildPrinterMessageUponCommand,
 	modifyFileSystemUponCommand,
 } from './fileCommands.js';
 import { Dependencies, runRepomod } from './runRepomod.js';
@@ -68,8 +68,7 @@ export const runCodemod = async (
 	codemod: Codemod,
 	flowSettings: FlowSettings,
 	runSettings: RunSettings,
-	memoryFileSystemUsed: boolean,
-) => {
+): Promise<readonly FormattedFileCommand[]> => {
 	const name = 'name' in codemod ? codemod.name : codemod.indexPath;
 
 	printer.info('Running the "%s" codemod using "%s"', name, codemod.engine);
@@ -79,19 +78,28 @@ export const runCodemod = async (
 	}
 
 	if (codemod.engine === 'recipe') {
-		if (!memoryFileSystemUsed) {
+		if (!runSettings.dryRun) {
 			for (const c of codemod.codemods) {
-				await runCodemod(
+				const commands = await runCodemod(
 					fileSystem,
 					printer,
 					c,
 					flowSettings,
 					runSettings,
-					memoryFileSystemUsed,
 				);
+
+				for (const command of commands) {
+					const lazyPromise = modifyFileSystemUponCommand(
+						fileSystem,
+						runSettings,
+						command,
+					);
+
+					await lazyPromise();
+				}
 			}
 
-			return;
+			return [];
 		}
 
 		// establish a in-memory file system
@@ -116,14 +124,7 @@ export const runCodemod = async (
 		}
 
 		for (const c of codemod.codemods) {
-			await runCodemod(
-				mfs,
-				printer,
-				c,
-				flowSettings,
-				{ dryRun: false },
-				true,
-			);
+			await runCodemod(mfs, printer, c, flowSettings, { dryRun: false });
 		}
 
 		const newPaths = await glob(['**/*.*'], {
@@ -177,34 +178,7 @@ export const runCodemod = async (
 			});
 		}
 
-		const formattedFileCommands = await buildFormattedFileCommands(
-			fileCommands,
-		);
-
-		for (const command of formattedFileCommands) {
-			const lazyPromise = modifyFileSystemUponCommand(
-				// @ts-expect-error type inconsistency
-				fs,
-				runSettings,
-				command,
-			);
-
-			await lazyPromise();
-
-			const printerMessage =
-				runSettings.dryRun === true
-					? buildPrinterMessageUponCommand(
-							runSettings.outputDirectoryPath,
-							command,
-					  )
-					: null;
-
-			if (printerMessage) {
-				printer.log(printerMessage);
-			}
-		}
-
-		return;
+		return buildFormattedFileCommands(fileCommands);
 	}
 
 	const source = fs.readFileSync(codemod.indexPath, {
@@ -280,33 +254,11 @@ export const runCodemod = async (
 			flowSettings.usePrettier,
 		);
 
-		const formattedFileCommands = await buildFormattedFileCommands(
-			fileCommands,
-		);
-
-		for (const command of formattedFileCommands) {
-			const lazyPromise = modifyFileSystemUponCommand(
-				fileSystem,
-				runSettings,
-				command,
-			);
-
-			await lazyPromise();
-
-			const printerMessage =
-				runSettings.dryRun === true
-					? buildPrinterMessageUponCommand(
-							runSettings.outputDirectoryPath,
-							command,
-					  )
-					: null;
-
-			if (!memoryFileSystemUsed && printerMessage) {
-				printer.log(printerMessage);
-			}
-		}
+		return buildFormattedFileCommands(fileCommands);
 	} else {
 		const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
+
+		const commands: FormattedFileCommand[] = [];
 
 		for (const path of paths) {
 			printer.info('Running the "%s" codemod against "%s"', name, path);
@@ -314,7 +266,7 @@ export const runCodemod = async (
 			try {
 				const data = await fileSystem.promises.readFile(path, 'utf8');
 
-				const modCommands =
+				const fileCommands =
 					codemod.engine === 'jscodeshift'
 						? runJscodeshiftCodemod(
 								// @ts-expect-error function type
@@ -331,38 +283,18 @@ export const runCodemod = async (
 								flowSettings.usePrettier,
 						  );
 
-				const formattedFileCommands = await buildFormattedFileCommands(
-					modCommands,
+				commands.push(
+					...(await buildFormattedFileCommands(fileCommands)),
 				);
-
-				for (const command of formattedFileCommands) {
-					const lazyPromise = modifyFileSystemUponCommand(
-						fileSystem,
-						runSettings,
-						command,
-					);
-
-					await lazyPromise();
-
-					const printerMessage =
-						runSettings.dryRun === true
-							? buildPrinterMessageUponCommand(
-									runSettings.outputDirectoryPath,
-									command,
-							  )
-							: null;
-
-					if (!memoryFileSystemUsed && printerMessage) {
-						printer.log(printerMessage);
-					}
-				}
 			} catch (error) {
-				if (!(error instanceof Error)) {
-					return;
+				if (error instanceof Error) {
+					printer.error(error);
 				}
 
-				printer.error(error);
+				throw error;
 			}
 		}
+
+		return commands;
 	}
 };

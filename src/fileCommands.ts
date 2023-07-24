@@ -4,7 +4,6 @@ import { format, resolveConfig, Options } from 'prettier';
 import { IFs } from 'memfs';
 import { filterNeitherNullNorUndefined } from './filterNeitherNullNorUndefined.js';
 import { RunSettings } from './executeMainThread.js';
-import { Printer } from './printer.js';
 import { LazyPromise } from './lazyPromise.js';
 import { Message } from './messages.js';
 
@@ -333,25 +332,3 @@ export const buildPrinterMessageUponCommand = (
 
 	throw new Error('Not supported command');
 };
-
-// export const handleFormattedFileCommand = async (
-// 	fileSystem: IFs,
-// 	printer: Printer,
-// 	runSettings: RunSettings,
-// 	command: FormattedFileCommand,
-// 	memoryFileSystemUsed: boolean,
-// ): Promise<void> => {
-// 	const lazyPromise =
-// 		runSettings.dryRun === true
-// 			? modifyFileSystemUponDryRunCommand(
-// 					fileSystem,
-// 					runSettings.outputDirectoryPath,
-// 					command,
-// 			  )
-// 			: modifyFileSystemUponWetRunCommand(fileSystem, command);
-
-// 	const printerMessage = buildPrinterMessageUponCommand(
-// 		runSettings.outputDirectoryPath,
-// 		command,
-// 	);
-// };
