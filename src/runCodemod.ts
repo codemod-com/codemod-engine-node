@@ -91,13 +91,11 @@ export const runCodemod = async (
 				);
 
 				for (const command of commands) {
-					const lazyPromise = modifyFileSystemUponCommand(
+					await modifyFileSystemUponCommand(
 						fileSystem,
 						runSettings,
 						command,
-					);
-
-					await lazyPromise();
+					)();
 				}
 			}
 
@@ -137,13 +135,11 @@ export const runCodemod = async (
 			);
 
 			for (const command of commands) {
-				const lazyPromise = modifyFileSystemUponCommand(
+				await modifyFileSystemUponCommand(
 					mfs,
 					{ dryRun: false },
 					command,
-				);
-
-				await lazyPromise();
+				)();
 			}
 		}
 

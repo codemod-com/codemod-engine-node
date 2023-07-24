@@ -249,14 +249,12 @@ export const executeMainThread = async () => {
 		}
 
 		for (const command of commands) {
-			const lazyPromise = modifyFileSystemUponCommand(
+			await modifyFileSystemUponCommand(
 				// @ts-expect-error type inconsistency
 				fs,
 				runSettings,
 				command,
-			);
-
-			await lazyPromise();
+			)();
 
 			const printerMessage = buildPrinterMessageUponCommand(
 				runSettings,
