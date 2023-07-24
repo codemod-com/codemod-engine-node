@@ -1,5 +1,6 @@
 import { runJscodeshiftCodemod } from './runJscodeshiftCodemod.js';
 import {
+	FileCommand,
 	buildFormattedFileCommands,
 	handleFormattedFileCommand,
 } from './fileCommands.js';
@@ -83,7 +84,7 @@ export const runCodemod = async (
 
 		const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
 
-		const map = new Map<string, string>();
+		const fileMap = new Map<string, string>();
 
 		for (const path of paths) {
 			const data = await fs.promises.readFile(path, { encoding: 'utf8' });
@@ -91,11 +92,11 @@ export const runCodemod = async (
 			await mfs.promises.mkdir(dirname(path), { recursive: true });
 			await mfs.promises.writeFile(path, data);
 
-			const value = createHash('ripemd160')
-				.update(path)
+			const dataHashDigest = createHash('ripemd160')
+				.update(data)
 				.digest('base64url');
 
-			map.set(path, value);
+			fileMap.set(path, dataHashDigest);
 		}
 
 		for (const c of codemod.codemods) {
@@ -109,14 +110,49 @@ export const runCodemod = async (
 			);
 		}
 
-		// TODO
-
 		const newPaths = await glob(['**/*.*'], {
 			absolute: true,
 			cwd: flowSettings.inputDirectoryPath,
 			// @ts-expect-error type inconsistency
 			fs: mfs,
 		});
+
+		const fileCommands: FileCommand[] = [];
+
+		for (const newPath of newPaths) {
+			const newDataBuffer = await mfs.promises.readFile(newPath);
+			const newData = newDataBuffer.toString();
+
+			const oldDataFileHash = fileMap.get(newPath) ?? null;
+
+			if (oldDataFileHash === null) {
+				// the file has been created
+				fileCommands.push({
+					kind: 'createFile',
+					newPath,
+					newData,
+					formatWithPrettier: false,
+				});
+			} else {
+				const newDataFileHash = createHash('ripemd160')
+					.update(newData)
+					.digest('base64url');
+
+				if (newDataFileHash !== oldDataFileHash) {
+					fileCommands.push({
+						kind: 'updateFile',
+						oldPath: newPath,
+						newData,
+						oldData: '', // TODO no longer necessary
+						formatWithPrettier: false,
+					});
+				}
+
+				// no changes to the file.
+			}
+
+			fileMap.delete(newPath);
+		}
 
 		console.log(newPaths);
 
