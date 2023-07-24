@@ -3,9 +3,7 @@ import {
 	FileCommand,
 	buildFormattedFileCommands,
 	buildPrinterMessageUponCommand,
-	handleFormattedFileCommand,
-	modifyFileSystemUponDryRunCommand,
-	modifyFileSystemUponWetRunCommand,
+	modifyFileSystemUponCommand,
 } from './fileCommands.js';
 import { Dependencies, runRepomod } from './runRepomod.js';
 import { escape, glob } from 'glob';
@@ -184,15 +182,12 @@ export const runCodemod = async (
 		);
 
 		for (const command of formattedFileCommands) {
-			const lazyPromise =
-				runSettings.dryRun === true
-					? modifyFileSystemUponDryRunCommand(
-							// @ts-expect-error type inconsistency
-							fs,
-							runSettings.outputDirectoryPath,
-							command,
-					  )
-					: modifyFileSystemUponWetRunCommand(fileSystem, command);
+			const lazyPromise = modifyFileSystemUponCommand(
+				// @ts-expect-error type inconsistency
+				fs,
+				runSettings,
+				command,
+			);
 
 			await lazyPromise();
 
@@ -290,13 +285,25 @@ export const runCodemod = async (
 		);
 
 		for (const command of formattedFileCommands) {
-			await handleFormattedFileCommand(
+			const lazyPromise = modifyFileSystemUponCommand(
 				fileSystem,
-				printer,
 				runSettings,
 				command,
-				memoryFileSystemUsed,
 			);
+
+			await lazyPromise();
+
+			const printerMessage =
+				runSettings.dryRun === true
+					? buildPrinterMessageUponCommand(
+							runSettings.outputDirectoryPath,
+							command,
+					  )
+					: null;
+
+			if (!memoryFileSystemUsed && printerMessage) {
+				printer.log(printerMessage);
+			}
 		}
 	} else {
 		const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
@@ -329,13 +336,25 @@ export const runCodemod = async (
 				);
 
 				for (const command of formattedFileCommands) {
-					await handleFormattedFileCommand(
+					const lazyPromise = modifyFileSystemUponCommand(
 						fileSystem,
-						printer,
 						runSettings,
 						command,
-						memoryFileSystemUsed,
 					);
+
+					await lazyPromise();
+
+					const printerMessage =
+						runSettings.dryRun === true
+							? buildPrinterMessageUponCommand(
+									runSettings.outputDirectoryPath,
+									command,
+							  )
+							: null;
+
+					if (!memoryFileSystemUsed && printerMessage) {
+						printer.log(printerMessage);
+					}
 				}
 			} catch (error) {
 				if (!(error instanceof Error)) {

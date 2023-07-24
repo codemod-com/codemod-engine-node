@@ -263,6 +263,21 @@ export const modifyFileSystemUponDryRunCommand = (
 	return async () => {};
 };
 
+export const modifyFileSystemUponCommand = (
+	fileSystem: IFs,
+	runSettings: RunSettings,
+	command: FormattedFileCommand,
+) => {
+	return runSettings.dryRun === true
+		? modifyFileSystemUponDryRunCommand(
+				// @ts-expect-error type inconsistency
+				fs,
+				runSettings.outputDirectoryPath,
+				command,
+		  )
+		: modifyFileSystemUponWetRunCommand(fileSystem, command);
+};
+
 export const buildPrinterMessageUponCommand = (
 	outputDirectoryPath: string,
 	command: FormattedFileCommand,
@@ -319,24 +334,24 @@ export const buildPrinterMessageUponCommand = (
 	throw new Error('Not supported command');
 };
 
-export const handleFormattedFileCommand = async (
-	fileSystem: IFs,
-	printer: Printer,
-	runSettings: RunSettings,
-	command: FormattedFileCommand,
-	memoryFileSystemUsed: boolean,
-): Promise<void> => {
-	const lazyPromise =
-		runSettings.dryRun === true
-			? modifyFileSystemUponDryRunCommand(
-					fileSystem,
-					runSettings.outputDirectoryPath,
-					command,
-			  )
-			: modifyFileSystemUponWetRunCommand(fileSystem, command);
+// export const handleFormattedFileCommand = async (
+// 	fileSystem: IFs,
+// 	printer: Printer,
+// 	runSettings: RunSettings,
+// 	command: FormattedFileCommand,
+// 	memoryFileSystemUsed: boolean,
+// ): Promise<void> => {
+// 	const lazyPromise =
+// 		runSettings.dryRun === true
+// 			? modifyFileSystemUponDryRunCommand(
+// 					fileSystem,
+// 					runSettings.outputDirectoryPath,
+// 					command,
+// 			  )
+// 			: modifyFileSystemUponWetRunCommand(fileSystem, command);
 
-	const printerMessage = buildPrinterMessageUponCommand(
-		runSettings.outputDirectoryPath,
-		command,
-	);
-};
+// 	const printerMessage = buildPrinterMessageUponCommand(
+// 		runSettings.outputDirectoryPath,
+// 		command,
+// 	);
+// };
