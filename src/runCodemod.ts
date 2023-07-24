@@ -78,6 +78,19 @@ export const runCodemod = async (
 	}
 
 	if (codemod.engine === 'recipe') {
+		if (!memoryFileSystemUsed) {
+			for (const c of codemod.codemods) {
+				await runCodemod(
+					fileSystem,
+					printer,
+					c,
+					flowSettings,
+					runSettings,
+					memoryFileSystemUsed,
+				);
+			}
+		}
+
 		// establish a in-memory file system
 		const volume = Volume.fromJSON({});
 		const mfs = createFsFromVolume(volume);
