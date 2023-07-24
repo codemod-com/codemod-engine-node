@@ -269,8 +269,7 @@ export const modifyFileSystemUponCommand = (
 ) => {
 	return runSettings.dryRun === true
 		? modifyFileSystemUponDryRunCommand(
-				// @ts-expect-error type inconsistency
-				fs,
+				fileSystem,
 				runSettings.outputDirectoryPath,
 				command,
 		  )
