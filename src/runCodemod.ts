@@ -33,6 +33,7 @@ const buildPaths = async (
 				// @ts-expect-error type inconsistency
 				fs: fileSystem,
 				ignore: repomod.excludePatterns?.slice(),
+				nodir: true,
 			},
 		);
 
@@ -42,6 +43,7 @@ const buildPaths = async (
 			// @ts-expect-error type inconsistency
 			fs: fileSystem,
 			ignore: flowSettings.excludePattern.slice(),
+			nodir: true,
 		});
 
 		return repomodPaths
@@ -124,9 +126,25 @@ export const runCodemod = async (
 		}
 
 		for (const subCodemod of codemod.codemods) {
-			await runCodemod(mfs, printer, subCodemod, flowSettings, {
-				dryRun: false,
-			});
+			const commands = await runCodemod(
+				mfs,
+				printer,
+				subCodemod,
+				flowSettings,
+				{
+					dryRun: false,
+				},
+			);
+
+			for (const command of commands) {
+				const lazyPromise = modifyFileSystemUponCommand(
+					mfs,
+					{ dryRun: false },
+					command,
+				);
+
+				await lazyPromise();
+			}
 		}
 
 		const newPaths = await glob(['**/*.*'], {
@@ -134,6 +152,7 @@ export const runCodemod = async (
 			cwd: flowSettings.inputDirectoryPath,
 			// @ts-expect-error type inconsistency
 			fs: mfs,
+			nodir: true,
 		});
 
 		const fileCommands: FileCommand[] = [];
@@ -179,6 +198,8 @@ export const runCodemod = async (
 				oldPath,
 			});
 		}
+
+		console.log('FF', fileCommands.length);
 
 		return buildFormattedFileCommands(fileCommands);
 	}
