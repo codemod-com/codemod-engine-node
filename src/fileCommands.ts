@@ -5,6 +5,7 @@ import { IFs } from 'memfs';
 import { filterNeitherNullNorUndefined } from './filterNeitherNullNorUndefined.js';
 import { RunSettings } from './executeMainThread.js';
 import { Printer } from './printer.js';
+import { LazyPromise } from './lazyPromise.js';
 
 export type CreateFileCommand = Readonly<{
 	kind: 'createFile';
@@ -147,6 +148,59 @@ export const buildFormattedFileCommands = async (
 	);
 
 	return formattedFileCommands.filter(filterNeitherNullNorUndefined);
+};
+
+export const modifyFileSystemUponCommand = (
+	fileSystem: IFs,
+	command: FormattedFileCommand,
+): LazyPromise<void> => {
+	if (command.kind === 'createFile') {
+		const directoryPath = dirname(command.newPath);
+
+		return async () => {
+			await fileSystem.promises.mkdir(directoryPath, { recursive: true });
+
+			return fileSystem.promises.writeFile(
+				command.newPath,
+				command.newData,
+			);
+		};
+	}
+
+	if (command.kind === 'deleteFile') {
+		return () => fileSystem.promises.unlink(command.oldPath);
+	}
+
+	if (command.kind === 'moveFile') {
+		return async () => {
+			await fileSystem.promises.copyFile(
+				command.oldPath,
+				command.newPath,
+			);
+
+			return fileSystem.promises.unlink(command.oldPath);
+		};
+	}
+
+	if (command.kind === 'updateFile') {
+		return () =>
+			fileSystem.promises.writeFile(command.oldPath, command.newData);
+	}
+
+	if (command.kind === 'copyFile') {
+		const directoryPath = dirname(command.newPath);
+
+		return async () => {
+			await fileSystem.promises.mkdir(directoryPath, { recursive: true });
+
+			return fileSystem.promises.copyFile(
+				command.oldPath,
+				command.newPath,
+			);
+		};
+	}
+
+	return () => Promise.reject(new Error('Unrecognized command'));
 };
 
 export const handleFormattedFileCommand = async (
