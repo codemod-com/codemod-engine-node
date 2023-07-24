@@ -95,7 +95,7 @@ export const runCodemod = async (
 						fileSystem,
 						runSettings,
 						command,
-					)();
+					);
 				}
 			}
 
@@ -139,7 +139,7 @@ export const runCodemod = async (
 					mfs,
 					{ dryRun: false },
 					command,
-				)();
+				);
 			}
 		}
 

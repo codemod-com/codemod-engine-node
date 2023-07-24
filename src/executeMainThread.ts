@@ -254,7 +254,7 @@ export const executeMainThread = async () => {
 				fs,
 				runSettings,
 				command,
-			)();
+			);
 
 			const printerMessage = buildPrinterMessageUponCommand(
 				runSettings,

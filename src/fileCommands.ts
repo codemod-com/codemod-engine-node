@@ -4,7 +4,6 @@ import { format, resolveConfig, Options } from 'prettier';
 import { IFs } from 'memfs';
 import { filterNeitherNullNorUndefined } from './filterNeitherNullNorUndefined.js';
 import { RunSettings } from './executeMainThread.js';
-import { LazyPromise } from './lazyPromise.js';
 import { Message } from './messages.js';
 
 export type CreateFileCommand = Readonly<{
@@ -150,57 +149,39 @@ export const buildFormattedFileCommands = async (
 	return formattedFileCommands.filter(filterNeitherNullNorUndefined);
 };
 
-export const modifyFileSystemUponWetRunCommand = (
+export const modifyFileSystemUponWetRunCommand = async (
 	fileSystem: IFs,
 	command: FormattedFileCommand,
-): LazyPromise<void> => {
+): Promise<void> => {
 	if (command.kind === 'createFile') {
 		const directoryPath = dirname(command.newPath);
 
-		return async () => {
-			await fileSystem.promises.mkdir(directoryPath, { recursive: true });
+		await fileSystem.promises.mkdir(directoryPath, { recursive: true });
 
-			return fileSystem.promises.writeFile(
-				command.newPath,
-				command.newData,
-			);
-		};
+		return fileSystem.promises.writeFile(command.newPath, command.newData);
 	}
 
 	if (command.kind === 'deleteFile') {
-		return () => fileSystem.promises.unlink(command.oldPath);
+		return fileSystem.promises.unlink(command.oldPath);
 	}
 
 	if (command.kind === 'moveFile') {
-		return async () => {
-			await fileSystem.promises.copyFile(
-				command.oldPath,
-				command.newPath,
-			);
+		await fileSystem.promises.copyFile(command.oldPath, command.newPath);
 
-			return fileSystem.promises.unlink(command.oldPath);
-		};
+		return fileSystem.promises.unlink(command.oldPath);
 	}
 
 	if (command.kind === 'updateFile') {
-		return () =>
-			fileSystem.promises.writeFile(command.oldPath, command.newData);
+		return fileSystem.promises.writeFile(command.oldPath, command.newData);
 	}
 
 	if (command.kind === 'copyFile') {
 		const directoryPath = dirname(command.newPath);
 
-		return async () => {
-			await fileSystem.promises.mkdir(directoryPath, { recursive: true });
+		await fileSystem.promises.mkdir(directoryPath, { recursive: true });
 
-			return fileSystem.promises.copyFile(
-				command.oldPath,
-				command.newPath,
-			);
-		};
+		return fileSystem.promises.copyFile(command.oldPath, command.newPath);
 	}
-
-	return () => Promise.reject(new Error('Unrecognized command'));
 };
 
 export const buildNewDataPathForCreateFileCommand = (
@@ -233,19 +214,18 @@ export const buildNewDataPathForUpdateFileCommand = (
 	return join(outputDirectoryPath, `${hashDigest}${extName}`);
 };
 
-export const modifyFileSystemUponDryRunCommand = (
+export const modifyFileSystemUponDryRunCommand = async (
 	fileSystem: IFs,
 	outputDirectoryPath: string,
 	command: FormattedFileCommand,
-): LazyPromise<void> => {
+): Promise<void> => {
 	if (command.kind === 'createFile') {
 		const newDataPath = buildNewDataPathForCreateFileCommand(
 			outputDirectoryPath,
 			command,
 		);
 
-		return () =>
-			fileSystem.promises.writeFile(newDataPath, command.newData);
+		await fileSystem.promises.writeFile(newDataPath, command.newData);
 	}
 
 	if (command.kind === 'updateFile') {
@@ -254,12 +234,8 @@ export const modifyFileSystemUponDryRunCommand = (
 			command,
 		);
 
-		return () =>
-			fileSystem.promises.writeFile(newDataPath, command.newData);
+		await fileSystem.promises.writeFile(newDataPath, command.newData);
 	}
-
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	return async () => {};
 };
 
 export const modifyFileSystemUponCommand = (
