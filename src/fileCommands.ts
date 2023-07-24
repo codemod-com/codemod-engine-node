@@ -278,12 +278,16 @@ export const modifyFileSystemUponCommand = (
 };
 
 export const buildPrinterMessageUponCommand = (
-	outputDirectoryPath: string,
+	runSettings: RunSettings,
 	command: FormattedFileCommand,
-): Message => {
+): Message | null => {
+	if (!runSettings.dryRun) {
+		return null;
+	}
+
 	if (command.kind === 'createFile') {
 		const newDataPath = buildNewDataPathForCreateFileCommand(
-			outputDirectoryPath,
+			runSettings.outputDirectoryPath,
 			command,
 		);
 
@@ -311,7 +315,7 @@ export const buildPrinterMessageUponCommand = (
 
 	if (command.kind === 'updateFile') {
 		const newDataPath = buildNewDataPathForUpdateFileCommand(
-			outputDirectoryPath,
+			runSettings.outputDirectoryPath,
 			command,
 		);
 

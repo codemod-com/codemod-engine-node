@@ -292,8 +292,6 @@ export const runCodemod = async (
 				if (error instanceof Error) {
 					printer.error(error);
 				}
-
-				throw error;
 			}
 		}
 

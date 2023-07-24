@@ -258,13 +258,10 @@ export const executeMainThread = async () => {
 
 			await lazyPromise();
 
-			const printerMessage =
-				runSettings.dryRun === true
-					? buildPrinterMessageUponCommand(
-							runSettings.outputDirectoryPath,
-							command,
-					  )
-					: null;
+			const printerMessage = buildPrinterMessageUponCommand(
+				runSettings,
+				command,
+			);
 
 			if (printerMessage) {
 				printer.log(printerMessage);
