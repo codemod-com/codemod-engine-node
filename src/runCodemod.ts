@@ -8,12 +8,13 @@ import { escape, glob } from 'glob';
 import type { FlowSettings, RunSettings } from './executeMainThread.js';
 import * as fs from 'fs';
 import * as tsmorph from 'ts-morph';
-import nodePath from 'node:path';
+import nodePath, { dirname } from 'node:path';
 import { Repomod } from '@intuita-inc/repomod-engine-api';
 import { runTsMorphCodemod } from './runTsMorphCodemod.js';
 import { Printer } from './printer.js';
 import { Codemod } from './codemod.js';
 import { IFs, Volume, createFsFromVolume } from 'memfs';
+import { createHash } from 'node:crypto';
 
 const buildPaths = async (
 	fileSystem: IFs,
@@ -82,15 +83,42 @@ export const runCodemod = async (
 
 		const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
 
+		const map = new Map<string, string>();
+
 		for (const path of paths) {
 			const data = await fs.promises.readFile(path, { encoding: 'utf8' });
 
+			await mfs.promises.mkdir(dirname(path), { recursive: true });
 			await mfs.promises.writeFile(path, data);
+
+			const value = createHash('ripemd160')
+				.update(path)
+				.digest('base64url');
+
+			map.set(path, value);
 		}
 
 		for (const c of codemod.codemods) {
-			await runCodemod(mfs, printer, c, flowSettings, runSettings, true);
+			await runCodemod(
+				mfs,
+				printer,
+				c,
+				flowSettings,
+				{ dryRun: false },
+				true,
+			);
 		}
+
+		// TODO
+
+		const newPaths = await glob(['**/*.*'], {
+			absolute: true,
+			cwd: flowSettings.inputDirectoryPath,
+			// @ts-expect-error type inconsistency
+			fs: mfs,
+		});
+
+		console.log(newPaths);
 
 		return;
 	}
