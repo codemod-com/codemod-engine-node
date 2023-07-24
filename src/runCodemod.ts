@@ -2,7 +2,10 @@ import { runJscodeshiftCodemod } from './runJscodeshiftCodemod.js';
 import {
 	FileCommand,
 	buildFormattedFileCommands,
+	buildPrinterMessageUponCommand,
 	handleFormattedFileCommand,
+	modifyFileSystemUponDryRunCommand,
+	modifyFileSystemUponWetRunCommand,
 } from './fileCommands.js';
 import { Dependencies, runRepomod } from './runRepomod.js';
 import { escape, glob } from 'glob';
@@ -181,14 +184,29 @@ export const runCodemod = async (
 		);
 
 		for (const command of formattedFileCommands) {
-			await handleFormattedFileCommand(
-				// @ts-expect-error type inconsistency
-				fs,
-				printer,
-				runSettings,
-				command,
-				false,
-			);
+			const lazyPromise =
+				runSettings.dryRun === true
+					? modifyFileSystemUponDryRunCommand(
+							// @ts-expect-error type inconsistency
+							fs,
+							runSettings.outputDirectoryPath,
+							command,
+					  )
+					: modifyFileSystemUponWetRunCommand(fileSystem, command);
+
+			await lazyPromise();
+
+			const printerMessage =
+				runSettings.dryRun === true
+					? buildPrinterMessageUponCommand(
+							runSettings.outputDirectoryPath,
+							command,
+					  )
+					: null;
+
+			if (printerMessage) {
+				printer.log(printerMessage);
+			}
 		}
 
 		return;
