@@ -148,13 +148,33 @@ export const runCodemod = async (
 					});
 				}
 
-				// no changes to the file.
+				// no changes to the file
 			}
 
 			fileMap.delete(newPath);
 		}
 
-		console.log(newPaths);
+		for (const oldPath of fileMap.keys()) {
+			fileCommands.push({
+				kind: 'deleteFile',
+				oldPath,
+			});
+		}
+
+		const formattedFileCommands = await buildFormattedFileCommands(
+			fileCommands,
+		);
+
+		for (const command of formattedFileCommands) {
+			await handleFormattedFileCommand(
+				// @ts-expect-error type inconsistency
+				fs,
+				printer,
+				runSettings,
+				command,
+				false,
+			);
+		}
 
 		return;
 	}
