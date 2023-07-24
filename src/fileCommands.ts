@@ -204,20 +204,46 @@ export const modifyFileSystemUponWetRunCommand = (
 	return () => Promise.reject(new Error('Unrecognized command'));
 };
 
+export const buildNewDataPathForCreateFileCommand = (
+	outputDirectoryPath: string,
+	command: FormattedFileCommand & { kind: 'createFile' },
+): string => {
+	const hashDigest = createHash('md5')
+		.update(command.kind)
+		.update(command.newPath)
+		.update(command.newData)
+		.digest('base64url');
+
+	const extName = extname(command.newPath);
+
+	return join(outputDirectoryPath, `${hashDigest}${extName}`);
+};
+
+export const buildNewDataPathForUpdateFileCommand = (
+	outputDirectoryPath: string,
+	command: FormattedFileCommand & { kind: 'updateFile' },
+): string => {
+	const hashDigest = createHash('md5')
+		.update(command.kind)
+		.update(command.oldPath)
+		.update(command.newData)
+		.digest('base64url');
+
+	const extName = extname(command.oldPath);
+
+	return join(outputDirectoryPath, `${hashDigest}${extName}`);
+};
+
 export const modifyFileSystemUponDryRunCommand = (
 	fileSystem: IFs,
 	outputDirectoryPath: string,
 	command: FormattedFileCommand,
 ): LazyPromise<void> => {
 	if (command.kind === 'createFile') {
-		const hash = createHash('md5')
-			.update(command.kind)
-			.update(command.newPath)
-			.update(command.newData)
-			.digest('base64url');
-
-		const extName = extname(command.newPath);
-		const newDataPath = join(outputDirectoryPath, `${hash}${extName}`);
+		const newDataPath = buildNewDataPathForCreateFileCommand(
+			outputDirectoryPath,
+			command,
+		);
 
 		return () =>
 			fileSystem.promises.writeFile(newDataPath, command.newData);
@@ -246,9 +272,15 @@ export const modifyFileSystemUponDryRunCommand = (
 };
 
 export const buildPrinterMessageUponCommand = (
+	outputDirectoryPath: string,
 	command: FormattedFileCommand,
 ): Message => {
 	if (command.kind === 'createFile') {
+		const newDataPath = buildNewDataPathForCreateFileCommand(
+			outputDirectoryPath,
+			command,
+		);
+
 		return {
 			kind: 'create',
 			newFilePath: command.newPath,
@@ -272,6 +304,11 @@ export const buildPrinterMessageUponCommand = (
 	}
 
 	if (command.kind === 'updateFile') {
+		const newDataPath = buildNewDataPathForUpdateFileCommand(
+			outputDirectoryPath,
+			command,
+		);
+
 		return {
 			kind: 'rewrite',
 			oldPath: command.oldPath,
@@ -286,6 +323,8 @@ export const buildPrinterMessageUponCommand = (
 			newFilePath: command.newPath,
 		};
 	}
+
+	throw new Error('Not supported command');
 };
 
 export const handleFormattedFileCommand = async (
