@@ -79,11 +79,11 @@ export const runCodemod = async (
 
 	if (codemod.engine === 'recipe') {
 		if (!runSettings.dryRun) {
-			for (const c of codemod.codemods) {
+			for (const subCodemod of codemod.codemods) {
 				const commands = await runCodemod(
 					fileSystem,
 					printer,
-					c,
+					subCodemod,
 					flowSettings,
 					runSettings,
 				);
@@ -123,8 +123,10 @@ export const runCodemod = async (
 			fileMap.set(path, dataHashDigest);
 		}
 
-		for (const c of codemod.codemods) {
-			await runCodemod(mfs, printer, c, flowSettings, { dryRun: false });
+		for (const subCodemod of codemod.codemods) {
+			await runCodemod(mfs, printer, subCodemod, flowSettings, {
+				dryRun: false,
+			});
 		}
 
 		const newPaths = await glob(['**/*.*'], {
