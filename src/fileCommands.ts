@@ -6,6 +6,7 @@ import { filterNeitherNullNorUndefined } from './filterNeitherNullNorUndefined.j
 import { RunSettings } from './executeMainThread.js';
 import { Printer } from './printer.js';
 import { LazyPromise } from './lazyPromise.js';
+import { Message } from './messages.js';
 
 export type CreateFileCommand = Readonly<{
 	kind: 'createFile';
@@ -150,7 +151,7 @@ export const buildFormattedFileCommands = async (
 	return formattedFileCommands.filter(filterNeitherNullNorUndefined);
 };
 
-export const modifyFileSystemUponCommand = (
+export const modifyFileSystemUponWetRunCommand = (
 	fileSystem: IFs,
 	command: FormattedFileCommand,
 ): LazyPromise<void> => {
@@ -201,6 +202,90 @@ export const modifyFileSystemUponCommand = (
 	}
 
 	return () => Promise.reject(new Error('Unrecognized command'));
+};
+
+export const modifyFileSystemUponDryRunCommand = (
+	fileSystem: IFs,
+	outputDirectoryPath: string,
+	command: FormattedFileCommand,
+): LazyPromise<void> => {
+	if (command.kind === 'createFile') {
+		const hash = createHash('md5')
+			.update(command.kind)
+			.update(command.newPath)
+			.update(command.newData)
+			.digest('base64url');
+
+		const extName = extname(command.newPath);
+		const newDataPath = join(outputDirectoryPath, `${hash}${extName}`);
+
+		return () =>
+			fileSystem.promises.writeFile(newDataPath, command.newData);
+	}
+
+	if (command.kind === 'updateFile') {
+		const hashDigest = createHash('md5')
+			.update(command.kind)
+			.update(command.oldPath)
+			.update(command.newData)
+			.digest('base64url');
+
+		const extName = extname(command.oldPath);
+
+		const newDataPath = join(
+			outputDirectoryPath,
+			`${hashDigest}${extName}`,
+		);
+
+		return () =>
+			fileSystem.promises.writeFile(newDataPath, command.newData);
+	}
+
+	// eslint-disable-next-line @typescript-eslint/no-empty-function
+	return async () => {};
+};
+
+export const buildPrinterMessageUponCommand = (
+	command: FormattedFileCommand,
+): Message => {
+	if (command.kind === 'createFile') {
+		return {
+			kind: 'create',
+			newFilePath: command.newPath,
+			newContentPath: newDataPath,
+		};
+	}
+
+	if (command.kind === 'deleteFile') {
+		return {
+			kind: 'delete',
+			oldFilePath: command.oldPath,
+		};
+	}
+
+	if (command.kind === 'moveFile') {
+		return {
+			kind: 'move',
+			oldFilePath: command.oldPath,
+			newFilePath: command.newPath,
+		};
+	}
+
+	if (command.kind === 'updateFile') {
+		return {
+			kind: 'rewrite',
+			oldPath: command.oldPath,
+			newDataPath,
+		};
+	}
+
+	if (command.kind === 'copyFile') {
+		return {
+			kind: 'copy',
+			oldFilePath: command.oldPath,
+			newFilePath: command.newPath,
+		};
+	}
 };
 
 export const handleFormattedFileCommand = async (
