@@ -153,7 +153,10 @@ export class WorkerThreadManager {
 			}
 
 			if (workerThreadMessage.kind === 'error') {
-				console.error(workerThreadMessage.message);
+				this.__onPrinterMessage({
+					kind: 'error',
+					message: workerThreadMessage.message,
+				});
 			}
 		};
 	}

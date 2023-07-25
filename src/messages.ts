@@ -47,6 +47,11 @@ export type NamesMessage = Readonly<{
 	names: ReadonlyArray<string>;
 }>;
 
+export type ErrorMessage = Readonly<{
+	kind: 'error';
+	message: string;
+}>;
+
 // TODO I am considering naming it PrinterMessage
 export type Message =
 	| RewriteMessage
@@ -57,4 +62,5 @@ export type Message =
 	| CreateMessage
 	| CopyMessage
 	| MetadataPathMessage
-	| NamesMessage;
+	| NamesMessage
+	| ErrorMessage;

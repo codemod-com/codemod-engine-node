@@ -213,8 +213,6 @@ export const executeMainThread = async () => {
 	try {
 		const codemodDownloader = new CodemodDownloader(printer);
 
-		console.log(argv);
-
 		const codemodSettings = S.parseSync(codemodSettingsSchema)(argv);
 		const flowSettings = S.parseSync(flowSettingsSchema)(argv);
 		const runSettings = S.parseSync(runSettingsSchema)(argv);

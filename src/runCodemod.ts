@@ -95,7 +95,10 @@ export const runCodemod = async (
 					async (command) => {
 						commands.push(command);
 					},
-					() => {
+					(message) => {
+						if (message.kind === 'error') {
+							onPrinterMessage(message);
+						}
 						// we are discarding any printer messages from subcodemods
 						// if we are within a recipe
 					},
@@ -148,7 +151,11 @@ export const runCodemod = async (
 				async (command) => {
 					commands.push(command);
 				},
-				() => {
+				(message) => {
+					if (message.kind === 'error') {
+						onPrinterMessage(message);
+					}
+
 					// we are discarding any printer messages from subcodemods
 					// if we are within a recipe
 				},
