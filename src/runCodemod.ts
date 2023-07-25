@@ -295,44 +295,39 @@ export const runCodemod = async (
 		}
 
 		return;
-	} else {
-		const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
+	}
+	const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
 
-		const commands: FormattedFileCommand[] = [];
+	const commands: FormattedFileCommand[] = [];
 
-		for (const path of paths) {
-			printer.info('Running the "%s" codemod against "%s"', name, path);
+	for (const path of paths) {
+		printer.info('Running the "%s" codemod against "%s"', name, path);
 
-			try {
-				const data = await fileSystem.promises.readFile(path, 'utf8');
+		try {
+			const data = await fileSystem.promises.readFile(path, 'utf8');
 
-				const fileCommands =
-					codemod.engine === 'jscodeshift'
-						? runJscodeshiftCodemod(
-								// @ts-expect-error function type
-								transformer,
-								path,
-								data,
-								flowSettings.usePrettier,
-						  )
-						: runTsMorphCodemod(
-								// @ts-expect-error function type
-								transformer,
-								path,
-								data,
-								flowSettings.usePrettier,
-						  );
+			const fileCommands =
+				codemod.engine === 'jscodeshift'
+					? runJscodeshiftCodemod(
+							// @ts-expect-error function type
+							transformer,
+							path,
+							data,
+							flowSettings.usePrettier,
+					  )
+					: runTsMorphCodemod(
+							// @ts-expect-error function type
+							transformer,
+							path,
+							data,
+							flowSettings.usePrettier,
+					  );
 
-				commands.push(
-					...(await buildFormattedFileCommands(fileCommands)),
-				);
-			} catch (error) {
-				if (error instanceof Error) {
-					printer.error(error);
-				}
+			commands.push(...(await buildFormattedFileCommands(fileCommands)));
+		} catch (error) {
+			if (error instanceof Error) {
+				printer.error(error);
 			}
 		}
-
-		return commands;
 	}
 };
