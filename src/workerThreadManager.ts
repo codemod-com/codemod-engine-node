@@ -136,7 +136,7 @@ export class WorkerThreadManager {
 			}
 
 			if (workerThreadMessage.kind === 'message') {
-				console.log(JSON.stringify(workerThreadMessage.message));
+				this.__onPrettierMessage(workerThreadMessage.message);
 			}
 		};
 	}
