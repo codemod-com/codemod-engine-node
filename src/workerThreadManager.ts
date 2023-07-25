@@ -19,7 +19,7 @@ export class WorkerThreadManager {
 		private readonly __codemodEngine: 'jscodeshift' | 'ts-morph',
 		private readonly __codemodSource: string,
 		private readonly __formatWithPrettier: boolean,
-		private readonly __filePaths: readonly string[],
+		private readonly __filePaths: string[],
 		private readonly __onPrinterMessage: (message: Message) => void,
 		private readonly __onCommand: (
 			command: FormattedFileCommand,

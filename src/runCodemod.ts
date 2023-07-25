@@ -8,14 +8,15 @@ import { Dependencies, runRepomod } from './runRepomod.js';
 import { escape, glob } from 'glob';
 import type { FlowSettings, RunSettings } from './executeMainThread.js';
 import * as fs from 'fs';
-import * as tsmorph from 'ts-morph';
-import nodePath, { dirname } from 'node:path';
+import { dirname } from 'node:path';
 import { Repomod } from '@intuita-inc/repomod-engine-api';
 import { Printer } from './printer.js';
 import { Codemod } from './codemod.js';
 import { IFs, Volume, createFsFromVolume } from 'memfs';
 import { createHash } from 'node:crypto';
 import { WorkerThreadManager } from './workerThreadManager.js';
+import { getTransformer } from './getTransformer.js';
+import { Message } from './messages.js';
 
 const buildPaths = async (
 	fileSystem: IFs,
@@ -70,6 +71,7 @@ export const runCodemod = async (
 	flowSettings: FlowSettings,
 	runSettings: RunSettings,
 	onCommand: (command: FormattedFileCommand) => Promise<void>,
+	onPrinterMessage: (message: Message) => void,
 ): Promise<void> => {
 	const name = 'name' in codemod ? codemod.name : codemod.indexPath;
 
@@ -92,6 +94,10 @@ export const runCodemod = async (
 					runSettings,
 					async (command) => {
 						commands.push(command);
+					},
+					() => {
+						// we are discarding any printer messages from subcodemods
+						// if we are within a recipe
 					},
 				);
 
@@ -141,6 +147,10 @@ export const runCodemod = async (
 				},
 				async (command) => {
 					commands.push(command);
+				},
+				() => {
+					// we are discarding any printer messages from subcodemods
+					// if we are within a recipe
 				},
 			);
 
@@ -218,44 +228,7 @@ export const runCodemod = async (
 		encoding: 'utf8',
 	});
 
-	type Exports =
-		| {
-				__esModule?: true;
-				default?: unknown;
-				handleSourceFile?: unknown;
-				repomod?: Repomod<Dependencies>;
-		  }
-		// eslint-disable-next-line @typescript-eslint/ban-types
-		| Function;
-
-	const module = { exports: {} as Exports };
-	const req = (name: string) => {
-		if (name === 'ts-morph') {
-			return tsmorph;
-		}
-
-		if (name === 'node:path') {
-			return nodePath;
-		}
-	};
-
-	const keys = ['module', 'require'];
-	const values = [module, req];
-
-	// eslint-disable-next-line prefer-spread
-	new Function(...keys, source).apply(null, values);
-
-	const transformer =
-		typeof module.exports === 'function'
-			? module.exports
-			: module.exports.__esModule &&
-			  typeof module.exports.default === 'function'
-			? module.exports.default
-			: typeof module.exports.handleSourceFile === 'function'
-			? module.exports.handleSourceFile
-			: module.exports.repomod !== undefined
-			? module.exports.repomod
-			: null;
+	const transformer = getTransformer(source);
 
 	if (transformer === null) {
 		throw new Error(
@@ -264,25 +237,16 @@ export const runCodemod = async (
 	}
 
 	if (codemod.engine === 'repomod-engine') {
-		const repomod =
-			'repomod' in module.exports ? module.exports.repomod ?? null : null;
-
-		if (repomod === null) {
-			throw new Error(
-				'Could not find the repomod object exported from the CommonJS module',
-			);
-		}
-
 		const paths = await buildPaths(
 			fileSystem,
 			flowSettings,
 			codemod,
-			repomod,
+			transformer as Repomod<Dependencies>,
 		);
 
 		const fileCommands = await runRepomod(
 			fileSystem,
-			{ ...repomod, includePatterns: paths, excludePatterns: [] },
+			{ ...transformer, includePatterns: paths, excludePatterns: [] },
 			flowSettings.inputDirectoryPath,
 			flowSettings.usePrettier,
 		);
@@ -299,16 +263,23 @@ export const runCodemod = async (
 	// jscodeshift or ts-morph
 	const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
 
-	const manager = new WorkerThreadManager(
-		flowSettings.threadCount,
-		codemod.engine,
-		source,
-		flowSettings.usePrettier,
-		paths,
-		(message) => {
-			// are you sure?
-			printer.log(message);
-		},
-		onCommand,
-	);
+	const { engine } = codemod;
+
+	await new Promise<void>((resolve) => {
+		new WorkerThreadManager(
+			flowSettings.threadCount,
+			engine,
+			source,
+			flowSettings.usePrettier,
+			paths.slice(),
+			(message) => {
+				if (message.kind === 'finish') {
+					resolve();
+				}
+
+				onPrinterMessage(message);
+			},
+			onCommand,
+		);
+	});
 };

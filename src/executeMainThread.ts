@@ -11,6 +11,7 @@ import {
 	buildPrinterMessageUponCommand,
 	modifyFileSystemUponCommand,
 } from './fileCommands.js';
+import { Message } from './messages.js';
 
 const codemodSettingsSchema = S.union(
 	S.struct({
@@ -236,6 +237,10 @@ export const executeMainThread = async () => {
 			}
 		};
 
+		const handleMessage = async (message: Message) => {
+			printer.log(message);
+		};
+
 		if ('name' in codemodSettings) {
 			printer.info(
 				'Executing the "%s" codemod against "%s"',
@@ -256,6 +261,7 @@ export const executeMainThread = async () => {
 				flowSettings,
 				runSettings,
 				handleCommand,
+				handleMessage,
 			);
 		} else {
 			const codemod = {
@@ -272,6 +278,7 @@ export const executeMainThread = async () => {
 				flowSettings,
 				runSettings,
 				handleCommand,
+				handleMessage,
 			);
 		}
 	} catch (error) {
