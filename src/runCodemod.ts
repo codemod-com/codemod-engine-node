@@ -298,8 +298,6 @@ export const runCodemod = async (
 	}
 	const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
 
-	const commands: FormattedFileCommand[] = [];
-
 	for (const path of paths) {
 		printer.info('Running the "%s" codemod against "%s"', name, path);
 
@@ -323,7 +321,11 @@ export const runCodemod = async (
 							flowSettings.usePrettier,
 					  );
 
-			commands.push(...(await buildFormattedFileCommands(fileCommands)));
+			const commands = await buildFormattedFileCommands(fileCommands);
+
+			for (const command of commands) {
+				await onCommand(command);
+			}
 		} catch (error) {
 			if (error instanceof Error) {
 				printer.error(error);
