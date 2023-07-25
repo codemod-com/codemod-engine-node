@@ -2,6 +2,7 @@ import { Worker } from 'node:worker_threads';
 import { MainThreadMessage } from './mainThreadMessages.js';
 import { Message } from './messages.js';
 import { decodeWorkerThreadMessage } from './workerThreadMessages.js';
+import { FormattedFileCommand } from './fileCommands.js';
 
 const WORKER_THREAD_TIME_LIMIT = 10000;
 
@@ -18,8 +19,11 @@ export class WorkerThreadManager {
 		private readonly __codemodEngine: 'jscodeshift' | 'ts-morph',
 		private readonly __codemodSource: string,
 		private readonly __formatWithPrettier: boolean,
-		private readonly __filePaths: string[],
+		private readonly __filePaths: readonly string[],
 		private readonly __onPrinterMessage: (message: Message) => void,
+		private readonly __onCommand: (
+			command: FormattedFileCommand,
+		) => Promise<void>,
 	) {
 		this.__totalFileCount = __filePaths.length;
 
@@ -117,8 +121,19 @@ export class WorkerThreadManager {
 	}
 
 	private __buildOnWorkerMessage(i: number) {
-		return (m: unknown): void => {
+		return async (m: unknown): Promise<void> => {
 			const workerThreadMessage = decodeWorkerThreadMessage(m);
+
+			if (workerThreadMessage.kind === 'commands') {
+				const commands =
+					workerThreadMessage.commands as FormattedFileCommand[];
+
+				for (const command of commands) {
+					await this.__onCommand(command);
+				}
+
+				return;
+			}
 
 			if (workerThreadMessage.kind === 'idleness') {
 				this.__onPrinterMessage({
@@ -130,10 +145,8 @@ export class WorkerThreadManager {
 
 				this.__idleWorkerIds.push(i);
 				this.__work();
-			}
 
-			if (workerThreadMessage.kind === 'fileCommand') {
-				this.__onPrinterMessage(workerThreadMessage.message);
+				return;
 			}
 		};
 	}

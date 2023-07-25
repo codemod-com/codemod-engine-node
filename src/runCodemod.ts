@@ -1,4 +1,3 @@
-import { runJscodeshiftCodemod } from './runJscodeshiftCodemod.js';
 import {
 	FileCommand,
 	FormattedFileCommand,
@@ -12,7 +11,6 @@ import * as fs from 'fs';
 import * as tsmorph from 'ts-morph';
 import nodePath, { dirname } from 'node:path';
 import { Repomod } from '@intuita-inc/repomod-engine-api';
-import { runTsMorphCodemod } from './runTsMorphCodemod.js';
 import { Printer } from './printer.js';
 import { Codemod } from './codemod.js';
 import { IFs, Volume, createFsFromVolume } from 'memfs';
@@ -299,43 +297,18 @@ export const runCodemod = async (
 	}
 
 	// jscodeshift or ts-morph
-
-	const manager = new WorkerThreadManager();
-
 	const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
 
-	for (const path of paths) {
-		printer.info('Running the "%s" codemod against "%s"', name, path);
-
-		try {
-			const data = await fileSystem.promises.readFile(path, 'utf8');
-
-			const fileCommands =
-				codemod.engine === 'jscodeshift'
-					? runJscodeshiftCodemod(
-							// @ts-expect-error function type
-							transformer,
-							path,
-							data,
-							flowSettings.usePrettier,
-					  )
-					: runTsMorphCodemod(
-							// @ts-expect-error function type
-							transformer,
-							path,
-							data,
-							flowSettings.usePrettier,
-					  );
-
-			const commands = await buildFormattedFileCommands(fileCommands);
-
-			for (const command of commands) {
-				await onCommand(command);
-			}
-		} catch (error) {
-			if (error instanceof Error) {
-				printer.error(error);
-			}
-		}
-	}
+	const manager = new WorkerThreadManager(
+		flowSettings.threadCount,
+		codemod.engine,
+		source,
+		flowSettings.usePrettier,
+		paths,
+		(message) => {
+			// are you sure?
+			printer.log(message);
+		},
+		onCommand,
+	);
 };

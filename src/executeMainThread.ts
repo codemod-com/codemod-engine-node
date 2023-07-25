@@ -35,6 +35,7 @@ const DEFAULT_FILE_LIMIT = 1000;
 const DEFAULT_USE_PRETTIER = false;
 const DEFAULT_USE_CACHE = false;
 const DEFAULT_USE_JSON = false;
+const DEFAULT_THREAD_COUNT = 4;
 
 const flowSettingsSchema = S.struct({
 	includePattern: S.optional(S.array(S.string)).withDefault(
@@ -52,6 +53,7 @@ const flowSettingsSchema = S.struct({
 	usePrettier: S.optional(S.boolean).withDefault(() => DEFAULT_USE_PRETTIER),
 	useCache: S.optional(S.boolean).withDefault(() => DEFAULT_USE_CACHE),
 	useJson: S.optional(S.boolean).withDefault(() => DEFAULT_USE_JSON),
+	threadCount: S.optional(S.number).withDefault(() => DEFAULT_THREAD_COUNT),
 });
 
 export type FlowSettings = S.To<typeof flowSettingsSchema>;
@@ -125,6 +127,11 @@ export const executeMainThread = async () => {
 						type: 'boolean',
 						description: 'Use JSON responses in the console',
 						default: DEFAULT_USE_JSON,
+					})
+					.option('threadCount', {
+						type: 'number',
+						description: 'Number of worker threads',
+						default: DEFAULT_THREAD_COUNT,
 					})
 					.option('dryRun', {
 						type: 'boolean',
