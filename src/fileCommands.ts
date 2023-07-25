@@ -98,7 +98,7 @@ export const formatText = async (
 	}
 };
 
-const buildFormattedFileCommand = async (
+export const buildFormattedFileCommand = async (
 	command: FileCommand,
 ): Promise<FormattedFileCommand | null> => {
 	if (command.kind === 'createFile') {

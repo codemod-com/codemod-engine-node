@@ -1,4 +1,3 @@
-import { runJscodeshiftCodemod } from './runJscodeshiftCodemod.js';
 import {
 	FileCommand,
 	FormattedFileCommand,
@@ -9,14 +8,15 @@ import { Dependencies, runRepomod } from './runRepomod.js';
 import { escape, glob } from 'glob';
 import type { FlowSettings, RunSettings } from './executeMainThread.js';
 import * as fs from 'fs';
-import * as tsmorph from 'ts-morph';
-import nodePath, { dirname } from 'node:path';
+import { dirname } from 'node:path';
 import { Repomod } from '@intuita-inc/repomod-engine-api';
-import { runTsMorphCodemod } from './runTsMorphCodemod.js';
 import { Printer } from './printer.js';
 import { Codemod } from './codemod.js';
 import { IFs, Volume, createFsFromVolume } from 'memfs';
 import { createHash } from 'node:crypto';
+import { WorkerThreadManager } from './workerThreadManager.js';
+import { getTransformer } from './getTransformer.js';
+import { Message } from './messages.js';
 
 const buildPaths = async (
 	fileSystem: IFs,
@@ -70,7 +70,9 @@ export const runCodemod = async (
 	codemod: Codemod,
 	flowSettings: FlowSettings,
 	runSettings: RunSettings,
-): Promise<readonly FormattedFileCommand[]> => {
+	onCommand: (command: FormattedFileCommand) => Promise<void>,
+	onPrinterMessage: (message: Message) => void,
+): Promise<void> => {
 	const name = 'name' in codemod ? codemod.name : codemod.indexPath;
 
 	printer.info('Running the "%s" codemod using "%s"', name, codemod.engine);
@@ -82,12 +84,24 @@ export const runCodemod = async (
 	if (codemod.engine === 'recipe') {
 		if (!runSettings.dryRun) {
 			for (const subCodemod of codemod.codemods) {
-				const commands = await runCodemod(
+				const commands: FormattedFileCommand[] = [];
+
+				await runCodemod(
 					fileSystem,
 					printer,
 					subCodemod,
 					flowSettings,
 					runSettings,
+					async (command) => {
+						commands.push(command);
+					},
+					(message) => {
+						if (message.kind === 'error') {
+							onPrinterMessage(message);
+						}
+						// we are discarding any printer messages from subcodemods
+						// if we are within a recipe
+					},
 				);
 
 				for (const command of commands) {
@@ -99,7 +113,7 @@ export const runCodemod = async (
 				}
 			}
 
-			return [];
+			return;
 		}
 
 		// establish a in-memory file system
@@ -124,13 +138,26 @@ export const runCodemod = async (
 		}
 
 		for (const subCodemod of codemod.codemods) {
-			const commands = await runCodemod(
+			const commands: FormattedFileCommand[] = [];
+
+			await runCodemod(
 				mfs,
 				printer,
 				subCodemod,
 				flowSettings,
 				{
 					dryRun: false,
+				},
+				async (command) => {
+					commands.push(command);
+				},
+				(message) => {
+					if (message.kind === 'error') {
+						onPrinterMessage(message);
+					}
+
+					// we are discarding any printer messages from subcodemods
+					// if we are within a recipe
 				},
 			);
 
@@ -195,51 +222,20 @@ export const runCodemod = async (
 			});
 		}
 
-		return buildFormattedFileCommands(fileCommands);
+		const commands = await buildFormattedFileCommands(fileCommands);
+
+		for (const command of commands) {
+			await onCommand(command);
+		}
+
+		return;
 	}
 
 	const source = fs.readFileSync(codemod.indexPath, {
 		encoding: 'utf8',
 	});
 
-	type Exports =
-		| {
-				__esModule?: true;
-				default?: unknown;
-				handleSourceFile?: unknown;
-				repomod?: Repomod<Dependencies>;
-		  }
-		// eslint-disable-next-line @typescript-eslint/ban-types
-		| Function;
-
-	const module = { exports: {} as Exports };
-	const req = (name: string) => {
-		if (name === 'ts-morph') {
-			return tsmorph;
-		}
-
-		if (name === 'node:path') {
-			return nodePath;
-		}
-	};
-
-	const keys = ['module', 'require'];
-	const values = [module, req];
-
-	// eslint-disable-next-line prefer-spread
-	new Function(...keys, source).apply(null, values);
-
-	const transformer =
-		typeof module.exports === 'function'
-			? module.exports
-			: module.exports.__esModule &&
-			  typeof module.exports.default === 'function'
-			? module.exports.default
-			: typeof module.exports.handleSourceFile === 'function'
-			? module.exports.handleSourceFile
-			: module.exports.repomod !== undefined
-			? module.exports.repomod
-			: null;
+	const transformer = getTransformer(source);
 
 	if (transformer === null) {
 		throw new Error(
@@ -248,68 +244,56 @@ export const runCodemod = async (
 	}
 
 	if (codemod.engine === 'repomod-engine') {
-		const repomod =
-			'repomod' in module.exports ? module.exports.repomod ?? null : null;
-
-		if (repomod === null) {
-			throw new Error(
-				'Could not find the repomod object exported from the CommonJS module',
-			);
-		}
-
 		const paths = await buildPaths(
 			fileSystem,
 			flowSettings,
 			codemod,
-			repomod,
+			transformer as Repomod<Dependencies>,
 		);
 
 		const fileCommands = await runRepomod(
 			fileSystem,
-			{ ...repomod, includePatterns: paths, excludePatterns: [] },
+			{ ...transformer, includePatterns: paths, excludePatterns: [] },
 			flowSettings.inputDirectoryPath,
 			flowSettings.usePrettier,
 		);
 
-		return buildFormattedFileCommands(fileCommands);
-	} else {
-		const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
+		const commands = await buildFormattedFileCommands(fileCommands);
 
-		const commands: FormattedFileCommand[] = [];
-
-		for (const path of paths) {
-			printer.info('Running the "%s" codemod against "%s"', name, path);
-
-			try {
-				const data = await fileSystem.promises.readFile(path, 'utf8');
-
-				const fileCommands =
-					codemod.engine === 'jscodeshift'
-						? runJscodeshiftCodemod(
-								// @ts-expect-error function type
-								transformer,
-								path,
-								data,
-								flowSettings.usePrettier,
-						  )
-						: runTsMorphCodemod(
-								// @ts-expect-error function type
-								transformer,
-								path,
-								data,
-								flowSettings.usePrettier,
-						  );
-
-				commands.push(
-					...(await buildFormattedFileCommands(fileCommands)),
-				);
-			} catch (error) {
-				if (error instanceof Error) {
-					printer.error(error);
-				}
-			}
+		for (const command of commands) {
+			await onCommand(command);
 		}
 
-		return commands;
+		return;
 	}
+
+	// jscodeshift or ts-morph
+	const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
+
+	const { engine } = codemod;
+
+	await new Promise<void>((resolve) => {
+		new WorkerThreadManager(
+			flowSettings.threadCount,
+			engine,
+			source,
+			flowSettings.usePrettier,
+			paths.slice(),
+			async (path) => {
+				const data = await fileSystem.promises.readFile(path, {
+					encoding: 'utf8',
+				});
+
+				return data as string;
+			},
+			(message) => {
+				if (message.kind === 'finish') {
+					resolve();
+				}
+
+				onPrinterMessage(message);
+			},
+			onCommand,
+		);
+	});
 };
