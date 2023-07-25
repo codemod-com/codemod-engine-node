@@ -1,8 +1,7 @@
 import { Worker } from 'node:worker_threads';
 import { MainThreadMessage } from './mainThreadMessages.js';
-import { ProgressMessage } from './messages.js';
+import { Message } from './messages.js';
 import { decodeWorkerThreadMessage } from './workerThreadMessages.js';
-import { Printer } from './printer.js';
 
 const WORKER_THREAD_TIME_LIMIT = 10000;
 
@@ -15,7 +14,6 @@ export class WorkerThreadManager {
 	private readonly __interval: NodeJS.Timeout;
 
 	public constructor(
-		private readonly __printer: Printer,
 		private readonly __workerCount: number,
 		private readonly __filePaths: string[],
 		private readonly __codemodFilePath: string | null,
@@ -23,6 +21,7 @@ export class WorkerThreadManager {
 		private readonly __codemodHashDigests: ReadonlyArray<string>,
 		private readonly __executionId: string,
 		private readonly __formatWithPrettier: boolean,
+		private readonly __onPrettierMessage: (message: Message) => void,
 	) {
 		this.__totalFileCount = __filePaths.length;
 
@@ -37,13 +36,11 @@ export class WorkerThreadManager {
 			this.__workers.push(worker);
 		}
 
-		const progressMessage: ProgressMessage = {
+		this.__onPrettierMessage({
 			kind: 'progress',
 			processedFileNumber: 0,
 			totalFileNumber: this.__totalFileCount,
-		};
-
-		console.log(JSON.stringify(progressMessage));
+		});
 
 		this.__work();
 
@@ -117,7 +114,7 @@ export class WorkerThreadManager {
 			worker.postMessage({ kind: 'exit' } satisfies MainThreadMessage);
 		}
 
-		this.__printer.log({
+		this.__onPrettierMessage({
 			kind: 'finish',
 		});
 	}
@@ -127,7 +124,7 @@ export class WorkerThreadManager {
 			const workerThreadMessage = decodeWorkerThreadMessage(m);
 
 			if (workerThreadMessage.kind === 'idleness') {
-				this.__printer.log({
+				this.__onPrettierMessage({
 					kind: 'progress',
 					processedFileNumber:
 						this.__totalFileCount - this.__filePaths.length,
