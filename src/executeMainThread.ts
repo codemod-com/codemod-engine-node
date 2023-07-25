@@ -5,6 +5,12 @@ import { handleListNamesCommand } from './handleListCliCommand.js';
 import { CodemodDownloader } from './downloadCodemod.js';
 import { runCodemod } from './runCodemod.js';
 import { Printer } from './printer.js';
+import * as fs from 'fs';
+import {
+	FormattedFileCommand,
+	buildPrinterMessageUponCommand,
+	modifyFileSystemUponCommand,
+} from './fileCommands.js';
 
 const codemodSettingsSchema = S.union(
 	S.struct({
@@ -203,6 +209,8 @@ export const executeMainThread = async () => {
 		const flowSettings = S.parseSync(flowSettingsSchema)(argv);
 		const runSettings = S.parseSync(runSettingsSchema)(argv);
 
+		let commands: readonly FormattedFileCommand[];
+
 		if ('name' in codemodSettings) {
 			printer.info(
 				'Executing the "%s" codemod against "%s"',
@@ -215,7 +223,14 @@ export const executeMainThread = async () => {
 				flowSettings.useCache,
 			);
 
-			await runCodemod(printer, codemod, flowSettings, runSettings);
+			commands = await runCodemod(
+				// @ts-expect-error type inconsistency
+				fs,
+				printer,
+				codemod,
+				flowSettings,
+				runSettings,
+			);
 		} else {
 			const codemod = {
 				source: 'fileSystem' as const,
@@ -223,7 +238,32 @@ export const executeMainThread = async () => {
 				indexPath: codemodSettings.sourcePath,
 			};
 
-			await runCodemod(printer, codemod, flowSettings, runSettings);
+			commands = await runCodemod(
+				// @ts-expect-error type inconsistency
+				fs,
+				printer,
+				codemod,
+				flowSettings,
+				runSettings,
+			);
+		}
+
+		for (const command of commands) {
+			await modifyFileSystemUponCommand(
+				// @ts-expect-error type inconsistency
+				fs,
+				runSettings,
+				command,
+			);
+
+			const printerMessage = buildPrinterMessageUponCommand(
+				runSettings,
+				command,
+			);
+
+			if (printerMessage) {
+				printer.log(printerMessage);
+			}
 		}
 	} catch (error) {
 		if (!(error instanceof Error)) {

@@ -1,26 +1,76 @@
 import { runJscodeshiftCodemod } from './runJscodeshiftCodemod.js';
 import {
+	FileCommand,
+	FormattedFileCommand,
 	buildFormattedFileCommands,
-	handleFormattedFileCommand,
+	modifyFileSystemUponCommand,
 } from './fileCommands.js';
-import { readFile } from 'fs/promises';
 import { Dependencies, runRepomod } from './runRepomod.js';
 import { escape, glob } from 'glob';
 import type { FlowSettings, RunSettings } from './executeMainThread.js';
 import * as fs from 'fs';
 import * as tsmorph from 'ts-morph';
-import nodePath from 'node:path';
+import nodePath, { dirname } from 'node:path';
 import { Repomod } from '@intuita-inc/repomod-engine-api';
 import { runTsMorphCodemod } from './runTsMorphCodemod.js';
 import { Printer } from './printer.js';
 import { Codemod } from './codemod.js';
+import { IFs, Volume, createFsFromVolume } from 'memfs';
+import { createHash } from 'node:crypto';
+
+const buildPaths = async (
+	fileSystem: IFs,
+	flowSettings: FlowSettings,
+	codemod: Codemod,
+	repomod: Repomod<Dependencies> | null,
+): Promise<ReadonlyArray<string>> => {
+	if (codemod.engine === 'repomod-engine' && repomod !== null) {
+		const repomodPaths = await glob(
+			repomod.includePatterns?.slice() ?? [],
+			{
+				absolute: true,
+				cwd: flowSettings.inputDirectoryPath,
+				// @ts-expect-error type inconsistency
+				fs: fileSystem,
+				ignore: repomod.excludePatterns?.slice(),
+				nodir: true,
+			},
+		);
+
+		const flowPaths = await glob(flowSettings.includePattern.slice(), {
+			absolute: true,
+			cwd: flowSettings.inputDirectoryPath,
+			// @ts-expect-error type inconsistency
+			fs: fileSystem,
+			ignore: flowSettings.excludePattern.slice(),
+			nodir: true,
+		});
+
+		return repomodPaths
+			.filter((path) => flowPaths.includes(path))
+			.map((path) => escape(path))
+			.slice(0, flowSettings.fileLimit);
+	} else {
+		const paths = await glob(flowSettings.includePattern.slice(), {
+			absolute: true,
+			cwd: flowSettings.inputDirectoryPath,
+			// @ts-expect-error type inconsistency
+			fs: fileSystem,
+			ignore: flowSettings.excludePattern.slice(),
+			nodir: true,
+		});
+
+		return paths.slice(0, flowSettings.fileLimit);
+	}
+};
 
 export const runCodemod = async (
+	fileSystem: IFs,
 	printer: Printer,
 	codemod: Codemod,
 	flowSettings: FlowSettings,
 	runSettings: RunSettings,
-) => {
+): Promise<readonly FormattedFileCommand[]> => {
 	const name = 'name' in codemod ? codemod.name : codemod.indexPath;
 
 	printer.info('Running the "%s" codemod using "%s"', name, codemod.engine);
@@ -30,11 +80,122 @@ export const runCodemod = async (
 	}
 
 	if (codemod.engine === 'recipe') {
-		for (const c of codemod.codemods) {
-			await runCodemod(printer, c, flowSettings, runSettings);
+		if (!runSettings.dryRun) {
+			for (const subCodemod of codemod.codemods) {
+				const commands = await runCodemod(
+					fileSystem,
+					printer,
+					subCodemod,
+					flowSettings,
+					runSettings,
+				);
+
+				for (const command of commands) {
+					await modifyFileSystemUponCommand(
+						fileSystem,
+						runSettings,
+						command,
+					);
+				}
+			}
+
+			return [];
 		}
 
-		return;
+		// establish a in-memory file system
+		const volume = Volume.fromJSON({});
+		const mfs = createFsFromVolume(volume);
+
+		const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
+
+		const fileMap = new Map<string, string>();
+
+		for (const path of paths) {
+			const data = await fs.promises.readFile(path, { encoding: 'utf8' });
+
+			await mfs.promises.mkdir(dirname(path), { recursive: true });
+			await mfs.promises.writeFile(path, data);
+
+			const dataHashDigest = createHash('ripemd160')
+				.update(data)
+				.digest('base64url');
+
+			fileMap.set(path, dataHashDigest);
+		}
+
+		for (const subCodemod of codemod.codemods) {
+			const commands = await runCodemod(
+				mfs,
+				printer,
+				subCodemod,
+				flowSettings,
+				{
+					dryRun: false,
+				},
+			);
+
+			for (const command of commands) {
+				await modifyFileSystemUponCommand(
+					mfs,
+					{ dryRun: false },
+					command,
+				);
+			}
+		}
+
+		const newPaths = await glob(['**/*.*'], {
+			absolute: true,
+			cwd: flowSettings.inputDirectoryPath,
+			// @ts-expect-error type inconsistency
+			fs: mfs,
+			nodir: true,
+		});
+
+		const fileCommands: FileCommand[] = [];
+
+		for (const newPath of newPaths) {
+			const newDataBuffer = await mfs.promises.readFile(newPath);
+			const newData = newDataBuffer.toString();
+
+			const oldDataFileHash = fileMap.get(newPath) ?? null;
+
+			if (oldDataFileHash === null) {
+				// the file has been created
+				fileCommands.push({
+					kind: 'createFile',
+					newPath,
+					newData,
+					formatWithPrettier: false,
+				});
+			} else {
+				const newDataFileHash = createHash('ripemd160')
+					.update(newData)
+					.digest('base64url');
+
+				if (newDataFileHash !== oldDataFileHash) {
+					fileCommands.push({
+						kind: 'updateFile',
+						oldPath: newPath,
+						newData,
+						oldData: '', // TODO no longer necessary
+						formatWithPrettier: false,
+					});
+				}
+
+				// no changes to the file
+			}
+
+			fileMap.delete(newPath);
+		}
+
+		for (const oldPath of fileMap.keys()) {
+			fileCommands.push({
+				kind: 'deleteFile',
+				oldPath,
+			});
+		}
+
+		return buildFormattedFileCommands(fileCommands);
 	}
 
 	const source = fs.readFileSync(codemod.indexPath, {
@@ -96,58 +257,33 @@ export const runCodemod = async (
 			);
 		}
 
-		const repomodPaths = await glob(
-			repomod.includePatterns?.slice() ?? [],
-			{
-				absolute: true,
-				cwd: flowSettings.inputDirectoryPath,
-				fs,
-				ignore: repomod.excludePatterns?.slice(),
-			},
+		const paths = await buildPaths(
+			fileSystem,
+			flowSettings,
+			codemod,
+			repomod,
 		);
 
-		const flowPaths = await glob(flowSettings.includePattern.slice(), {
-			absolute: true,
-			cwd: flowSettings.inputDirectoryPath,
-			fs,
-			ignore: flowSettings.excludePattern.slice(),
-		});
-
-		const paths = repomodPaths
-			.filter((path) => flowPaths.includes(path))
-			.map((path) => escape(path));
-
 		const fileCommands = await runRepomod(
+			fileSystem,
 			{ ...repomod, includePatterns: paths, excludePatterns: [] },
 			flowSettings.inputDirectoryPath,
 			flowSettings.usePrettier,
 		);
 
-		const formattedFileCommands = await buildFormattedFileCommands(
-			fileCommands,
-		);
-
-		for (const command of formattedFileCommands) {
-			await handleFormattedFileCommand(printer, runSettings, command);
-		}
+		return buildFormattedFileCommands(fileCommands);
 	} else {
-		const globbedPaths = await glob(flowSettings.includePattern.slice(), {
-			absolute: true,
-			cwd: flowSettings.inputDirectoryPath,
-			fs,
-			ignore: flowSettings.excludePattern.slice(),
-			nodir: true,
-		});
+		const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
 
-		const paths = globbedPaths.slice(0, flowSettings.fileLimit);
+		const commands: FormattedFileCommand[] = [];
 
 		for (const path of paths) {
 			printer.info('Running the "%s" codemod against "%s"', name, path);
 
 			try {
-				const data = await readFile(path, 'utf8');
+				const data = await fileSystem.promises.readFile(path, 'utf8');
 
-				const modCommands =
+				const fileCommands =
 					codemod.engine === 'jscodeshift'
 						? runJscodeshiftCodemod(
 								// @ts-expect-error function type
@@ -164,24 +300,16 @@ export const runCodemod = async (
 								flowSettings.usePrettier,
 						  );
 
-				const formattedFileCommands = await buildFormattedFileCommands(
-					modCommands,
+				commands.push(
+					...(await buildFormattedFileCommands(fileCommands)),
 				);
-
-				for (const command of formattedFileCommands) {
-					await handleFormattedFileCommand(
-						printer,
-						runSettings,
-						command,
-					);
-				}
 			} catch (error) {
-				if (!(error instanceof Error)) {
-					return;
+				if (error instanceof Error) {
+					printer.error(error);
 				}
-
-				printer.error(error);
 			}
 		}
+
+		return commands;
 	}
 };

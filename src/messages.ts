@@ -47,6 +47,7 @@ export type NamesMessage = Readonly<{
 	names: ReadonlyArray<string>;
 }>;
 
+// TODO I am considering naming it PrinterMessage
 export type Message =
 	| RewriteMessage
 	| FinishMessage

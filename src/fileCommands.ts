@@ -1,10 +1,10 @@
 import { createHash } from 'node:crypto';
-import { copyFile, mkdir, unlink, writeFile } from 'node:fs/promises';
 import { join, extname, dirname } from 'node:path';
 import { format, resolveConfig, Options } from 'prettier';
+import { IFs } from 'memfs';
 import { filterNeitherNullNorUndefined } from './filterNeitherNullNorUndefined.js';
 import { RunSettings } from './executeMainThread.js';
-import { Printer } from './printer.js';
+import { Message } from './messages.js';
 
 export type CreateFileCommand = Readonly<{
 	kind: 'createFile';
@@ -149,128 +149,165 @@ export const buildFormattedFileCommands = async (
 	return formattedFileCommands.filter(filterNeitherNullNorUndefined);
 };
 
-export const handleFormattedFileCommand = async (
-	printer: Printer,
-	runSettings: RunSettings,
+export const modifyFileSystemUponWetRunCommand = async (
+	fileSystem: IFs,
 	command: FormattedFileCommand,
 ): Promise<void> => {
 	if (command.kind === 'createFile') {
-		if (!runSettings.dryRun) {
-			const directoryPath = dirname(command.newPath);
+		const directoryPath = dirname(command.newPath);
 
-			await mkdir(directoryPath, { recursive: true });
+		await fileSystem.promises.mkdir(directoryPath, { recursive: true });
 
-			await writeFile(command.newPath, command.newData);
-
-			return;
-		}
-
-		const hash = createHash('md5')
-			.update(command.kind)
-			.update(command.newPath)
-			.update(command.newData)
-			.digest('base64url');
-
-		const extName = extname(command.newPath);
-		const newDataPath = join(
-			runSettings.outputDirectoryPath,
-			`${hash}${extName}`,
-		);
-
-		await writeFile(newDataPath, command.newData);
-
-		printer.log({
-			kind: 'create',
-			newFilePath: command.newPath,
-			newContentPath: newDataPath,
-		});
-
-		return;
+		return fileSystem.promises.writeFile(command.newPath, command.newData);
 	}
 
 	if (command.kind === 'deleteFile') {
-		if (!runSettings.dryRun) {
-			await unlink(command.oldPath);
-
-			return;
-		}
-
-		printer.log({
-			kind: 'delete',
-			oldFilePath: command.oldPath,
-		});
-
-		return;
+		return fileSystem.promises.unlink(command.oldPath);
 	}
 
 	if (command.kind === 'moveFile') {
-		if (!runSettings.dryRun) {
-			await copyFile(command.oldPath, command.newPath);
+		await fileSystem.promises.copyFile(command.oldPath, command.newPath);
 
-			await unlink(command.oldPath);
-
-			return;
-		}
-
-		printer.log({
-			kind: 'move',
-			oldFilePath: command.oldPath,
-			newFilePath: command.newPath,
-		});
-
-		return;
+		return fileSystem.promises.unlink(command.oldPath);
 	}
 
 	if (command.kind === 'updateFile') {
-		if (!runSettings.dryRun) {
-			await writeFile(command.oldPath, command.newData);
-
-			return;
-		}
-
-		const hashDigest = createHash('md5')
-			.update(command.kind)
-			.update(command.oldPath)
-			.update(command.newData)
-			.digest('base64url');
-
-		const extName = extname(command.oldPath);
-
-		const newDataPath = join(
-			runSettings.outputDirectoryPath,
-			`${hashDigest}${extName}`,
-		);
-
-		await writeFile(newDataPath, command.newData);
-
-		printer.log({
-			kind: 'rewrite',
-			oldPath: command.oldPath,
-			newDataPath,
-		});
-
-		return;
+		return fileSystem.promises.writeFile(command.oldPath, command.newData);
 	}
 
 	if (command.kind === 'copyFile') {
-		if (!runSettings.dryRun) {
-			const directoryPath = dirname(command.newPath);
+		const directoryPath = dirname(command.newPath);
 
-			await mkdir(directoryPath, { recursive: true });
+		await fileSystem.promises.mkdir(directoryPath, { recursive: true });
 
-			await copyFile(command.oldPath, command.newPath);
+		return fileSystem.promises.copyFile(command.oldPath, command.newPath);
+	}
+};
 
-			return;
-		}
+export const buildNewDataPathForCreateFileCommand = (
+	outputDirectoryPath: string,
+	command: FormattedFileCommand & { kind: 'createFile' },
+): string => {
+	const hashDigest = createHash('md5')
+		.update(command.kind)
+		.update(command.newPath)
+		.update(command.newData)
+		.digest('base64url');
 
-		printer.log({
+	const extName = extname(command.newPath);
+
+	return join(outputDirectoryPath, `${hashDigest}${extName}`);
+};
+
+export const buildNewDataPathForUpdateFileCommand = (
+	outputDirectoryPath: string,
+	command: FormattedFileCommand & { kind: 'updateFile' },
+): string => {
+	const hashDigest = createHash('md5')
+		.update(command.kind)
+		.update(command.oldPath)
+		.update(command.newData)
+		.digest('base64url');
+
+	const extName = extname(command.oldPath);
+
+	return join(outputDirectoryPath, `${hashDigest}${extName}`);
+};
+
+export const modifyFileSystemUponDryRunCommand = async (
+	fileSystem: IFs,
+	outputDirectoryPath: string,
+	command: FormattedFileCommand,
+): Promise<void> => {
+	if (command.kind === 'createFile') {
+		const newDataPath = buildNewDataPathForCreateFileCommand(
+			outputDirectoryPath,
+			command,
+		);
+
+		await fileSystem.promises.writeFile(newDataPath, command.newData);
+	}
+
+	if (command.kind === 'updateFile') {
+		const newDataPath = buildNewDataPathForUpdateFileCommand(
+			outputDirectoryPath,
+			command,
+		);
+
+		await fileSystem.promises.writeFile(newDataPath, command.newData);
+	}
+};
+
+export const modifyFileSystemUponCommand = (
+	fileSystem: IFs,
+	runSettings: RunSettings,
+	command: FormattedFileCommand,
+) => {
+	return runSettings.dryRun === true
+		? modifyFileSystemUponDryRunCommand(
+				fileSystem,
+				runSettings.outputDirectoryPath,
+				command,
+		  )
+		: modifyFileSystemUponWetRunCommand(fileSystem, command);
+};
+
+export const buildPrinterMessageUponCommand = (
+	runSettings: RunSettings,
+	command: FormattedFileCommand,
+): Message | null => {
+	if (!runSettings.dryRun) {
+		return null;
+	}
+
+	if (command.kind === 'createFile') {
+		const newDataPath = buildNewDataPathForCreateFileCommand(
+			runSettings.outputDirectoryPath,
+			command,
+		);
+
+		return {
+			kind: 'create',
+			newFilePath: command.newPath,
+			newContentPath: newDataPath,
+		};
+	}
+
+	if (command.kind === 'deleteFile') {
+		return {
+			kind: 'delete',
+			oldFilePath: command.oldPath,
+		};
+	}
+
+	if (command.kind === 'moveFile') {
+		return {
+			kind: 'move',
+			oldFilePath: command.oldPath,
+			newFilePath: command.newPath,
+		};
+	}
+
+	if (command.kind === 'updateFile') {
+		const newDataPath = buildNewDataPathForUpdateFileCommand(
+			runSettings.outputDirectoryPath,
+			command,
+		);
+
+		return {
+			kind: 'rewrite',
+			oldPath: command.oldPath,
+			newDataPath,
+		};
+	}
+
+	if (command.kind === 'copyFile') {
+		return {
 			kind: 'copy',
 			oldFilePath: command.oldPath,
 			newFilePath: command.newPath,
-		});
-
-		return;
+		};
 	}
 
-	throw new Error('Unrecognized command kind');
+	throw new Error('Not supported command');
 };
