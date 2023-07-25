@@ -20,6 +20,7 @@ export class WorkerThreadManager {
 		private readonly __codemodSource: string,
 		private readonly __formatWithPrettier: boolean,
 		private readonly __filePaths: string[],
+		private readonly __getData: (path: string) => Promise<string>,
 		private readonly __onPrinterMessage: (message: Message) => void,
 		private readonly __onCommand: (
 			command: FormattedFileCommand,
@@ -69,7 +70,7 @@ export class WorkerThreadManager {
 		}, 1000);
 	}
 
-	private __work(): void {
+	private async __work(): Promise<void> {
 		if (this.__finished) {
 			return;
 		}
@@ -94,10 +95,12 @@ export class WorkerThreadManager {
 			return;
 		}
 
+		const data = await this.__getData(filePath);
+
 		this.__workers[id]?.postMessage({
 			kind: 'runCodemod',
 			path: filePath,
-			data: '', // TODO get it,
+			data,
 			codemodSource: this.__codemodSource,
 			codemodEngine: this.__codemodEngine,
 			formatWithPrettier: this.__formatWithPrettier,
@@ -105,7 +108,7 @@ export class WorkerThreadManager {
 
 		this.__workerTimestamps[id] = Date.now();
 
-		this.__work();
+		await this.__work();
 	}
 
 	private __finish(): void {
@@ -144,9 +147,13 @@ export class WorkerThreadManager {
 				});
 
 				this.__idleWorkerIds.push(i);
-				this.__work();
+				await this.__work();
 
 				return;
+			}
+
+			if (workerThreadMessage.kind === 'error') {
+				console.error(workerThreadMessage.message);
 			}
 		};
 	}

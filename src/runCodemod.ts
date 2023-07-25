@@ -272,6 +272,13 @@ export const runCodemod = async (
 			source,
 			flowSettings.usePrettier,
 			paths.slice(),
+			async (path) => {
+				const data = await fileSystem.promises.readFile(path, {
+					encoding: 'utf8',
+				});
+
+				return data as string;
+			},
 			(message) => {
 				if (message.kind === 'finish') {
 					resolve();

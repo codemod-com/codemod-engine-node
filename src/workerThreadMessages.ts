@@ -8,6 +8,10 @@ const workerThreadMessageSchema = S.union(
 	S.struct({
 		kind: S.literal('idleness'),
 	}),
+	S.struct({
+		kind: S.literal('error'),
+		message: S.string,
+	}),
 );
 
 export type WorkerThreadMessage = S.To<typeof workerThreadMessageSchema>;
