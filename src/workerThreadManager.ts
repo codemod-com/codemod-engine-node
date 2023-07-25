@@ -127,14 +127,12 @@ export class WorkerThreadManager {
 			const workerThreadMessage = decodeWorkerThreadMessage(m);
 
 			if (workerThreadMessage.kind === 'idleness') {
-				const progressMessage: ProgressMessage = {
+				this.__printer.log({
 					kind: 'progress',
 					processedFileNumber:
 						this.__totalFileCount - this.__filePaths.length,
 					totalFileNumber: this.__totalFileCount,
-				};
-
-				console.log(JSON.stringify(progressMessage));
+				});
 
 				this.__idleWorkerIds.push(i);
 				this.__work();

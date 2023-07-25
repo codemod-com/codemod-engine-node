@@ -209,46 +209,9 @@ export const executeMainThread = async () => {
 		const flowSettings = S.parseSync(flowSettingsSchema)(argv);
 		const runSettings = S.parseSync(runSettingsSchema)(argv);
 
-		let commands: readonly FormattedFileCommand[];
-
-		if ('name' in codemodSettings) {
-			printer.info(
-				'Executing the "%s" codemod against "%s"',
-				codemodSettings.name,
-				flowSettings.inputDirectoryPath,
-			);
-
-			const codemod = await codemodDownloader.download(
-				codemodSettings.name,
-				flowSettings.useCache,
-			);
-
-			commands = await runCodemod(
-				// @ts-expect-error type inconsistency
-				fs,
-				printer,
-				codemod,
-				flowSettings,
-				runSettings,
-			);
-		} else {
-			const codemod = {
-				source: 'fileSystem' as const,
-				engine: codemodSettings.codemodEngine,
-				indexPath: codemodSettings.sourcePath,
-			};
-
-			commands = await runCodemod(
-				// @ts-expect-error type inconsistency
-				fs,
-				printer,
-				codemod,
-				flowSettings,
-				runSettings,
-			);
-		}
-
-		for (const command of commands) {
+		const handleCommand = async (
+			command: FormattedFileCommand,
+		): Promise<void> => {
 			await modifyFileSystemUponCommand(
 				// @ts-expect-error type inconsistency
 				fs,
@@ -264,6 +227,45 @@ export const executeMainThread = async () => {
 			if (printerMessage) {
 				printer.log(printerMessage);
 			}
+		};
+
+		if ('name' in codemodSettings) {
+			printer.info(
+				'Executing the "%s" codemod against "%s"',
+				codemodSettings.name,
+				flowSettings.inputDirectoryPath,
+			);
+
+			const codemod = await codemodDownloader.download(
+				codemodSettings.name,
+				flowSettings.useCache,
+			);
+
+			await runCodemod(
+				// @ts-expect-error type inconsistency
+				fs,
+				printer,
+				codemod,
+				flowSettings,
+				runSettings,
+				handleCommand,
+			);
+		} else {
+			const codemod = {
+				source: 'fileSystem' as const,
+				engine: codemodSettings.codemodEngine,
+				indexPath: codemodSettings.sourcePath,
+			};
+
+			await runCodemod(
+				// @ts-expect-error type inconsistency
+				fs,
+				printer,
+				codemod,
+				flowSettings,
+				runSettings,
+				handleCommand,
+			);
 		}
 	} catch (error) {
 		if (!(error instanceof Error)) {

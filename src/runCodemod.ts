@@ -70,7 +70,8 @@ export const runCodemod = async (
 	codemod: Codemod,
 	flowSettings: FlowSettings,
 	runSettings: RunSettings,
-): Promise<readonly FormattedFileCommand[]> => {
+	onCommand: (command: FormattedFileCommand) => Promise<void>,
+): Promise<void> => {
 	const name = 'name' in codemod ? codemod.name : codemod.indexPath;
 
 	printer.info('Running the "%s" codemod using "%s"', name, codemod.engine);
@@ -82,12 +83,17 @@ export const runCodemod = async (
 	if (codemod.engine === 'recipe') {
 		if (!runSettings.dryRun) {
 			for (const subCodemod of codemod.codemods) {
-				const commands = await runCodemod(
+				const commands: FormattedFileCommand[] = [];
+
+				await runCodemod(
 					fileSystem,
 					printer,
 					subCodemod,
 					flowSettings,
 					runSettings,
+					async (command) => {
+						commands.push(command);
+					},
 				);
 
 				for (const command of commands) {
@@ -99,7 +105,7 @@ export const runCodemod = async (
 				}
 			}
 
-			return [];
+			return;
 		}
 
 		// establish a in-memory file system
@@ -124,13 +130,18 @@ export const runCodemod = async (
 		}
 
 		for (const subCodemod of codemod.codemods) {
-			const commands = await runCodemod(
+			const commands: FormattedFileCommand[] = [];
+
+			await runCodemod(
 				mfs,
 				printer,
 				subCodemod,
 				flowSettings,
 				{
 					dryRun: false,
+				},
+				async (command) => {
+					commands.push(command);
 				},
 			);
 
@@ -195,7 +206,13 @@ export const runCodemod = async (
 			});
 		}
 
-		return buildFormattedFileCommands(fileCommands);
+		const commands = await buildFormattedFileCommands(fileCommands);
+
+		for (const command of commands) {
+			await onCommand(command);
+		}
+
+		return;
 	}
 
 	const source = fs.readFileSync(codemod.indexPath, {
@@ -271,7 +288,13 @@ export const runCodemod = async (
 			flowSettings.usePrettier,
 		);
 
-		return buildFormattedFileCommands(fileCommands);
+		const commands = await buildFormattedFileCommands(fileCommands);
+
+		for (const command of commands) {
+			await onCommand(command);
+		}
+
+		return;
 	} else {
 		const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
 
