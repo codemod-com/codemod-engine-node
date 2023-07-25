@@ -1,7 +1,13 @@
+import { isMainThread } from 'worker_threads';
 import { executeMainThread } from './executeMainThread.js';
+import { executeWorkerThread } from './executeWorkerThread.js';
 
-executeMainThread().catch((error) => {
-	if (error instanceof Error) {
-		console.error(JSON.stringify({ message: error.message }));
-	}
-});
+if (isMainThread) {
+	executeMainThread().catch((error) => {
+		if (error instanceof Error) {
+			console.error(JSON.stringify({ message: error.message }));
+		}
+	});
+} else {
+	executeWorkerThread();
+}
