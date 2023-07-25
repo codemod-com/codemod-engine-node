@@ -1,3 +1,5 @@
+import * as readline from 'node:readline';
+import { Interface } from 'node:readline';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import * as S from '@effect/schema/Schema';
@@ -74,6 +76,20 @@ const runSettingsSchema = S.union(
 export type RunSettings = S.To<typeof runSettingsSchema>;
 
 export const executeMainThread = async () => {
+	const interfaze = readline.createInterface(process.stdin);
+
+	const lineHandler = (line: string): void => {
+		if (line === 'shutdown') {
+			interfaze.off('line', lineHandler);
+
+			process.exit(0);
+		}
+	};
+
+	interfaze.on('line', lineHandler);
+
+	process.stdin.unref();
+
 	const argv = await Promise.resolve(
 		yargs(hideBin(process.argv))
 			.scriptName('intuita')
@@ -181,7 +197,7 @@ export const executeMainThread = async () => {
 				return;
 			}
 
-			printer.error(error);
+			printer.log({ kind: 'error', message: error.message });
 		}
 
 		return;
@@ -204,7 +220,7 @@ export const executeMainThread = async () => {
 				return;
 			}
 
-			printer.error(error);
+			printer.log({ kind: 'error', message: error.message });
 		}
 	}
 
@@ -286,6 +302,6 @@ export const executeMainThread = async () => {
 			return;
 		}
 
-		printer.error(error);
+		printer.log({ kind: 'error', message: error.message });
 	}
 };

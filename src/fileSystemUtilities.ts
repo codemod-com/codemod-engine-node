@@ -1,15 +1,5 @@
 import Axios from 'axios';
-import { readFile, stat, writeFile } from 'fs/promises';
-
-const getModificationTime = async (path: string): Promise<number> => {
-	try {
-		const { mtimeMs } = await stat(path);
-
-		return mtimeMs;
-	} catch (error) {
-		return 0;
-	}
-};
+import { readFile, writeFile } from 'fs/promises';
 
 export const downloadFile = async (
 	url: string,
@@ -17,20 +7,6 @@ export const downloadFile = async (
 	cache: boolean,
 ): Promise<Buffer> => {
 	if (cache) {
-		return readFile(path);
-	}
-
-	const localModificationTime = await getModificationTime(path);
-
-	const headResponse = await Axios.head(url, { timeout: 5000 });
-
-	const lastModified = headResponse?.headers['last-modified'] ?? null;
-
-	const remoteModificationTime = lastModified
-		? Date.parse(lastModified)
-		: localModificationTime;
-
-	if (localModificationTime >= remoteModificationTime) {
 		return readFile(path);
 	}
 
