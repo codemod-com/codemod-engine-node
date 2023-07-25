@@ -6,9 +6,19 @@ import { CodemodDownloader } from './downloadCodemod.js';
 import { runCodemod } from './runCodemod.js';
 import { Printer } from './printer.js';
 
-const codemodSettingsSchema = S.struct({
-	name: S.string,
-});
+const codemodSettingsSchema = S.union(
+	S.struct({
+		name: S.string,
+	}),
+	S.struct({
+		sourcePath: S.string,
+		codemodEngine: S.union(
+			S.literal('jscodeshift'),
+			S.literal('repomod-engine'),
+			S.literal('ts-morph'),
+		),
+	}),
+);
 
 export type CodemodSettings = S.To<typeof codemodSettingsSchema>;
 
@@ -81,6 +91,15 @@ export const executeMainThread = async () => {
 						type: 'string',
 						description: 'Name of the codemod in the registry',
 					})
+					.option('sourcePath', {
+						type: 'string',
+						description: 'Source path of the local codemod to run',
+					})
+					.option('codemodEngine', {
+						type: 'string',
+						description:
+							'The engine to use with the local codemod: "jscodeshift", "ts-morph", "repomod-engine"',
+					})
 					.option('fileLimit', {
 						type: 'number',
 						description: 'File limit for processing',
@@ -109,8 +128,7 @@ export const executeMainThread = async () => {
 					.option('outputDirectoryPath', {
 						type: 'string',
 						description: 'Output directory path for dry-run only',
-					})
-					.demandOption('name'),
+					}),
 			)
 			.command('listNames', 'list the codemod names', (y) =>
 				y.option('useJson', {
@@ -185,18 +203,28 @@ export const executeMainThread = async () => {
 		const flowSettings = S.parseSync(flowSettingsSchema)(argv);
 		const runSettings = S.parseSync(runSettingsSchema)(argv);
 
-		printer.info(
-			'Executing the "%s" codemod against "%s"',
-			codemodSettings.name,
-			flowSettings.inputDirectoryPath,
-		);
+		if ('name' in codemodSettings) {
+			printer.info(
+				'Executing the "%s" codemod against "%s"',
+				codemodSettings.name,
+				flowSettings.inputDirectoryPath,
+			);
 
-		const codemod = await codemodDownloader.download(
-			codemodSettings.name,
-			flowSettings.useCache,
-		);
+			const codemod = await codemodDownloader.download(
+				codemodSettings.name,
+				flowSettings.useCache,
+			);
 
-		await runCodemod(printer, codemod, flowSettings, runSettings);
+			await runCodemod(printer, codemod, flowSettings, runSettings);
+		} else {
+			const codemod = {
+				source: 'fileSystem' as const,
+				engine: codemodSettings.codemodEngine,
+				indexPath: codemodSettings.sourcePath,
+			};
+
+			await runCodemod(printer, codemod, flowSettings, runSettings);
+		}
 	} catch (error) {
 		if (!(error instanceof Error)) {
 			return;
