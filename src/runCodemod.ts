@@ -17,6 +17,7 @@ import { Printer } from './printer.js';
 import { Codemod } from './codemod.js';
 import { IFs, Volume, createFsFromVolume } from 'memfs';
 import { createHash } from 'node:crypto';
+import { WorkerThreadManager } from './workerThreadManager.js';
 
 const buildPaths = async (
 	fileSystem: IFs,
@@ -296,6 +297,11 @@ export const runCodemod = async (
 
 		return;
 	}
+
+	// jscodeshift or ts-morph
+
+	const manager = new WorkerThreadManager();
+
 	const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
 
 	for (const path of paths) {

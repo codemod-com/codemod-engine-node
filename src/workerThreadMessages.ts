@@ -2,8 +2,8 @@ import * as S from '@effect/schema/Schema';
 
 const workerThreadMessageSchema = S.union(
 	S.struct({
-		kind: S.literal('message'),
-		message: S.any,
+		kind: S.literal('commands'),
+		commands: S.unknown,
 	}),
 	S.struct({
 		kind: S.literal('idleness'),

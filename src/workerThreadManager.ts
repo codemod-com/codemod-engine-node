@@ -15,13 +15,11 @@ export class WorkerThreadManager {
 
 	public constructor(
 		private readonly __workerCount: number,
-		private readonly __filePaths: string[],
-		private readonly __codemodFilePath: string | null,
-		private readonly __outputDirectoryPath: string,
-		private readonly __codemodHashDigests: ReadonlyArray<string>,
-		private readonly __executionId: string,
+		private readonly __codemodEngine: 'jscodeshift' | 'ts-morph',
+		private readonly __codemodSource: string,
 		private readonly __formatWithPrettier: boolean,
-		private readonly __onPrettierMessage: (message: Message) => void,
+		private readonly __filePaths: string[],
+		private readonly __onPrinterMessage: (message: Message) => void,
 	) {
 		this.__totalFileCount = __filePaths.length;
 
@@ -36,7 +34,7 @@ export class WorkerThreadManager {
 			this.__workers.push(worker);
 		}
 
-		this.__onPrettierMessage({
+		this.__onPrinterMessage({
 			kind: 'progress',
 			processedFileNumber: 0,
 			totalFileNumber: this.__totalFileCount,
@@ -93,12 +91,11 @@ export class WorkerThreadManager {
 		}
 
 		this.__workers[id]?.postMessage({
-			kind: 'recipe',
-			codemodFilePath: this.__codemodFilePath,
-			filePath,
-			codemodHashDigests: this.__codemodHashDigests,
-			outputDirectoryPath: this.__outputDirectoryPath,
-			executionId: this.__executionId,
+			kind: 'runCodemod',
+			path: filePath,
+			data: '', // TODO get it,
+			codemodSource: this.__codemodSource,
+			codemodEngine: this.__codemodEngine,
 			formatWithPrettier: this.__formatWithPrettier,
 		} satisfies MainThreadMessage);
 
@@ -114,7 +111,7 @@ export class WorkerThreadManager {
 			worker.postMessage({ kind: 'exit' } satisfies MainThreadMessage);
 		}
 
-		this.__onPrettierMessage({
+		this.__onPrinterMessage({
 			kind: 'finish',
 		});
 	}
@@ -124,7 +121,7 @@ export class WorkerThreadManager {
 			const workerThreadMessage = decodeWorkerThreadMessage(m);
 
 			if (workerThreadMessage.kind === 'idleness') {
-				this.__onPrettierMessage({
+				this.__onPrinterMessage({
 					kind: 'progress',
 					processedFileNumber:
 						this.__totalFileCount - this.__filePaths.length,
@@ -135,8 +132,8 @@ export class WorkerThreadManager {
 				this.__work();
 			}
 
-			if (workerThreadMessage.kind === 'message') {
-				this.__onPrettierMessage(workerThreadMessage.message);
+			if (workerThreadMessage.kind === 'fileCommand') {
+				this.__onPrinterMessage(workerThreadMessage.message);
 			}
 		};
 	}

@@ -5,12 +5,15 @@ const mainThreadMessageSchema = S.union(
 		kind: S.literal('exit'),
 	}),
 	S.struct({
-		kind: S.literal('recipe'),
-		codemodFilePath: S.union(S.string, S.null),
-		filePath: S.string,
-		outputDirectoryPath: S.string,
-		codemodHashDigests: S.array(S.string),
-		executionId: S.string,
+		kind: S.literal('runCodemod'),
+		codemodSource: S.string,
+		codemodEngine: S.union(
+			S.literal('jscodeshift'),
+			S.literal('repomod-engine'),
+			S.literal('ts-morph'),
+		),
+		path: S.string,
+		data: S.string,
 		formatWithPrettier: S.boolean,
 	}),
 );
