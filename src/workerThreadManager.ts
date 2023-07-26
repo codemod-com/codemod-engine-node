@@ -12,6 +12,7 @@ export class WorkerThreadManager {
 	private __workers: Worker[] = [];
 	private __workerTimestamps: number[] = [];
 	private __totalFileCount: number;
+	private __processedFileNumber = 0;
 	private readonly __interval: NodeJS.Timeout;
 
 	public constructor(
@@ -70,6 +71,18 @@ export class WorkerThreadManager {
 		}, 1000);
 	}
 
+	public async terminateWorkers() {
+		if (this.__finished) {
+			return;
+		}
+
+		clearInterval(this.__interval);
+
+		for (const worker of this.__workers) {
+			await worker.terminate();
+		}
+	}
+
 	private async __work(): Promise<void> {
 		if (this.__finished) {
 			return;
@@ -77,7 +90,14 @@ export class WorkerThreadManager {
 
 		const filePath = this.__filePaths.pop();
 
+		console.error('filePath', filePath);
+
 		if (filePath === undefined) {
+			console.error(
+				'this.__idleWorkerIds.length',
+				this.__idleWorkerIds.length,
+			);
+
 			if (this.__idleWorkerIds.length === this.__workerCount) {
 				this.__finished = true;
 
@@ -134,30 +154,23 @@ export class WorkerThreadManager {
 				for (const command of commands) {
 					await this.__onCommand(command);
 				}
-
-				return;
-			}
-
-			if (workerThreadMessage.kind === 'idleness') {
-				this.__onPrinterMessage({
-					kind: 'progress',
-					processedFileNumber:
-						this.__totalFileCount - this.__filePaths.length,
-					totalFileNumber: this.__totalFileCount,
-				});
-
-				this.__idleWorkerIds.push(i);
-				await this.__work();
-
-				return;
-			}
-
-			if (workerThreadMessage.kind === 'error') {
+			} else if (workerThreadMessage.kind === 'error') {
 				this.__onPrinterMessage({
 					kind: 'error',
 					message: workerThreadMessage.message,
 				});
 			}
+
+			++this.__processedFileNumber;
+
+			this.__onPrinterMessage({
+				kind: 'progress',
+				processedFileNumber: this.__processedFileNumber,
+				totalFileNumber: this.__totalFileCount,
+			});
+
+			this.__idleWorkerIds.push(i);
+			await this.__work();
 		};
 	}
 }

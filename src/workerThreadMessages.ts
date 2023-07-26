@@ -6,9 +6,6 @@ const workerThreadMessageSchema = S.union(
 		commands: S.unknown,
 	}),
 	S.struct({
-		kind: S.literal('idleness'),
-	}),
-	S.struct({
 		kind: S.literal('error'),
 		message: S.string,
 	}),
