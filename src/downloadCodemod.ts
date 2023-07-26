@@ -3,8 +3,6 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { downloadFile } from './fileSystemUtilities.js';
-import { inflate } from 'node:zlib';
-import { promisify } from 'node:util';
 
 import { Printer } from './printer.js';
 import { Codemod, codemodConfigSchema } from './codemod.js';
@@ -13,7 +11,6 @@ import * as tar from 'tar';
 import * as S from '@effect/schema/Schema';
 import Axios from 'axios';
 
-const promisifiedInflate = promisify(inflate);
 const CODEMOD_REGISTRY_URL =
 	'https://intuita-public.s3.us-west-1.amazonaws.com/codemod-registry';
 
@@ -128,19 +125,15 @@ export class CodemodDownloader {
 			config.engine === 'repomod-engine' ||
 			config.engine === 'ts-morph'
 		) {
-			const deflatedIndexPath = join(directoryPath, 'index.cjs.z');
+			const indexPath = join(directoryPath, 'index.cjs');
 
-			const compressedData = await downloadFile(
-				`${CODEMOD_REGISTRY_URL}/${hashDigest}/index.cjs.z`,
-				deflatedIndexPath,
+			const data = await downloadFile(
+				`${CODEMOD_REGISTRY_URL}/${hashDigest}/index.cjs`,
+				indexPath,
 				cache,
 			);
 
-			const inflatedData = await promisifiedInflate(compressedData);
-
-			const indexPath = join(directoryPath, 'index.cjs');
-
-			await writeFile(indexPath, inflatedData);
+			await writeFile(indexPath, data);
 
 			return {
 				source: 'registry',

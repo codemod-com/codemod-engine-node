@@ -160,11 +160,17 @@ export const executeMainThread = async () => {
 					}),
 			)
 			.command('listNames', 'list the codemod names', (y) =>
-				y.option('useJson', {
-					type: 'boolean',
-					description: 'Respond with JSON',
-					default: DEFAULT_USE_JSON,
-				}),
+				y
+					.option('useJson', {
+						type: 'boolean',
+						description: 'Respond with JSON',
+						default: DEFAULT_USE_JSON,
+					})
+					.option('useCache', {
+						type: 'boolean',
+						description: 'Use cache for HTTP(S) requests',
+						default: DEFAULT_USE_CACHE,
+					}),
 			)
 			.command(
 				'getMetadataPath',
@@ -200,7 +206,7 @@ export const executeMainThread = async () => {
 		const printer = new Printer(argv.useJson);
 
 		try {
-			await handleListNamesCommand(printer);
+			await handleListNamesCommand(printer, argv.useCache);
 		} catch (error) {
 			if (!(error instanceof Error)) {
 				return;
