@@ -90,14 +90,7 @@ export class WorkerThreadManager {
 
 		const filePath = this.__filePaths.pop();
 
-		console.error('filePath', filePath);
-
 		if (filePath === undefined) {
-			console.error(
-				'this.__idleWorkerIds.length',
-				this.__idleWorkerIds.length,
-			);
-
 			if (this.__idleWorkerIds.length === this.__workerCount) {
 				this.__finished = true;
 
