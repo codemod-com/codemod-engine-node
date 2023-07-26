@@ -1,5 +1,4 @@
 import * as readline from 'node:readline';
-import { Interface } from 'node:readline';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import * as S from '@effect/schema/Schema';
@@ -183,6 +182,16 @@ export const executeMainThread = async () => {
 						})
 						.demandOption('name'),
 			)
+			.command(
+				'syncRegistry',
+				'syncs all the codemods from the registry',
+				(y) =>
+					y.option('useJson', {
+						type: 'boolean',
+						description: 'Respond with JSON',
+						default: DEFAULT_USE_JSON,
+					}),
+			)
 			.help()
 			.version().argv,
 	);
@@ -222,6 +231,26 @@ export const executeMainThread = async () => {
 
 			printer.log({ kind: 'error', message: error.message });
 		}
+
+		return;
+	}
+
+	if (String(argv._) === 'syncRegistry') {
+		const printer = new Printer(argv.useJson);
+
+		const codemodDownloader = new CodemodDownloader(printer);
+
+		try {
+			await codemodDownloader.syncRegistry();
+		} catch (error) {
+			if (!(error instanceof Error)) {
+				return;
+			}
+
+			printer.log({ kind: 'error', message: error.message });
+		}
+
+		return;
 	}
 
 	const printer = new Printer(argv.useJson);

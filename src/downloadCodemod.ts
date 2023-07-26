@@ -8,8 +8,10 @@ import { promisify } from 'node:util';
 
 import { Printer } from './printer.js';
 import { Codemod, codemodConfigSchema } from './codemod.js';
+import * as tar from 'tar';
 
 import * as S from '@effect/schema/Schema';
+import Axios from 'axios';
 
 const promisifiedInflate = promisify(inflate);
 const CODEMOD_REGISTRY_URL =
@@ -17,6 +19,42 @@ const CODEMOD_REGISTRY_URL =
 
 export class CodemodDownloader {
 	public constructor(private readonly __printer: Printer) {}
+
+	public async syncRegistry() {
+		this.__printer.info('Syncing the Codemod Registry');
+
+		const intuitaDirectoryPath = join(homedir(), '.intuita');
+
+		await mkdir(intuitaDirectoryPath, { recursive: true });
+
+		const getResponse = await Axios.get(
+			`${CODEMOD_REGISTRY_URL}/registry.tar.gz`,
+			{
+				responseType: 'arraybuffer',
+			},
+		);
+
+		const buffer = Buffer.from(getResponse.data);
+
+		const extractStream = tar.extract({
+			cwd: intuitaDirectoryPath,
+			newer: false,
+			keep: false,
+		});
+
+		return new Promise<void>((resolve, reject) => {
+			extractStream.once('error', (error) => {
+				reject(error);
+			});
+
+			extractStream.once('finish', () => {
+				resolve();
+			});
+
+			extractStream.write(buffer);
+			extractStream.end();
+		});
+	}
 
 	public async download(
 		name: string,
