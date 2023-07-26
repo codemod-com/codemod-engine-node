@@ -5,7 +5,10 @@ import * as S from '@effect/schema/Schema';
 import { downloadFile } from './fileSystemUtilities.js';
 import { Printer } from './printer.js';
 
-export const handleListNamesCommand = async (printer: Printer) => {
+export const handleListNamesCommand = async (
+	printer: Printer,
+	cache: boolean,
+) => {
 	const intuitaDirectoryPath = join(homedir(), '.intuita');
 
 	await mkdir(intuitaDirectoryPath, { recursive: true });
@@ -15,7 +18,7 @@ export const handleListNamesCommand = async (printer: Printer) => {
 	const buffer = await downloadFile(
 		'https://intuita-public.s3.us-west-1.amazonaws.com/codemod-registry/names.json',
 		path,
-		false,
+		cache,
 	);
 
 	const data = buffer.toString('utf8');
