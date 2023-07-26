@@ -6,6 +6,7 @@ const mainThreadMessageSchema = S.union(
 	}),
 	S.struct({
 		kind: S.literal('runCodemod'),
+		codemodPath: S.string,
 		codemodSource: S.string,
 		codemodEngine: S.union(
 			S.literal('jscodeshift'),

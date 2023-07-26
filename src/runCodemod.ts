@@ -231,11 +231,11 @@ export const runCodemod = async (
 		return;
 	}
 
-	const source = fs.readFileSync(codemod.indexPath, {
+	const codemodSource = fs.readFileSync(codemod.indexPath, {
 		encoding: 'utf8',
 	});
 
-	const transformer = getTransformer(source);
+	const transformer = getTransformer(codemod.indexPath, codemodSource);
 
 	if (transformer === null) {
 		throw new Error(
@@ -277,8 +277,9 @@ export const runCodemod = async (
 
 		const workerThreadManager = new WorkerThreadManager(
 			flowSettings.threadCount,
+			codemod.indexPath,
 			engine,
-			source,
+			codemodSource,
 			flowSettings.usePrettier,
 			paths.slice(),
 			async (path) => {
