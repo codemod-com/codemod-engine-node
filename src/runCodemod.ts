@@ -273,7 +273,9 @@ export const runCodemod = async (
 	const { engine } = codemod;
 
 	await new Promise<void>((resolve) => {
-		new WorkerThreadManager(
+		let timeout: NodeJS.Timeout | null = null;
+
+		const workerThreadManager = new WorkerThreadManager(
 			flowSettings.threadCount,
 			engine,
 			source,
@@ -287,11 +289,23 @@ export const runCodemod = async (
 				return data as string;
 			},
 			(message) => {
-				if (message.kind === 'finish') {
-					resolve();
+				onPrinterMessage(message);
+
+				if (timeout) {
+					clearTimeout(timeout);
 				}
 
-				onPrinterMessage(message);
+				if (message.kind === 'finish') {
+					resolve();
+
+					return;
+				}
+
+				timeout = setTimeout(async () => {
+					await workerThreadManager.terminateWorkers();
+
+					resolve();
+				}, 5000);
 			},
 			onCommand,
 		);

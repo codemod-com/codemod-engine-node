@@ -8,14 +8,14 @@ import { buildFormattedFileCommands } from './fileCommands.js';
 import { getTransformer } from './getTransformer.js';
 
 const messageHandler = async (m: unknown) => {
-	const message = decodeMainThreadMessage(m);
-
-	if (message.kind === 'exit') {
-		parentPort?.off('message', messageHandler);
-		return;
-	}
-
 	try {
+		const message = decodeMainThreadMessage(m);
+
+		if (message.kind === 'exit') {
+			parentPort?.off('message', messageHandler);
+			return;
+		}
+
 		const transformer = getTransformer(message.codemodSource);
 
 		const fileCommands =
@@ -46,14 +46,9 @@ const messageHandler = async (m: unknown) => {
 			parentPort?.postMessage({
 				kind: 'error',
 				message: error.message,
-			} satisfies WorkerThreadMessage)
+			} satisfies WorkerThreadMessage);
 		}
-		// TODO
 	}
-
-	parentPort?.postMessage({
-		kind: 'idleness',
-	} satisfies WorkerThreadMessage);
 };
 
 export const executeWorkerThread = () => {
