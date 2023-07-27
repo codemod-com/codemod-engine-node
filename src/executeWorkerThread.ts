@@ -16,7 +16,10 @@ const messageHandler = async (m: unknown) => {
 			return;
 		}
 
-		const transformer = getTransformer(message.codemodSource);
+		const transformer = getTransformer(
+			message.codemodPath,
+			message.codemodSource,
+		);
 
 		const fileCommands =
 			message.codemodEngine === 'jscodeshift'

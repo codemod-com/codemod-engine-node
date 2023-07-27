@@ -1,9 +1,23 @@
 import * as tsmorph from 'ts-morph';
+import ts from 'typescript';
 import nodePath from 'node:path';
 import { Repomod } from '@intuita-inc/repomod-engine-api';
 import { Dependencies } from './runRepomod.js';
 
-export const getTransformer = (source: string) => {
+export const getTransformer = (codemodPath: string, codemodSource: string) => {
+	let source: string = codemodSource;
+
+	if (codemodPath.endsWith('.ts')) {
+		const { outputText } = ts.transpileModule(codemodSource, {
+			compilerOptions: {
+				target: ts.ScriptTarget.ES5,
+				module: ts.ModuleKind.CommonJS,
+			},
+		});
+
+		source = outputText;
+	}
+
 	type Exports =
 		| {
 				__esModule?: true;
@@ -15,7 +29,7 @@ export const getTransformer = (source: string) => {
 		| Function;
 
 	const module = { exports: {} as Exports };
-	const req = (name: string) => {
+	const _require = (name: string) => {
 		if (name === 'ts-morph') {
 			return tsmorph;
 		}
@@ -25,8 +39,8 @@ export const getTransformer = (source: string) => {
 		}
 	};
 
-	const keys = ['module', 'require'];
-	const values = [module, req];
+	const keys = ['module', 'exports', 'require'];
+	const values = [module, module.exports, _require];
 
 	// eslint-disable-next-line prefer-spread
 	new Function(...keys, source).apply(null, values);

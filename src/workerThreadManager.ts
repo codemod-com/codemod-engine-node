@@ -17,6 +17,7 @@ export class WorkerThreadManager {
 
 	public constructor(
 		private readonly __workerCount: number,
+		private readonly __codemodPath: string,
 		private readonly __codemodEngine: 'jscodeshift' | 'ts-morph',
 		private readonly __codemodSource: string,
 		private readonly __formatWithPrettier: boolean,
@@ -114,6 +115,7 @@ export class WorkerThreadManager {
 			kind: 'runCodemod',
 			path: filePath,
 			data,
+			codemodPath: this.__codemodPath,
 			codemodSource: this.__codemodSource,
 			codemodEngine: this.__codemodEngine,
 			formatWithPrettier: this.__formatWithPrettier,
