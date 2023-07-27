@@ -1,10 +1,11 @@
 import { Printer } from './printer.js';
-import open from 'open';
 import {
 	getGitDiffForFile,
 	getLatestCommitHash,
 	isFileInGitDirectory,
 } from './gitCommands.js';
+import { spawnSync } from 'node:child_process';
+import { dirname } from 'node:path';
 
 const encode = (code: string): string => {
 	const buffer = Buffer.from(code);
@@ -18,6 +19,37 @@ const UrlParamKeys = {
 	codemodSource: 'codemodSource' as const,
 };
 
+const openURL = (url: string): boolean => {
+	// `spawnSync` is used because `execSync` has an input length limit
+	let command;
+	let args;
+
+	if (process.platform === 'win32') {
+		command = 'start';
+		args = [url];
+	} else if (process.platform === 'darwin') {
+		command = 'open';
+		args = [url];
+	} else {
+		try {
+			spawnSync('xdg-open', [url], { stdio: 'ignore', shell: true });
+			return true;
+		} catch (error) {
+			command = 'gnome-open';
+			args = [url];
+			return false;
+		}
+	}
+
+	try {
+		spawnSync(command, args, { stdio: 'ignore', shell: true });
+		return true;
+	} catch (error) {
+		console.error('Error while opening URL:', error);
+		return false;
+	}
+};
+
 const createCodemodStudioURL = ({
 	engine,
 	beforeSnippet,
@@ -26,21 +58,22 @@ const createCodemodStudioURL = ({
 	engine: 'jscodeshift' | 'tsmorph';
 	beforeSnippet: string;
 	afterSnippet: string;
-}): URL | null => {
+}): string | null => {
 	try {
 		const encodedEngine = encode(engine);
-		const encodedInputSnippet = encode(beforeSnippet);
-		const encodedOutputSnippet = encode(afterSnippet);
-
-		const searchParams = new URLSearchParams(window.location.search);
-		searchParams.set(UrlParamKeys.engine, encodedEngine);
-		searchParams.set(UrlParamKeys.beforeSnippet, encodedInputSnippet);
-		searchParams.set(UrlParamKeys.afterSnippet, encodedOutputSnippet);
+		const encodedBeforeSnippet = encode(beforeSnippet);
+		const encodedAfterSnippet = encode(afterSnippet);
 
 		const url = new URL('https://codemod.studio/');
+		const searchParams = new URLSearchParams([
+			[UrlParamKeys.engine, encodedEngine],
+			[UrlParamKeys.beforeSnippet, encodedBeforeSnippet],
+			[UrlParamKeys.afterSnippet, encodedAfterSnippet],
+		]);
+
 		url.search = searchParams.toString();
 
-		return url;
+		return url.toString();
 	} catch (error) {
 		console.error(error);
 		return null;
@@ -60,7 +93,7 @@ export const handleLearnCliCommand = async (
 		return;
 	}
 
-	const latestCommitHash = getLatestCommitHash(filePath);
+	const latestCommitHash = getLatestCommitHash(dirname(filePath));
 	if (latestCommitHash === null) {
 		printer.log({
 			kind: 'error',
@@ -87,6 +120,15 @@ export const handleLearnCliCommand = async (
 
 	const { removedCode, addedCode } = gitDiff;
 
+	if (removedCode === '' && addedCode === '') {
+		printer.log({
+			kind: 'error',
+			message:
+				'There is no difference between the status of the file and that at the previous commit.',
+		});
+		return;
+	}
+
 	const url = createCodemodStudioURL({
 		// TODO: Support other engines in the future
 		engine: 'jscodeshift',
@@ -106,5 +148,13 @@ export const handleLearnCliCommand = async (
 		kind: 'info',
 		message: 'Learning went successful! Opening Codemod Studio...',
 	});
-	await open(url.toString());
+
+	const success = openURL(url);
+	if (!success) {
+		printer.log({
+			kind: 'error',
+			message: 'Unexpected error occurred while opening Codemod Studio.',
+		});
+		return;
+	}
 };

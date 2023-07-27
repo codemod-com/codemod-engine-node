@@ -34,9 +34,9 @@ export const getGitDiffForFile = (
 				InRemovedSection = line.includes('-');
 				InAddedSection = line.includes('+');
 			} else if (line.startsWith('-') && InRemovedSection) {
-				removedCode += line.substring(1) + '\n';
+				removedCode += line.substring(1).trim() + '\n';
 			} else if (line.startsWith('+') && InAddedSection) {
-				addedCode += line.substring(1) + '\n';
+				addedCode += line.substring(1).trim() + '\n';
 			}
 		}
 
@@ -50,9 +50,9 @@ export const getGitDiffForFile = (
 	}
 };
 
-export const getLatestCommitHash = (path: string): string | null => {
+export const getLatestCommitHash = (directoryPath: string): string | null => {
 	try {
-		const gitLog = execSync(`git -C ${path} log -n 1 --format=%H`);
+		const gitLog = execSync(`git -C ${directoryPath} log -n 1 --format=%H`);
 		return gitLog.toString().trim();
 	} catch (error) {
 		if (!(error instanceof Error)) {
