@@ -26,16 +26,16 @@ export const getGitDiffForFile = (
 		const lines = output.split('\n');
 		let removedCode = '';
 		let addedCode = '';
-		let isInRemovedSection = false;
-		let isInAddedSection = false;
+		let InRemovedSection = false;
+		let InAddedSection = false;
 
 		for (const line of lines) {
 			if (line.startsWith('@@')) {
-				isInRemovedSection = line.includes('-');
-				isInAddedSection = line.includes('+');
-			} else if (line.startsWith('-') && isInRemovedSection) {
+				InRemovedSection = line.includes('-');
+				InAddedSection = line.includes('+');
+			} else if (line.startsWith('-') && InRemovedSection) {
 				removedCode += line.substring(1) + '\n';
-			} else if (line.startsWith('+') && isInAddedSection) {
+			} else if (line.startsWith('+') && InAddedSection) {
 				addedCode += line.substring(1) + '\n';
 			}
 		}
