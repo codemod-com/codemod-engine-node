@@ -50,9 +50,9 @@ export const getGitDiffForFile = (
 	}
 };
 
-export const getLatestCommitHash = (directoryPath: string): string | null => {
+export const getLatestCommitHash = (path: string): string | null => {
 	try {
-		const gitLog = execSync(`git -C ${directoryPath} log -n 1 --format=%H`);
+		const gitLog = execSync(`git -C ${path} log -n 1 --format=%H`);
 		return gitLog.toString().trim();
 	} catch (error) {
 		if (!(error instanceof Error)) {
