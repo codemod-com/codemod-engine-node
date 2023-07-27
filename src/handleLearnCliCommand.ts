@@ -32,7 +32,10 @@ const openURL = (url: string): boolean => {
 		args = [url];
 	} else {
 		try {
-			spawnSync('xdg-open', [url], { stdio: 'ignore', shell: true });
+			// By setting `shell: false`,
+			// we avoid potential command-line length limitations
+			// and the full URL should be passed to the default web browser without getting truncated
+			spawnSync('xdg-open', [url], { stdio: 'ignore', shell: false });
 			return true;
 		} catch (error) {
 			command = 'gnome-open';
@@ -42,7 +45,7 @@ const openURL = (url: string): boolean => {
 	}
 
 	try {
-		spawnSync(command, args, { stdio: 'ignore', shell: true });
+		spawnSync(command, args, { stdio: 'ignore', shell: false });
 		return true;
 	} catch (error) {
 		console.error('Error while opening URL:', error);

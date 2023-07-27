@@ -25,13 +25,14 @@ export const codemodConfigSchema = S.union(
 	}),
 );
 
-export type Codemod =
+export type NewCodemod =
 	| Readonly<{
 			source: 'registry';
-			name: string;
+			// hello hello
+			name: number;
 			engine: 'recipe';
 			directoryPath: string;
-			codemods: ReadonlyArray<Codemod>;
+			codemods: ReadonlyArray<NewCodemod>;
 	  }>
 	| Readonly<{
 			source: 'registry';
