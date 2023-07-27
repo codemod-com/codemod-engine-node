@@ -13,6 +13,7 @@ import {
 	modifyFileSystemUponCommand,
 } from './fileCommands.js';
 import { Message } from './messages.js';
+import { handleLearnCliCommand } from './handleLearnCliCommand.js';
 
 const codemodSettingsSchema = S.union(
 	S.struct({
@@ -198,6 +199,22 @@ export const executeMainThread = async () => {
 						default: DEFAULT_USE_JSON,
 					}),
 			)
+			.command(
+				'learn',
+				'exports the current `git diff` in a file to before/after panels in codemod studio',
+				(y) =>
+					y
+						.option('useJson', {
+							type: 'boolean',
+							description: 'Respond with JSON',
+							default: DEFAULT_USE_JSON,
+						})
+						.option('inputFilePath', {
+							type: 'string',
+							description: 'Input file path',
+						})
+						.demandOption('inputFilePath'),
+			)
 			.help()
 			.version().argv,
 	);
@@ -248,6 +265,22 @@ export const executeMainThread = async () => {
 
 		try {
 			await codemodDownloader.syncRegistry();
+		} catch (error) {
+			if (!(error instanceof Error)) {
+				return;
+			}
+
+			printer.log({ kind: 'error', message: error.message });
+		}
+
+		return;
+	}
+
+	if (String(argv._) === 'learn') {
+		const printer = new Printer(argv.useJson);
+
+		try {
+			await handleLearnCliCommand(printer, argv.inputFilePath);
 		} catch (error) {
 			if (!(error instanceof Error)) {
 				return;
