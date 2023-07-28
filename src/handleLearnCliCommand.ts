@@ -1,6 +1,6 @@
 import { Printer } from './printer.js';
 import {
-	findFirstModifiedFile,
+	findLastModifiedFile,
 	getGitDiffForFile,
 	getLatestCommitHash,
 	isFileInGitDirectory,
@@ -86,7 +86,7 @@ export const handleLearnCliCommand = async (
 		return;
 	}
 
-	const path = filePath ?? findFirstModifiedFile();
+	const path = filePath ?? findLastModifiedFile();
 
 	if (path === null) {
 		printer.log({
