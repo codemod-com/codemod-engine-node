@@ -31,12 +31,15 @@ export const getGitDiffForFile = (
 
 		for (const line of lines) {
 			if (line.startsWith('@@')) {
+				codeSnippetStarted = true;
+
 				const firstLineOfCode = (
 					line.substring(line.lastIndexOf('@@') + 2) ?? ''
 				).trimEnd();
-				removedCode += firstLineOfCode + '\n';
-				addedCode += firstLineOfCode + '\n';
-				codeSnippetStarted = true;
+				if (firstLineOfCode) {
+					removedCode += firstLineOfCode + '\n';
+					addedCode += firstLineOfCode + '\n';
+				}
 				continue;
 			}
 
