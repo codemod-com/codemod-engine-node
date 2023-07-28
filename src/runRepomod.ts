@@ -35,7 +35,7 @@ export type Dependencies = Readonly<{
 	parseMdx: typeof parseMdx;
 	stringifyMdx: typeof stringifyMdx;
 	visitMdxAst: typeof visit;
-	unifiedFileSystem:  UnifiedFileSystem, 
+	unifiedFileSystem: UnifiedFileSystem;
 }>;
 
 export const runRepomod = async (
@@ -65,7 +65,7 @@ export const runRepomod = async (
 		parseMdx,
 		stringifyMdx,
 		visitMdxAst: visit,
-		unifiedFileSystem, 
+		unifiedFileSystem,
 	}));
 
 	const externalFileCommands = await executeRepomod(
