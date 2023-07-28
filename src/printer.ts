@@ -41,4 +41,12 @@ export class Printer {
 
 		console.info(message, ...optionalParams);
 	}
+
+	public warn(message: string) {
+		if (this.__useJson) {
+			return;
+		}
+
+		console.warn(message);
+	}
 }

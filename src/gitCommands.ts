@@ -63,16 +63,15 @@ export const getLatestCommitHash = (directoryPath: string): string | null => {
 	}
 };
 
-export const findLastModifiedFile = (): string | null => {
+export const findModifiedFiles = (): string[] | null => {
 	try {
 		const modifiedFiles = execSync('git ls-files --modified', {
 			encoding: 'utf-8',
 		});
 		const fileList = modifiedFiles.trim().split('\n');
-		const lastModifiedFile = fileList[fileList.length - 1];
-		return lastModifiedFile;
+		return fileList;
 	} catch (error) {
-		console.error('Error finding the last modified file:', error);
+		console.error('Error finding the modified files:', error);
 		return null;
 	}
 };
