@@ -7,16 +7,14 @@ import {
 import { spawnSync } from 'node:child_process';
 import { dirname } from 'node:path';
 
-const encode = (code: string): string => {
-	const buffer = Buffer.from(code);
-	return buffer.toString('base64url');
-};
+const encode = (code: string): string =>
+	Buffer.from(code).toString('base64url');
 
 const UrlParamKeys = {
-	engine: 'engine' as const,
-	beforeSnippet: 'beforeSnippet' as const,
-	afterSnippet: 'afterSnippet' as const,
-	codemodSource: 'codemodSource' as const,
+	Engine: 'engine' as const,
+	BeforeSnippet: 'beforeSnippet' as const,
+	AfterSnippet: 'afterSnippet' as const,
+	CodemodSource: 'codemodSource' as const,
 };
 
 const openURL = (url: string): boolean => {
@@ -27,22 +25,13 @@ const openURL = (url: string): boolean => {
 	if (process.platform === 'win32') {
 		command = 'start';
 		args = [url];
-	} else if (process.platform === 'darwin') {
+	} else {
 		command = 'open';
 		args = [url];
-	} else {
-		try {
-			// By setting `shell: false`,
-			// we avoid potential command-line length limitations
-			// and the full URL should be passed to the default web browser without getting truncated
-			spawnSync('xdg-open', [url], { stdio: 'ignore', shell: false });
-			return true;
-		} catch (error) {
-			command = 'gnome-open';
-			args = [url];
-			return false;
-		}
 	}
+	// By setting `shell: false`,
+	// we avoid potential command-line length limitations
+	// and the full URL should be passed to the default web browser without getting truncated
 
 	try {
 		spawnSync(command, args, { stdio: 'ignore', shell: false });
@@ -69,9 +58,9 @@ const createCodemodStudioURL = ({
 
 		const url = new URL('https://codemod.studio/');
 		const searchParams = new URLSearchParams([
-			[UrlParamKeys.engine, encodedEngine],
-			[UrlParamKeys.beforeSnippet, encodedBeforeSnippet],
-			[UrlParamKeys.afterSnippet, encodedAfterSnippet],
+			[UrlParamKeys.Engine, encodedEngine],
+			[UrlParamKeys.BeforeSnippet, encodedBeforeSnippet],
+			[UrlParamKeys.AfterSnippet, encodedAfterSnippet],
 		]);
 
 		url.search = searchParams.toString();
