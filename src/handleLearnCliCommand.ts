@@ -1,5 +1,6 @@
 import { Printer } from './printer.js';
 import {
+	findFirstModifiedFile,
 	getGitDiffForFile,
 	getLatestCommitHash,
 	isFileInGitDirectory,
@@ -74,9 +75,9 @@ const createCodemodStudioURL = ({
 
 export const handleLearnCliCommand = async (
 	printer: Printer,
-	filePath: string,
+	filePath: string | null,
 ) => {
-	if (!isFileInGitDirectory(filePath)) {
+	if (filePath !== null && !isFileInGitDirectory(filePath)) {
 		printer.log({
 			kind: 'error',
 			message:
@@ -85,7 +86,18 @@ export const handleLearnCliCommand = async (
 		return;
 	}
 
-	const latestCommitHash = getLatestCommitHash(dirname(filePath));
+	const path = filePath || findFirstModifiedFile();
+
+	if (path === null) {
+		printer.log({
+			kind: 'error',
+			message:
+				'We could not find any modified file to run the command on.',
+		});
+		return;
+	}
+
+	const latestCommitHash = getLatestCommitHash(dirname(path));
 	if (latestCommitHash === null) {
 		printer.log({
 			kind: 'error',
@@ -95,12 +107,9 @@ export const handleLearnCliCommand = async (
 		return;
 	}
 
-	printer.log({
-		kind: 'info',
-		message: `Learning \`git diff\` in ${filePath}...`,
-	});
+	printer.info(`Learning \`git diff\` starts on ${path}...`);
 
-	const gitDiff = getGitDiffForFile(latestCommitHash, filePath);
+	const gitDiff = getGitDiffForFile(latestCommitHash, path);
 	if (gitDiff === null) {
 		printer.log({
 			kind: 'error',
@@ -136,10 +145,7 @@ export const handleLearnCliCommand = async (
 		return;
 	}
 
-	printer.log({
-		kind: 'info',
-		message: 'Learning went successful! Opening Codemod Studio...',
-	});
+	printer.info('Learning went successful! Opening Codemod Studio...');
 
 	const success = openURL(url);
 	if (!success) {
