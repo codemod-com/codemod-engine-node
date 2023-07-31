@@ -212,8 +212,7 @@ export const executeMainThread = async () => {
 						.option('inputFilePath', {
 							type: 'string',
 							description: 'Input file path',
-						})
-						.demandOption('inputFilePath'),
+						}),
 			)
 			.help()
 			.version().argv,
@@ -280,7 +279,7 @@ export const executeMainThread = async () => {
 		const printer = new Printer(argv.useJson);
 
 		try {
-			await handleLearnCliCommand(printer, argv.inputFilePath);
+			await handleLearnCliCommand(printer, argv.inputFilePath ?? null);
 		} catch (error) {
 			if (!(error instanceof Error)) {
 				return;
