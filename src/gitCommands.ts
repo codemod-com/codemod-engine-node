@@ -24,19 +24,36 @@ export const getGitDiffForFile = (
 		const diff = execSync(`git diff ${commitHash} --unified=1 ${filePath}`);
 		const output = diff.toString();
 		const lines = output.split('\n');
+
 		let removedCode = '';
 		let addedCode = '';
-		let InRemovedSection = false;
-		let InAddedSection = false;
+		let codeSnippetStarted = false;
 
 		for (const line of lines) {
 			if (line.startsWith('@@')) {
-				InRemovedSection = line.includes('-');
-				InAddedSection = line.includes('+');
-			} else if (line.startsWith('-') && InRemovedSection) {
-				removedCode += line.substring(1).trim() + '\n';
-			} else if (line.startsWith('+') && InAddedSection) {
-				addedCode += line.substring(1).trim() + '\n';
+				codeSnippetStarted = true;
+
+				const firstLineOfCode = (
+					line.substring(line.lastIndexOf('@@') + 2) ?? ''
+				).trimEnd();
+				if (firstLineOfCode) {
+					removedCode += firstLineOfCode + '\n';
+					addedCode += firstLineOfCode + '\n';
+				}
+				continue;
+			}
+
+			if (!codeSnippetStarted) {
+				continue;
+			}
+
+			if (line.startsWith('-')) {
+				removedCode += line.substring(1).trimEnd() + '\n';
+			} else if (line.startsWith('+')) {
+				addedCode += line.substring(1).trimEnd() + '\n';
+			} else {
+				removedCode += line.trimEnd() + '\n';
+				addedCode += line.trimEnd() + '\n';
 			}
 		}
 
