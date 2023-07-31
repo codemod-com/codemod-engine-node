@@ -68,8 +68,7 @@ export const findModifiedFiles = (): string[] | null => {
 		const modifiedFiles = execSync('git ls-files --modified', {
 			encoding: 'utf-8',
 		});
-		const fileList = modifiedFiles.trim().split('\n');
-		return fileList;
+		return modifiedFiles.trim().split('\n');
 	} catch (error) {
 		console.error('Error finding the modified files:', error);
 		return null;

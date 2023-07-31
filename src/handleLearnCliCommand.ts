@@ -87,8 +87,7 @@ export const handleLearnCliCommand = async (
 	}
 
 	const modifiedFiles = findModifiedFiles();
-	const lastModifiedFile =
-		modifiedFiles !== null ? modifiedFiles[modifiedFiles.length - 1] : null;
+	const lastModifiedFile = modifiedFiles?.[modifiedFiles.length - 1] ?? null;
 
 	const path = filePath ?? lastModifiedFile;
 
