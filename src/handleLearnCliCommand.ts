@@ -1,6 +1,6 @@
 import { Printer } from './printer.js';
 import {
-	findFirstModifiedFile,
+	findModifiedFiles,
 	getGitDiffForFile,
 	getLatestCommitHash,
 	isFileInGitDirectory,
@@ -86,7 +86,10 @@ export const handleLearnCliCommand = async (
 		return;
 	}
 
-	const path = filePath ?? findFirstModifiedFile();
+	const modifiedFiles = findModifiedFiles();
+	const lastModifiedFile = modifiedFiles?.[modifiedFiles.length - 1] ?? null;
+
+	const path = filePath ?? lastModifiedFile;
 
 	if (path === null) {
 		printer.log({
@@ -105,6 +108,12 @@ export const handleLearnCliCommand = async (
 				'Unexpected error occurred while getting the latest commit hash.',
 		});
 		return;
+	}
+
+	if (modifiedFiles !== null && modifiedFiles.length > 1) {
+		printer.warn(
+			'Only the changes in the most recently edited file will be processed.',
+		);
 	}
 
 	printer.info(`Learning \`git diff\` starts on ${path}...`);

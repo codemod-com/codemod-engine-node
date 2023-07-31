@@ -1,4 +1,4 @@
-import { execSync, spawnSync } from 'node:child_process';
+import { execSync } from 'node:child_process';
 import { existsSync, lstatSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -80,23 +80,14 @@ export const getLatestCommitHash = (directoryPath: string): string | null => {
 	}
 };
 
-export const findFirstModifiedFile = (): string | null => {
-	const result = spawnSync('git', ['status', '--porcelain'], {
-		encoding: 'utf-8',
-	});
-
-	if (result.error) {
-		console.error('Error running git status:', result.error);
+export const findModifiedFiles = (): string[] | null => {
+	try {
+		const modifiedFiles = execSync('git ls-files --modified', {
+			encoding: 'utf-8',
+		});
+		return modifiedFiles.trim().split('\n');
+	} catch (error) {
+		console.error('Error finding the modified files:', error);
 		return null;
 	}
-
-	const outputLines = result.stdout.trim().split('\n');
-	for (const line of outputLines) {
-		if (line.startsWith('M ')) {
-			// Assuming 'M' indicates a modified file in git status
-			return line.substring(2).trim();
-		}
-	}
-
-	return null;
 };
