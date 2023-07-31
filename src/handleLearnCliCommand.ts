@@ -86,7 +86,7 @@ export const handleLearnCliCommand = async (
 		return;
 	}
 
-	const path = filePath || findFirstModifiedFile();
+	const path = filePath ?? findFirstModifiedFile();
 
 	if (path === null) {
 		printer.log({
