@@ -1,6 +1,6 @@
 {
 	"name": "@intuita-inc/intuita",
-	"version": "0.0.11",
+	"version": "0.0.12",
 	"description": "A codemod engine for Node.js libraries (jscodeshift, ts-morph, etc.)",
 	"type": "module",
 	"exports": null,
@@ -32,6 +32,7 @@
 	"bin": "dist/index.cjs",
 	"devDependencies": {
 		"@types/jscodeshift": "^0.11.5",
+		"@types/mocha": "^10.0.1",
 		"@types/node": "18.11.9",
 		"@types/prettier": "^2.7.3",
 		"@types/tar": "^6.1.5",
@@ -42,6 +43,7 @@
 		"eslint": "^8.28.0",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-plugin-prettier": "^4.2.1",
+		"mocha": "^10.2.0",
 		"ts-node": "^10.9.1",
 		"typescript": "4.9.3"
 	},
@@ -50,7 +52,8 @@
 		"build": "esbuild ./src/index.ts --bundle --platform=node --target=node16 --minify --format=cjs --legal-comments=inline --outfile=./dist/index.cjs",
 		"lint:eslint": "eslint src --fix --ext ts",
 		"lint:prettier": "prettier --write .",
-		"package": "pkg --compress GZip ."
+		"package": "pkg --compress GZip .",
+		"test": "mocha"
 	},
 	"pkg": {
 		"outputPath": "./package/"

@@ -4,19 +4,21 @@ import nodePath from 'node:path';
 import { Repomod } from '@intuita-inc/repomod-engine-api';
 import { Dependencies } from './runRepomod.js';
 
+export const transpile = (source: string): string => {
+	const { outputText } = ts.transpileModule(source, {
+		compilerOptions: {
+			target: ts.ScriptTarget.ES5,
+			module: ts.ModuleKind.CommonJS,
+		},
+	});
+
+	return outputText;
+};
+
 export const getTransformer = (codemodPath: string, codemodSource: string) => {
-	let source: string = codemodSource;
-
-	if (codemodPath.endsWith('.ts')) {
-		const { outputText } = ts.transpileModule(codemodSource, {
-			compilerOptions: {
-				target: ts.ScriptTarget.ES5,
-				module: ts.ModuleKind.CommonJS,
-			},
-		});
-
-		source = outputText;
-	}
+	const source = codemodPath.endsWith('.ts')
+		? transpile(codemodSource)
+		: codemodSource;
 
 	type Exports =
 		| {

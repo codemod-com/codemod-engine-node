@@ -1,16 +1,41 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
-import jscodeshift, { API, FileInfo, Transform } from 'jscodeshift';
+import vm from 'node:vm';
+import jscodeshift, { API, FileInfo } from 'jscodeshift';
 import type { FileCommand } from './fileCommands.js';
 
-const buildApi = (parser: string): API => ({
+export const buildApi = (parser: string): API => ({
 	j: jscodeshift.withParser(parser),
 	jscodeshift: jscodeshift.withParser(parser),
+	// eslint-disable-next-line @typescript-eslint/no-empty-function
 	stats: () => {},
+	// eslint-disable-next-line @typescript-eslint/no-empty-function
 	report: () => {},
 });
 
+const transform = (
+	codemodSource: string,
+	fileInfo: FileInfo,
+	api: API,
+	options: any,
+): string => {
+	const codeToExecute = `
+		${codemodSource}
+
+		transform(__INTUITA__file, __INTUITA__api, __INTUITA__options);
+	`;
+
+	// Create a new context for the code execution
+	const context = vm.createContext({
+		exports: {},
+		__INTUITA__file: fileInfo,
+		__INTUITA__api: api,
+		__INTUITA__options: options,
+	});
+
+	return vm.runInContext(codeToExecute, context);
+};
+
 export const runJscodeshiftCodemod = (
-	transform: Transform,
+	codemodSource: string,
 	oldPath: string,
 	oldData: string,
 	formatWithPrettier: boolean,
@@ -26,14 +51,17 @@ export const runJscodeshiftCodemod = (
 		});
 	};
 
-	const fileInfo: FileInfo = {
-		path: oldPath,
-		source: oldData,
-	};
-
-	const newData = transform(fileInfo, buildApi('tsx'), {
-		createFile,
-	});
+	const newData = transform(
+		codemodSource,
+		{
+			path: oldPath,
+			source: oldData,
+		},
+		buildApi('tsx'),
+		{
+			createFile,
+		},
+	);
 
 	if (typeof newData !== 'string' || oldData === newData) {
 		return commands;
