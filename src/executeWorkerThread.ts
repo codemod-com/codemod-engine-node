@@ -5,7 +5,6 @@ import { runJscodeshiftCodemod } from './runJscodeshiftCodemod.js';
 import { runTsMorphCodemod } from './runTsMorphCodemod.js';
 
 import { buildFormattedFileCommands } from './fileCommands.js';
-import { getTransformer } from './getTransformer.js';
 
 const messageHandler = async (m: unknown) => {
 	try {
@@ -16,23 +15,16 @@ const messageHandler = async (m: unknown) => {
 			return;
 		}
 
-		const transformer = getTransformer(
-			message.codemodPath,
-			message.codemodSource,
-		);
-
 		const fileCommands =
 			message.codemodEngine === 'jscodeshift'
 				? runJscodeshiftCodemod(
-						// @ts-expect-error function type
-						transformer,
+						message.codemodSource,
 						message.path,
 						message.data,
 						message.formatWithPrettier,
 				  )
 				: runTsMorphCodemod(
-						// @ts-expect-error function type
-						transformer,
+						message.codemodSource,
 						message.path,
 						message.data,
 						message.formatWithPrettier,
