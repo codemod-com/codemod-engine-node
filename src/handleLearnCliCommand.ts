@@ -6,8 +6,60 @@ import {
 	getLatestCommitHash,
 	isFileInGitDirectory,
 } from './gitCommands.js';
-import { spawnSync } from 'node:child_process';
-import { dirname } from 'node:path';
+import { execSync, spawnSync } from 'node:child_process';
+import { dirname, extname } from 'node:path';
+import { Project, SyntaxKind } from 'ts-morph';
+
+const isJSorTS = (name: string) =>
+	name.startsWith('.ts') || name.startsWith('.js');
+const variableDeclarationRegex =
+	/(?:export\s+)?(?:var|let|const|type)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/;
+
+const getFileExtension = (filePath: string) => {
+	return extname(filePath).toLowerCase();
+};
+
+const getOldSourceFile = (
+	commitHash: string,
+	filePath: string,
+	fileExtension: string,
+) => {
+	if (!isJSorTS(fileExtension)) {
+		return null;
+	}
+
+	try {
+		const output = execSync(
+			`git show ${commitHash}:${filePath}`,
+		).toString();
+
+		const project = new Project({
+			useInMemoryFileSystem: true,
+			compilerOptions: {
+				allowJs: true,
+			},
+		});
+
+		return project.createSourceFile(filePath, output);
+	} catch (error) {
+		console.error(error);
+		return null;
+	}
+};
+
+const getSourceFile = (filePath: string, fileExtension: string) => {
+	if (!isJSorTS(fileExtension)) {
+		return null;
+	}
+
+	const project = new Project({
+		compilerOptions: {
+			allowJs: true,
+		},
+	});
+
+	return project.addSourceFileAtPathIfExists(filePath);
+};
 
 const encode = (code: string): string =>
 	Buffer.from(code).toString('base64url');
@@ -98,6 +150,16 @@ export const handleLearnCliCommand = async (
 		return;
 	}
 
+	const fileExtension = getFileExtension(path);
+
+	if (!isJSorTS(fileExtension)) {
+		printer.log({
+			kind: 'error',
+			message: 'File must be either a JavaScript or TypeScript file.',
+		});
+		return;
+	}
+
 	const latestCommitHash = getLatestCommitHash(dirname(path));
 	if (latestCommitHash === null) {
 		printer.log({
@@ -127,9 +189,7 @@ export const handleLearnCliCommand = async (
 		return;
 	}
 
-	const { removedCode, addedCode } = gitDiff;
-
-	if (removedCode === '' && addedCode === '') {
+	if (gitDiff.length === 0) {
 		printer.log({
 			kind: 'error',
 			message:
@@ -138,11 +198,61 @@ export const handleLearnCliCommand = async (
 		return;
 	}
 
+	let beforeSnippet = '';
+	let afterSnippet = '';
+	const variableDeclarationNames: string[] = [];
+	for (const diff of gitDiff) {
+		const { removedCode, addedCode, firstLineOfCodeBlock } = diff;
+
+		const matches = firstLineOfCodeBlock.match(variableDeclarationRegex);
+		if (matches === null) {
+			beforeSnippet += removedCode;
+			afterSnippet += addedCode;
+			continue;
+		}
+		const variableName = matches[1];
+		if (variableDeclarationNames.includes(variableName)) {
+			continue;
+		}
+		variableDeclarationNames.push(variableName);
+	}
+	const oldSourceFile = await getOldSourceFile(
+		latestCommitHash,
+		path,
+		fileExtension,
+	);
+	const sourceFile = getSourceFile(path, fileExtension);
+	if (oldSourceFile === null || sourceFile === null) {
+		printer.log({
+			kind: 'error',
+			message: 'Unexpected error occurred while getting AST of the file.',
+		});
+		return;
+	}
+	const oldVariableNodes = oldSourceFile.getDescendantsOfKind(
+		SyntaxKind.VariableDeclaration,
+	);
+	const variableNodes = sourceFile.getDescendantsOfKind(
+		SyntaxKind.VariableDeclaration,
+	);
+	variableDeclarationNames.forEach((name) => {
+		const matchingNode =
+			variableNodes.find((node) => node.getName() === name) ?? null;
+		if (matchingNode !== null) {
+			afterSnippet += matchingNode.getParent().getFullText();
+		}
+		const oldMatchingNode =
+			oldVariableNodes.find((node) => node.getName() === name) ?? null;
+		if (oldMatchingNode !== null) {
+			beforeSnippet += oldMatchingNode.getParent().getFullText();
+		}
+	});
+
 	const url = createCodemodStudioURL({
 		// TODO: Support other engines in the future
 		engine: 'jscodeshift',
-		beforeSnippet: removedCode,
-		afterSnippet: addedCode,
+		beforeSnippet,
+		afterSnippet,
 	});
 
 	if (url === null) {
