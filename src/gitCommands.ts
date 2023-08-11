@@ -1,5 +1,6 @@
 import { execSync } from 'node:child_process';
 import { existsSync, lstatSync } from 'node:fs';
+import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
 export const isGitDirectory = (directoryPath: string): boolean => {
@@ -86,6 +87,34 @@ export const findModifiedFiles = (): string[] | null => {
 			encoding: 'utf-8',
 		});
 		return modifiedFiles.trim().split('\n');
+	} catch (error) {
+		console.error('Error finding the modified files:', error);
+		return null;
+	}
+};
+
+export const findLastlyModifiedFile = async (): Promise<string | null> => {
+	try {
+		const modifiedFiles = execSync('git ls-files --modified', {
+			encoding: 'utf-8',
+		})
+			.trim()
+			.split('\n');
+		if (modifiedFiles.length === 0) {
+			return null;
+		}
+		let lastlyModifiedFile = modifiedFiles[0];
+		let maxTimestamp = 0;
+
+		for (const modifiedFile of modifiedFiles) {
+			const stats = await stat(modifiedFile);
+			const timestamp = stats.mtimeMs;
+			if (maxTimestamp < timestamp) {
+				lastlyModifiedFile = modifiedFile;
+				maxTimestamp = timestamp;
+			}
+		}
+		return lastlyModifiedFile;
 	} catch (error) {
 		console.error('Error finding the modified files:', error);
 		return null;

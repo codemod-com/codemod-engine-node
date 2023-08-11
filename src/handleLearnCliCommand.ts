@@ -1,5 +1,6 @@
 import { Printer } from './printer.js';
 import {
+	findLastlyModifiedFile,
 	findModifiedFiles,
 	getGitDiffForFile,
 	getLatestCommitHash,
@@ -86,10 +87,7 @@ export const handleLearnCliCommand = async (
 		return;
 	}
 
-	const modifiedFiles = findModifiedFiles();
-	const lastModifiedFile = modifiedFiles?.[modifiedFiles.length - 1] ?? null;
-
-	const path = filePath ?? lastModifiedFile;
+	const path = filePath ?? (await findLastlyModifiedFile());
 
 	if (path === null) {
 		printer.log({
@@ -110,6 +108,7 @@ export const handleLearnCliCommand = async (
 		return;
 	}
 
+	const modifiedFiles = findModifiedFiles();
 	if (modifiedFiles !== null && modifiedFiles.length > 1) {
 		printer.warn(
 			'Only the changes in the most recently edited file will be processed.',
