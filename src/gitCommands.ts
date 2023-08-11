@@ -103,7 +103,7 @@ export const findLastlyModifiedFile = async (): Promise<string | null> => {
 		if (modifiedFiles.length === 0) {
 			return null;
 		}
-		let lastlyModifiedFile = modifiedFiles[0];
+		let lastlyModifiedFile = null;
 		let maxTimestamp = 0;
 
 		for (const modifiedFile of modifiedFiles) {
