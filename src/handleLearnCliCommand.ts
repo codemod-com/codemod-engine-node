@@ -12,8 +12,7 @@ import { Project } from 'ts-morph';
 
 // remove all special characters and whitespaces
 const removeSpecialCharacters = (str: string) =>
-	// eslint-disable-next-line no-useless-escape
-	str.replace(/[\{\}\(\)\[\]:;,/?'"<>|=`!]/g, '').replace(/\s/g, '');
+	str.replace(/[{}()[\]:;,/?'"<>|=`!]/g, '').replace(/\s/g, '');
 
 const isJSorTS = (name: string) =>
 	name.startsWith('.ts') || name.startsWith('.js');
