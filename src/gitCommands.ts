@@ -20,28 +20,45 @@ export const isFileInGitDirectory = (filePath: string): boolean => {
 export const getGitDiffForFile = (
 	commitHash: string,
 	filePath: string,
-): { removedCode: string; addedCode: string } | null => {
+):
+	| { removedCode: string; addedCode: string; firstLineOfCodeBlock: string }[]
+	| null => {
 	try {
-		const diff = execSync(`git diff ${commitHash} --unified=1 ${filePath}`);
+		const diff = execSync(`git diff ${commitHash} --unified=0 ${filePath}`);
 		const output = diff.toString();
 		const lines = output.split('\n');
-
+		const array = [];
 		let removedCode = '';
 		let addedCode = '';
+		let firstLineOfCodeBlock = '';
 		let codeSnippetStarted = false;
 
-		for (const line of lines) {
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
 			if (line.startsWith('@@')) {
-				codeSnippetStarted = true;
-
-				const firstLineOfCode = (
-					line.substring(line.lastIndexOf('@@') + 2) ?? ''
-				).trimEnd();
-				if (firstLineOfCode) {
-					removedCode += firstLineOfCode + '\n';
-					addedCode += firstLineOfCode + '\n';
+				if (removedCode.length > 0 || addedCode.length > 0) {
+					array.push({
+						removedCode,
+						addedCode,
+						firstLineOfCodeBlock,
+					});
 				}
-				continue;
+				codeSnippetStarted = true;
+				removedCode = '';
+				addedCode = '';
+				firstLineOfCodeBlock = (
+					line.substring(line.lastIndexOf('@@') + 2) ?? ''
+				).trim();
+			}
+			if (i === lines.length - 1) {
+				if (removedCode.length > 0 || addedCode.length > 0) {
+					array.push({
+						removedCode,
+						addedCode,
+						firstLineOfCodeBlock,
+					});
+				}
+				break;
 			}
 
 			if (!codeSnippetStarted) {
@@ -52,13 +69,10 @@ export const getGitDiffForFile = (
 				removedCode += line.substring(1).trimEnd() + '\n';
 			} else if (line.startsWith('+')) {
 				addedCode += line.substring(1).trimEnd() + '\n';
-			} else {
-				removedCode += line.trimEnd() + '\n';
-				addedCode += line.trimEnd() + '\n';
 			}
 		}
 
-		return { removedCode, addedCode };
+		return array;
 	} catch (error) {
 		if (!(error instanceof Error)) {
 			return null;
@@ -100,15 +114,18 @@ export const findLastlyModifiedFile = async (): Promise<string | null> => {
 		})
 			.trim()
 			.split('\n');
+
 		if (modifiedFiles.length === 0) {
 			return null;
 		}
-		let lastlyModifiedFile = null;
+
+		let lastlyModifiedFile: string | null = null;
 		let maxTimestamp = 0;
 
 		for (const modifiedFile of modifiedFiles) {
 			const stats = await stat(modifiedFile);
 			const timestamp = stats.mtimeMs;
+			
 			if (maxTimestamp < timestamp) {
 				lastlyModifiedFile = modifiedFile;
 				maxTimestamp = timestamp;
