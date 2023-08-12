@@ -13,7 +13,13 @@ import { Project, SyntaxKind } from 'ts-morph';
 const isJSorTS = (name: string) =>
 	name.startsWith('.ts') || name.startsWith('.js');
 const variableDeclarationRegex =
-	/(?:export\s+)?(?:var|let|const|type)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/;
+	/(?:export\s+)?(?:var|let|const)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/;
+const functionDeclarationRegex =
+	/(?:export\s+)?(?:function)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/;
+const typeDeclarationRegex =
+	/(?:export\s+)?(?:type)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/;
+const interfaceDeclarationRegex =
+	/(?:export\s+)?(?:interface)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/;
 
 const getFileExtension = (filePath: string) => {
 	return extname(filePath).toLowerCase();
@@ -58,7 +64,7 @@ const getSourceFile = (filePath: string, fileExtension: string) => {
 		},
 	});
 
-	return project.addSourceFileAtPathIfExists(filePath);
+	return project.addSourceFileAtPathIfExists(filePath) ?? null;
 };
 
 const encode = (code: string): string =>
@@ -200,28 +206,63 @@ export const handleLearnCliCommand = async (
 
 	let beforeSnippet = '';
 	let afterSnippet = '';
-	const variableDeclarationNames: string[] = [];
+	const declarations = new Set<{ name: string; kind: SyntaxKind }>();
+
 	for (const diff of gitDiff) {
 		const { removedCode, addedCode, firstLineOfCodeBlock } = diff;
 
-		const matches = firstLineOfCodeBlock.match(variableDeclarationRegex);
-		if (matches === null) {
-			beforeSnippet += removedCode;
-			afterSnippet += addedCode;
+		const variableDeclarationMatches = firstLineOfCodeBlock.match(
+			variableDeclarationRegex,
+		);
+		const functionDeclarationMatches = firstLineOfCodeBlock.match(
+			functionDeclarationRegex,
+		);
+
+		if (variableDeclarationMatches !== null) {
+			declarations.add({
+				name: variableDeclarationMatches[1],
+				kind: SyntaxKind.VariableDeclaration,
+			});
 			continue;
 		}
-		const variableName = matches[1];
-		if (variableDeclarationNames.includes(variableName)) {
+		if (functionDeclarationMatches !== null) {
+			declarations.add({
+				name: functionDeclarationMatches[1],
+				kind: SyntaxKind.FunctionDeclaration,
+			});
 			continue;
 		}
-		variableDeclarationNames.push(variableName);
+
+		const typeDeclarationMatches = addedCode.match(typeDeclarationRegex);
+		const interfaceDeclarationMatches = addedCode.match(
+			interfaceDeclarationRegex,
+		);
+
+		if (typeDeclarationMatches !== null) {
+			declarations.add({
+				name: typeDeclarationMatches[1],
+				kind: SyntaxKind.TypeAliasDeclaration,
+			});
+			continue;
+		}
+		if (interfaceDeclarationMatches !== null) {
+			declarations.add({
+				name: interfaceDeclarationMatches[1],
+				kind: SyntaxKind.InterfaceDeclaration,
+			});
+			continue;
+		}
+
+		beforeSnippet += removedCode;
+		afterSnippet += addedCode;
 	}
-	const oldSourceFile = await getOldSourceFile(
+	const oldSourceFile = getOldSourceFile(
 		latestCommitHash,
 		path,
 		fileExtension,
 	);
 	const sourceFile = getSourceFile(path, fileExtension);
+
 	if (oldSourceFile === null || sourceFile === null) {
 		printer.log({
 			kind: 'error',
@@ -229,22 +270,40 @@ export const handleLearnCliCommand = async (
 		});
 		return;
 	}
-	const oldVariableNodes = oldSourceFile.getDescendantsOfKind(
-		SyntaxKind.VariableDeclaration,
-	);
-	const variableNodes = sourceFile.getDescendantsOfKind(
-		SyntaxKind.VariableDeclaration,
-	);
-	variableDeclarationNames.forEach((name) => {
+
+	declarations.forEach(({ name, kind }) => {
+		const oldNodesOfKind = oldSourceFile.getDescendantsOfKind(kind);
+		const newNodesOfKind = sourceFile.getDescendantsOfKind(kind);
 		const matchingNode =
-			variableNodes.find((node) => node.getName() === name) ?? null;
+			newNodesOfKind.find((node) => (node as any).getName() === name) ??
+			null;
 		if (matchingNode !== null) {
-			afterSnippet += matchingNode.getParent().getFullText();
+			const parentNode = matchingNode.getParent() ?? null;
+			if (
+				(kind === SyntaxKind.VariableDeclaration ||
+					kind === SyntaxKind.FunctionDeclaration) &&
+				parentNode !== null
+			) {
+				afterSnippet += parentNode.getFullText() + '\n';
+			} else {
+				afterSnippet += matchingNode.getFullText() + '\n';
+			}
 		}
 		const oldMatchingNode =
-			oldVariableNodes.find((node) => node.getName() === name) ?? null;
+			oldNodesOfKind.find((node) => (node as any).getName() === name) ??
+			null;
+
 		if (oldMatchingNode !== null) {
-			beforeSnippet += oldMatchingNode.getParent().getFullText();
+			const parentNode = oldMatchingNode.getParent() ?? null;
+			if (
+				(kind === SyntaxKind.VariableDeclaration ||
+					kind === SyntaxKind.FunctionDeclaration) &&
+				parentNode !== null
+			) {
+				beforeSnippet += parentNode.getFullText() + '\n';
+			} else {
+				beforeSnippet += oldMatchingNode.getFullText() + '\n';
+			}
 		}
 	});
 
