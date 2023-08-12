@@ -8,12 +8,14 @@ import {
 } from './gitCommands.js';
 import { execSync, spawnSync } from 'node:child_process';
 import { dirname, extname } from 'node:path';
-import { Project, SyntaxKind } from 'ts-morph';
+import { Project } from 'ts-morph';
+
+// remove all special characters and whitespaces
+const removeSpecialCharacters = (str: string) =>
+	str.replace(/[{}()[\]:;,/?'"<>|=`!]/g, '').replace(/\s/g, '');
 
 const isJSorTS = (name: string) =>
 	name.startsWith('.ts') || name.startsWith('.js');
-const variableDeclarationRegex =
-	/(?:export\s+)?(?:var|let|const|type)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/;
 
 const getFileExtension = (filePath: string) => {
 	return extname(filePath).toLowerCase();
@@ -58,7 +60,7 @@ const getSourceFile = (filePath: string, fileExtension: string) => {
 		},
 	});
 
-	return project.addSourceFileAtPathIfExists(filePath);
+	return project.addSourceFileAtPathIfExists(filePath) ?? null;
 };
 
 const encode = (code: string): string =>
@@ -198,30 +200,13 @@ export const handleLearnCliCommand = async (
 		return;
 	}
 
-	let beforeSnippet = '';
-	let afterSnippet = '';
-	const variableDeclarationNames: string[] = [];
-	for (const diff of gitDiff) {
-		const { removedCode, addedCode, firstLineOfCodeBlock } = diff;
-
-		const matches = firstLineOfCodeBlock.match(variableDeclarationRegex);
-		if (matches === null) {
-			beforeSnippet += removedCode;
-			afterSnippet += addedCode;
-			continue;
-		}
-		const variableName = matches[1];
-		if (variableDeclarationNames.includes(variableName)) {
-			continue;
-		}
-		variableDeclarationNames.push(variableName);
-	}
-	const oldSourceFile = await getOldSourceFile(
+	const oldSourceFile = getOldSourceFile(
 		latestCommitHash,
 		path,
 		fileExtension,
 	);
 	const sourceFile = getSourceFile(path, fileExtension);
+
 	if (oldSourceFile === null || sourceFile === null) {
 		printer.log({
 			kind: 'error',
@@ -229,30 +214,53 @@ export const handleLearnCliCommand = async (
 		});
 		return;
 	}
-	const oldVariableNodes = oldSourceFile.getDescendantsOfKind(
-		SyntaxKind.VariableDeclaration,
-	);
-	const variableNodes = sourceFile.getDescendantsOfKind(
-		SyntaxKind.VariableDeclaration,
-	);
-	variableDeclarationNames.forEach((name) => {
-		const matchingNode =
-			variableNodes.find((node) => node.getName() === name) ?? null;
-		if (matchingNode !== null) {
-			afterSnippet += matchingNode.getParent().getFullText();
-		}
-		const oldMatchingNode =
-			oldVariableNodes.find((node) => node.getName() === name) ?? null;
-		if (oldMatchingNode !== null) {
-			beforeSnippet += oldMatchingNode.getParent().getFullText();
-		}
-	});
 
+	const beforeNodeTexts = new Set<string>();
+	const afterNodeTexts = new Set<string>();
+
+	const lines = gitDiff.split('\n');
+
+	for (const line of lines) {
+		if (!line.startsWith('-') && !line.startsWith('+')) {
+			continue;
+		}
+
+		const codeString = line.substring(1).trim();
+		if (removeSpecialCharacters(codeString).length === 0) {
+			continue;
+		}
+
+		if (line.startsWith('-')) {
+			oldSourceFile.forEachChild((node) => {
+				const content = node.getFullText();
+
+				if (content.includes(codeString)) {
+					beforeNodeTexts.add(content);
+				}
+			});
+		}
+
+		if (line.startsWith('+')) {
+			sourceFile.forEachChild((node) => {
+				const content = node.getFullText();
+				if (content.includes(codeString)) {
+					afterNodeTexts.add(content);
+				}
+			});
+		}
+	}
+
+	const beforeSnippet = Array.from(beforeNodeTexts).join('');
+	const afterSnippet = Array.from(afterNodeTexts).join('');
 	const url = createCodemodStudioURL({
 		// TODO: Support other engines in the future
 		engine: 'jscodeshift',
-		beforeSnippet,
-		afterSnippet,
+		beforeSnippet: beforeSnippet.startsWith('\n')
+			? beforeSnippet.replace('\n', '')
+			: beforeSnippet,
+		afterSnippet: afterSnippet.startsWith('\n')
+			? afterSnippet.replace('\n', '')
+			: afterSnippet,
 	});
 
 	if (url === null) {
