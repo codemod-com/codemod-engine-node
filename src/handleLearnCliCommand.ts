@@ -275,8 +275,9 @@ export const handleLearnCliCommand = async (
 		const oldNodesOfKind = oldSourceFile.getDescendantsOfKind(kind);
 		const newNodesOfKind = sourceFile.getDescendantsOfKind(kind);
 		const matchingNode =
-			newNodesOfKind.find((node) => (node as any).getName() === name) ??
-			null;
+			newNodesOfKind.find(
+				(node) => 'getName' in node && node.getName() === name,
+			) ?? null;
 		if (matchingNode !== null) {
 			const parentNode = matchingNode.getParent() ?? null;
 			if (
@@ -290,8 +291,9 @@ export const handleLearnCliCommand = async (
 			}
 		}
 		const oldMatchingNode =
-			oldNodesOfKind.find((node) => (node as any).getName() === name) ??
-			null;
+			oldNodesOfKind.find(
+				(node) => 'getName' in node && node.getName() === name,
+			) ?? null;
 
 		if (oldMatchingNode !== null) {
 			const parentNode = oldMatchingNode.getParent() ?? null;
