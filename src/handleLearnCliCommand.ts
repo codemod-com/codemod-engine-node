@@ -8,18 +8,15 @@ import {
 } from './gitCommands.js';
 import { execSync, spawnSync } from 'node:child_process';
 import { dirname, extname } from 'node:path';
-import { Project, SyntaxKind } from 'ts-morph';
+import { Project } from 'ts-morph';
+
+// remove all special characters and whitespaces
+const removeSpecialCharacters = (str: string) =>
+	// eslint-disable-next-line no-useless-escape
+	str.replace(/[\{\}\(\)\[\]:;,/?'"<>|=`!]/g, '').replace(/\s/g, '');
 
 const isJSorTS = (name: string) =>
 	name.startsWith('.ts') || name.startsWith('.js');
-const variableDeclarationRegex =
-	/(?:export\s+)?(?:var|let|const)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/;
-const functionDeclarationRegex =
-	/(?:export\s+)?(?:function)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/;
-const typeDeclarationRegex =
-	/(?:export\s+)?(?:type)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/;
-const interfaceDeclarationRegex =
-	/(?:export\s+)?(?:interface)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/;
 
 const getFileExtension = (filePath: string) => {
 	return extname(filePath).toLowerCase();
@@ -204,58 +201,6 @@ export const handleLearnCliCommand = async (
 		return;
 	}
 
-	let beforeSnippet = '';
-	let afterSnippet = '';
-	const declarations = new Set<{ name: string; kind: SyntaxKind }>();
-
-	for (const diff of gitDiff) {
-		const { removedCode, addedCode, firstLineOfCodeBlock } = diff;
-
-		const variableDeclarationMatches = firstLineOfCodeBlock.match(
-			variableDeclarationRegex,
-		);
-		const functionDeclarationMatches = firstLineOfCodeBlock.match(
-			functionDeclarationRegex,
-		);
-
-		if (variableDeclarationMatches !== null) {
-			declarations.add({
-				name: variableDeclarationMatches[1],
-				kind: SyntaxKind.VariableDeclaration,
-			});
-			continue;
-		}
-		if (functionDeclarationMatches !== null) {
-			declarations.add({
-				name: functionDeclarationMatches[1],
-				kind: SyntaxKind.FunctionDeclaration,
-			});
-			continue;
-		}
-
-		const typeDeclarationMatches = addedCode.match(typeDeclarationRegex);
-		const interfaceDeclarationMatches = addedCode.match(
-			interfaceDeclarationRegex,
-		);
-
-		if (typeDeclarationMatches !== null) {
-			declarations.add({
-				name: typeDeclarationMatches[1],
-				kind: SyntaxKind.TypeAliasDeclaration,
-			});
-			continue;
-		}
-		if (interfaceDeclarationMatches !== null) {
-			declarations.add({
-				name: interfaceDeclarationMatches[1],
-				kind: SyntaxKind.InterfaceDeclaration,
-			});
-			continue;
-		}
-
-		beforeSnippet += removedCode;
-		afterSnippet += addedCode;
-	}
 	const oldSourceFile = getOldSourceFile(
 		latestCommitHash,
 		path,
@@ -271,49 +216,52 @@ export const handleLearnCliCommand = async (
 		return;
 	}
 
-	declarations.forEach(({ name, kind }) => {
-		const oldNodesOfKind = oldSourceFile.getDescendantsOfKind(kind);
-		const newNodesOfKind = sourceFile.getDescendantsOfKind(kind);
-		const matchingNode =
-			newNodesOfKind.find(
-				(node) => 'getName' in node && node.getName() === name,
-			) ?? null;
-		if (matchingNode !== null) {
-			const parentNode = matchingNode.getParent() ?? null;
-			if (
-				(kind === SyntaxKind.VariableDeclaration ||
-					kind === SyntaxKind.FunctionDeclaration) &&
-				parentNode !== null
-			) {
-				afterSnippet += parentNode.getFullText() + '\n';
-			} else {
-				afterSnippet += matchingNode.getFullText() + '\n';
-			}
-		}
-		const oldMatchingNode =
-			oldNodesOfKind.find(
-				(node) => 'getName' in node && node.getName() === name,
-			) ?? null;
+	const beforeNodeTexts = new Set<string>();
+	const afterNodeTexts = new Set<string>();
 
-		if (oldMatchingNode !== null) {
-			const parentNode = oldMatchingNode.getParent() ?? null;
-			if (
-				(kind === SyntaxKind.VariableDeclaration ||
-					kind === SyntaxKind.FunctionDeclaration) &&
-				parentNode !== null
-			) {
-				beforeSnippet += parentNode.getFullText() + '\n';
-			} else {
-				beforeSnippet += oldMatchingNode.getFullText() + '\n';
-			}
-		}
-	});
+	const lines = gitDiff.split('\n');
 
+	for (const line of lines) {
+		if (!line.startsWith('-') && !line.startsWith('+')) {
+			continue;
+		}
+
+		const codeString = line.substring(1).trim();
+		if (removeSpecialCharacters(codeString).length === 0) {
+			continue;
+		}
+
+		if (line.startsWith('-')) {
+			oldSourceFile.forEachChild((node) => {
+				const content = node.getFullText();
+
+				if (content.includes(codeString)) {
+					beforeNodeTexts.add(content);
+				}
+			});
+		}
+
+		if (line.startsWith('+')) {
+			sourceFile.forEachChild((node) => {
+				const content = node.getFullText();
+				if (content.includes(codeString)) {
+					afterNodeTexts.add(content);
+				}
+			});
+		}
+	}
+
+	const beforeSnippet = Array.from(beforeNodeTexts).join('');
+	const afterSnippet = Array.from(afterNodeTexts).join('');
 	const url = createCodemodStudioURL({
 		// TODO: Support other engines in the future
 		engine: 'jscodeshift',
-		beforeSnippet,
-		afterSnippet,
+		beforeSnippet: beforeSnippet.startsWith('\n')
+			? beforeSnippet.replace('\n', '')
+			: beforeSnippet,
+		afterSnippet: afterSnippet.startsWith('\n')
+			? afterSnippet.replace('\n', '')
+			: afterSnippet,
 	});
 
 	if (url === null) {

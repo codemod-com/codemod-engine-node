@@ -20,59 +20,10 @@ export const isFileInGitDirectory = (filePath: string): boolean => {
 export const getGitDiffForFile = (
 	commitHash: string,
 	filePath: string,
-):
-	| { removedCode: string; addedCode: string; firstLineOfCodeBlock: string }[]
-	| null => {
+): string | null => {
 	try {
 		const diff = execSync(`git diff ${commitHash} --unified=0 ${filePath}`);
-		const output = diff.toString();
-		const lines = output.split('\n');
-		const array = [];
-		let removedCode = '';
-		let addedCode = '';
-		let firstLineOfCodeBlock = '';
-		let codeSnippetStarted = false;
-
-		for (let i = 0; i < lines.length; i++) {
-			const line = lines[i];
-			if (line.startsWith('@@')) {
-				if (removedCode.length > 0 || addedCode.length > 0) {
-					array.push({
-						removedCode,
-						addedCode,
-						firstLineOfCodeBlock,
-					});
-				}
-				codeSnippetStarted = true;
-				removedCode = '';
-				addedCode = '';
-				firstLineOfCodeBlock = (
-					line.substring(line.lastIndexOf('@@') + 2) ?? ''
-				).trim();
-			}
-			if (i === lines.length - 1) {
-				if (removedCode.length > 0 || addedCode.length > 0) {
-					array.push({
-						removedCode,
-						addedCode,
-						firstLineOfCodeBlock,
-					});
-				}
-				break;
-			}
-
-			if (!codeSnippetStarted) {
-				continue;
-			}
-
-			if (line.startsWith('-')) {
-				removedCode += line.substring(1).trimEnd() + '\n';
-			} else if (line.startsWith('+')) {
-				addedCode += line.substring(1).trimEnd() + '\n';
-			}
-		}
-
-		return array;
+		return diff.toString();
 	} catch (error) {
 		if (!(error instanceof Error)) {
 			return null;
@@ -125,7 +76,7 @@ export const findLastlyModifiedFile = async (): Promise<string | null> => {
 		for (const modifiedFile of modifiedFiles) {
 			const stats = await stat(modifiedFile);
 			const timestamp = stats.mtimeMs;
-			
+
 			if (maxTimestamp < timestamp) {
 				lastlyModifiedFile = modifiedFile;
 				maxTimestamp = timestamp;
