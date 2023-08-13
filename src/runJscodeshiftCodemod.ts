@@ -24,8 +24,13 @@ const transform = (
 	`;
 
 	// Create a new context for the code execution
+	const exports = {};
+
 	const context = vm.createContext({
-		exports: {},
+		module: {
+			exports,
+		},
+		exports,
 		__INTUITA__file: fileInfo,
 		__INTUITA__api: api,
 		__INTUITA__options: options,

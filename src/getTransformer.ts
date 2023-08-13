@@ -15,11 +15,7 @@ export const transpile = (source: string): string => {
 	return outputText;
 };
 
-export const getTransformer = (codemodPath: string, codemodSource: string) => {
-	const source = codemodPath.endsWith('.ts')
-		? transpile(codemodSource)
-		: codemodSource;
-
+export const getTransformer = (source: string) => {
 	type Exports =
 		| {
 				__esModule?: true;

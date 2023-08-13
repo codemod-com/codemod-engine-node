@@ -11,7 +11,9 @@ export class WorkerThreadManager {
 	private __idleWorkerIds: number[] = [];
 	private __workers: Worker[] = [];
 	private __workerTimestamps: number[] = [];
-	private __totalFileCount: number;
+	private __filePaths: string[] = [];
+	private __currentFileCount = 0;
+	private __totalFileCount: number | null = null;
 	private __processedFileNumber = 0;
 	private readonly __interval: NodeJS.Timeout;
 
@@ -21,15 +23,13 @@ export class WorkerThreadManager {
 		private readonly __codemodEngine: 'jscodeshift' | 'ts-morph',
 		private readonly __codemodSource: string,
 		private readonly __formatWithPrettier: boolean,
-		private readonly __filePaths: string[],
 		private readonly __getData: (path: string) => Promise<string>,
 		private readonly __onPrinterMessage: (message: Message) => void,
 		private readonly __onCommand: (
 			command: FormattedFileCommand,
 		) => Promise<void>,
+		private readonly __pathGenerator: AsyncGenerator<string, void, void>,
 	) {
-		this.__totalFileCount = __filePaths.length;
-
 		for (let i = 0; i < __workerCount; ++i) {
 			this.__idleWorkerIds.push(i);
 			this.__workerTimestamps.push(Date.now());
@@ -44,10 +44,8 @@ export class WorkerThreadManager {
 		this.__onPrinterMessage({
 			kind: 'progress',
 			processedFileNumber: 0,
-			totalFileNumber: this.__totalFileCount,
+			totalFileNumber: this.__currentFileCount,
 		});
-
-		this.__work();
 
 		this.__interval = setInterval(() => {
 			const now = Date.now();
@@ -70,6 +68,8 @@ export class WorkerThreadManager {
 				}
 			}
 		}, 1000);
+
+		this.__pullNewPath();
 	}
 
 	public async terminateWorkers() {
@@ -84,6 +84,24 @@ export class WorkerThreadManager {
 		}
 	}
 
+	private async __pullNewPath() {
+		const iteratorResult = await this.__pathGenerator.next();
+
+		if (iteratorResult.done) {
+			this.__totalFileCount = this.__currentFileCount;
+
+			return;
+		}
+
+		++this.__currentFileCount;
+
+		this.__filePaths.push(iteratorResult.value);
+
+		await this.__work();
+
+		await this.__pullNewPath();
+	}
+
 	private async __work(): Promise<void> {
 		if (this.__finished) {
 			return;
@@ -92,7 +110,10 @@ export class WorkerThreadManager {
 		const filePath = this.__filePaths.pop();
 
 		if (filePath === undefined) {
-			if (this.__idleWorkerIds.length === this.__workerCount) {
+			if (
+				this.__totalFileCount !== null &&
+				this.__idleWorkerIds.length === this.__workerCount
+			) {
 				this.__finished = true;
 
 				this.__finish();
@@ -161,7 +182,7 @@ export class WorkerThreadManager {
 			this.__onPrinterMessage({
 				kind: 'progress',
 				processedFileNumber: this.__processedFileNumber,
-				totalFileNumber: this.__totalFileCount,
+				totalFileNumber: this.__currentFileCount,
 			});
 
 			this.__idleWorkerIds.push(i);
