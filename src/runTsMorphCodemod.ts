@@ -25,8 +25,13 @@ const transform = (
 		handleSourceFile(sourceFile);
 	`;
 
+	const exports = {};
+
 	const context = vm.createContext({
-		exports: {},
+		module: {
+			exports,
+		},
+		exports,
 		__INTUITA__oldPath: oldPath,
 		__INTUITA__oldData: oldData,
 		require: (name: string) => {

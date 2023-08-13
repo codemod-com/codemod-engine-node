@@ -21,6 +21,7 @@
 		"mdast-util-to-markdown": "^2.1.0",
 		"memfs": "^4.2.0",
 		"micromark-extension-mdxjs": "^2.0.0",
+		"minimatch": "^9.0.3",
 		"prettier": "^2.8.7",
 		"rehype-parse": "^8.0.4",
 		"tar": "^6.1.15",
@@ -54,7 +55,7 @@
 		"build": "esbuild ./src/index.ts --bundle --platform=node --target=node16 --minify --format=cjs --legal-comments=inline --outfile=./dist/index.cjs",
 		"lint:eslint": "eslint src --fix --ext ts",
 		"lint:prettier": "prettier --write .",
-		"package": "pkg --compress GZip .",
+		"package": "pkg -t node16-linux-x64 --compress GZip .",
 		"test": "mocha"
 	},
 	"pkg": {

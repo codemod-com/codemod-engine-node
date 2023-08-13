@@ -5,7 +5,7 @@ import {
 	modifyFileSystemUponCommand,
 } from './fileCommands.js';
 import { Dependencies, runRepomod } from './runRepomod.js';
-import { escape, glob } from 'glob';
+import { escape, glob, Glob } from 'glob';
 import type { FlowSettings, RunSettings } from './executeMainThread.js';
 import * as fs from 'fs';
 import { dirname } from 'node:path';
@@ -15,8 +15,9 @@ import { Codemod } from './codemod.js';
 import { IFs, Volume, createFsFromVolume } from 'memfs';
 import { createHash } from 'node:crypto';
 import { WorkerThreadManager } from './workerThreadManager.js';
-import { getTransformer } from './getTransformer.js';
+import { getTransformer, transpile } from './getTransformer.js';
 import { Message } from './messages.js';
+import { minimatch } from 'minimatch';
 
 const buildPaths = async (
 	fileSystem: IFs,
@@ -63,6 +64,64 @@ const buildPaths = async (
 		return paths.slice(0, flowSettings.fileLimit);
 	}
 };
+
+async function* buildPathGenerator(
+	fileSystem: IFs,
+	flowSettings: FlowSettings,
+	codemod: Codemod,
+	repomod: Repomod<Dependencies> | null,
+): AsyncGenerator<string, void, unknown> {
+	const controller = new AbortController();
+
+	const glob = new Glob(flowSettings.includePattern.slice(), {
+		absolute: true,
+		cwd: flowSettings.inputDirectoryPath,
+		// @ts-expect-error type inconsistency
+		fs: fileSystem,
+		ignore: flowSettings.excludePattern.slice(),
+		nodir: true,
+		withFileTypes: false,
+		signal: controller.signal,
+	});
+
+	const asyncGenerator = glob.iterate();
+
+	let fileCount = 0;
+
+	while (fileCount < flowSettings.fileLimit) {
+		const iteratorResult = await asyncGenerator.next();
+
+		if (iteratorResult.done) {
+			return;
+		}
+
+		const { value } = iteratorResult;
+
+		const path = typeof value === 'string' ? value : value.fullpath();
+
+		if (codemod.engine === 'repomod-engine' && repomod !== null) {
+			const includePatterns = repomod.includePatterns?.slice() ?? [];
+			const excludePatterns = repomod.excludePatterns?.slice() ?? [];
+
+			if (
+				includePatterns.some((pattern) =>
+					minimatch(path, pattern, {}),
+				) &&
+				excludePatterns.every(
+					(pattern) => !minimatch(path, pattern, {}),
+				)
+			) {
+				yield path;
+			}
+		} else {
+			yield path;
+		}
+
+		++fileCount;
+	}
+
+	controller.abort();
+}
 
 export const runCodemod = async (
 	fileSystem: IFs,
@@ -235,7 +294,11 @@ export const runCodemod = async (
 		encoding: 'utf8',
 	});
 
-	const transformer = getTransformer(codemod.indexPath, codemodSource);
+	const transpiledSource = codemod.indexPath.endsWith('.ts')
+		? transpile(codemodSource)
+		: codemodSource;
+
+	const transformer = getTransformer(transpiledSource);
 
 	if (transformer === null) {
 		throw new Error(
@@ -268,7 +331,12 @@ export const runCodemod = async (
 	}
 
 	// jscodeshift or ts-morph
-	const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
+	const pathGenerator = buildPathGenerator(
+		fileSystem,
+		flowSettings,
+		codemod,
+		null,
+	);
 
 	const { engine } = codemod;
 
@@ -279,9 +347,8 @@ export const runCodemod = async (
 			flowSettings.threadCount,
 			codemod.indexPath,
 			engine,
-			codemodSource,
+			transpiledSource,
 			flowSettings.usePrettier,
-			paths.slice(),
 			async (path) => {
 				const data = await fileSystem.promises.readFile(path, {
 					encoding: 'utf8',
@@ -309,6 +376,7 @@ export const runCodemod = async (
 				}, 5000);
 			},
 			onCommand,
+			pathGenerator,
 		);
 	});
 };

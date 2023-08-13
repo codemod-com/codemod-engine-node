@@ -37,12 +37,12 @@ const messageHandler = async (m: unknown) => {
 			commands,
 		} satisfies WorkerThreadMessage);
 	} catch (error) {
-		if (error instanceof Error) {
-			parentPort?.postMessage({
-				kind: 'error',
-				message: error.message,
-			} satisfies WorkerThreadMessage);
-		}
+		const message = error instanceof Error ? error.message : String(error);
+
+		parentPort?.postMessage({
+			kind: 'error',
+			message,
+		} satisfies WorkerThreadMessage);
 	}
 };
 
