@@ -71,6 +71,7 @@ const UrlParamKeys = {
 	BeforeSnippet: 'beforeSnippet' as const,
 	AfterSnippet: 'afterSnippet' as const,
 	CodemodSource: 'codemodSource' as const,
+	Command: 'command' as const,
 };
 
 const openURL = (url: string): boolean => {
@@ -111,12 +112,13 @@ const createCodemodStudioURL = ({
 		const encodedEngine = encode(engine);
 		const encodedBeforeSnippet = encode(beforeSnippet);
 		const encodedAfterSnippet = encode(afterSnippet);
-
+		
 		const url = new URL('https://codemod.studio/');
 		const searchParams = new URLSearchParams([
 			[UrlParamKeys.Engine, encodedEngine],
 			[UrlParamKeys.BeforeSnippet, encodedBeforeSnippet],
 			[UrlParamKeys.AfterSnippet, encodedAfterSnippet],
+			[UrlParamKeys.Command, 'learn']
 		]);
 
 		url.search = searchParams.toString();
