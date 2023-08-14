@@ -17,7 +17,7 @@ const messageHandler = async (m: unknown) => {
 
 		const fileCommands =
 			message.codemodEngine === 'jscodeshift'
-				? runJscodeshiftCodemod(
+				? await runJscodeshiftCodemod(
 						message.codemodSource,
 						message.path,
 						message.data,
