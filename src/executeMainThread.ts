@@ -112,11 +112,6 @@ export const executeMainThread = async () => {
 						description: 'Input directory path',
 						default: DEFAULT_INPUT_DIRECTORY_PATH,
 					})
-					.option('name', {
-						type: 'string',
-						description:
-							'Name of the codemod or recipe in the registry',
-					})
 					.option('sourcePath', {
 						type: 'string',
 						description: 'Source path of the local codemod to run',
