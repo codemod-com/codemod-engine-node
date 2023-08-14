@@ -112,13 +112,13 @@ const createCodemodStudioURL = ({
 		const encodedEngine = encode(engine);
 		const encodedBeforeSnippet = encode(beforeSnippet);
 		const encodedAfterSnippet = encode(afterSnippet);
-		
+
 		const url = new URL('https://codemod.studio/');
 		const searchParams = new URLSearchParams([
 			[UrlParamKeys.Engine, encodedEngine],
 			[UrlParamKeys.BeforeSnippet, encodedBeforeSnippet],
 			[UrlParamKeys.AfterSnippet, encodedAfterSnippet],
-			[UrlParamKeys.Command, 'learn']
+			[UrlParamKeys.Command, 'learn'],
 		]);
 
 		url.search = searchParams.toString();
@@ -263,12 +263,9 @@ export const handleLearnCliCommand = async (
 	const url = createCodemodStudioURL({
 		// TODO: Support other engines in the future
 		engine: 'jscodeshift',
-		beforeSnippet: beforeSnippet.startsWith('\n')
-			? beforeSnippet.replace('\n', '')
-			: beforeSnippet,
-		afterSnippet: afterSnippet.startsWith('\n')
-			? afterSnippet.replace('\n', '')
-			: afterSnippet,
+		// remove all occurrences of `\n` at the beginning
+		beforeSnippet: beforeSnippet.replace(/^\n+/, ''),
+		afterSnippet: afterSnippet.replace(/^\n+/, ''),
 	});
 
 	if (url === null) {
