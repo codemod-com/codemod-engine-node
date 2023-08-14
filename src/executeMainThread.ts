@@ -173,23 +173,6 @@ export const executeMainThread = async () => {
 						}),
 			)
 			.command(
-				'path',
-				'provides the path of metadata file for the specified codemod or recipe',
-				(y) =>
-					y
-						.option('name', {
-							type: 'string',
-							description:
-								'Name of the codemod or recipe in the registry',
-						})
-						.option('useJson', {
-							type: 'boolean',
-							description: 'Respond with JSON',
-							default: DEFAULT_USE_JSON,
-						})
-						.demandOption('name'),
-			)
-			.command(
 				'syncRegistry',
 				'syncs all the codemods from the registry',
 				(y) =>
@@ -223,29 +206,6 @@ export const executeMainThread = async () => {
 
 		try {
 			await handleListNamesCommand(printer, argv.useCache);
-		} catch (error) {
-			if (!(error instanceof Error)) {
-				return;
-			}
-
-			printer.log({ kind: 'error', message: error.message });
-		}
-
-		return;
-	}
-
-	if (String(argv._) === 'path') {
-		const printer = new Printer(argv.useJson);
-
-		try {
-			const codemodDownloader = new CodemodDownloader(printer);
-
-			const codemod = await codemodDownloader.download(argv.name, false);
-
-			printer.log({
-				kind: 'metadataPath',
-				path: codemod.directoryPath,
-			});
 		} catch (error) {
 			if (!(error instanceof Error)) {
 				return;
