@@ -30,7 +30,7 @@ const buildPaths = async (
 			repomod.includePatterns?.slice() ?? [],
 			{
 				absolute: true,
-				cwd: flowSettings.inputDirectoryPath,
+				cwd: flowSettings.targetPath,
 				// @ts-expect-error type inconsistency
 				fs: fileSystem,
 				ignore: repomod.excludePatterns?.slice(),
@@ -38,12 +38,12 @@ const buildPaths = async (
 			},
 		);
 
-		const flowPaths = await glob(flowSettings.includePattern.slice(), {
+		const flowPaths = await glob(flowSettings.include.slice(), {
 			absolute: true,
-			cwd: flowSettings.inputDirectoryPath,
+			cwd: flowSettings.targetPath,
 			// @ts-expect-error type inconsistency
 			fs: fileSystem,
-			ignore: flowSettings.excludePattern.slice(),
+			ignore: flowSettings.exclude.slice(),
 			nodir: true,
 		});
 
@@ -52,12 +52,12 @@ const buildPaths = async (
 			.map((path) => escape(path))
 			.slice(0, flowSettings.fileLimit);
 	} else {
-		const paths = await glob(flowSettings.includePattern.slice(), {
+		const paths = await glob(flowSettings.include.slice(), {
 			absolute: true,
-			cwd: flowSettings.inputDirectoryPath,
+			cwd: flowSettings.targetPath,
 			// @ts-expect-error type inconsistency
 			fs: fileSystem,
-			ignore: flowSettings.excludePattern.slice(),
+			ignore: flowSettings.exclude.slice(),
 			nodir: true,
 		});
 
@@ -73,12 +73,12 @@ async function* buildPathGenerator(
 ): AsyncGenerator<string, void, unknown> {
 	const controller = new AbortController();
 
-	const glob = new Glob(flowSettings.includePattern.slice(), {
+	const glob = new Glob(flowSettings.include.slice(), {
 		absolute: true,
-		cwd: flowSettings.inputDirectoryPath,
+		cwd: flowSettings.targetPath,
 		// @ts-expect-error type inconsistency
 		fs: fileSystem,
-		ignore: flowSettings.excludePattern.slice(),
+		ignore: flowSettings.exclude.slice(),
 		nodir: true,
 		withFileTypes: false,
 		signal: controller.signal,
@@ -231,7 +231,7 @@ export const runCodemod = async (
 
 		const newPaths = await glob(['**/*.*'], {
 			absolute: true,
-			cwd: flowSettings.inputDirectoryPath,
+			cwd: flowSettings.targetPath,
 			// @ts-expect-error type inconsistency
 			fs: mfs,
 			nodir: true,
@@ -317,7 +317,7 @@ export const runCodemod = async (
 		const fileCommands = await runRepomod(
 			fileSystem,
 			{ ...transformer, includePatterns: paths, excludePatterns: [] },
-			flowSettings.inputDirectoryPath,
+			flowSettings.targetPath,
 			flowSettings.usePrettier,
 		);
 
