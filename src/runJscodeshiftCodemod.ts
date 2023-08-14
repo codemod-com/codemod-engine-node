@@ -56,13 +56,15 @@ export const runJscodeshiftCodemod = (
 		});
 	};
 
+	const api = buildApi('tsx');
+
 	const newData = transform(
 		codemodSource,
 		{
 			path: oldPath,
 			source: oldData,
 		},
-		buildApi('tsx'),
+		api,
 		{
 			createFile,
 		},
@@ -70,6 +72,27 @@ export const runJscodeshiftCodemod = (
 
 	if (typeof newData !== 'string' || oldData === newData) {
 		return commands;
+	}
+
+	// sometimes codemods produce newData even though they are literally no changes
+	// by removing parentheses around return statements, we will likely find the pointless results
+	try {
+		const oldRoot = api.jscodeshift(oldData);
+		const newRoot = api.jscodeshift(newData);
+
+		oldRoot
+			.find(api.j.ParenthesizedExpression)
+			.replaceWith((path) => path.node.expression);
+
+		newRoot
+			.find(api.j.ParenthesizedExpression)
+			.replaceWith((path) => path.node.expression);
+
+		if (oldRoot.toSource() === newRoot.toSource()) {
+			return commands;
+		}
+	} catch (error) {
+		console.error(error);
 	}
 
 	commands.push({
