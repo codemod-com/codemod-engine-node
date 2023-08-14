@@ -236,7 +236,10 @@ export const handleLearnCliCommand = async (
 			oldSourceFile.forEachChild((node) => {
 				const content = node.getFullText();
 
-				if (content.includes(codeString)) {
+				if (
+					content.includes(codeString) &&
+					!beforeNodeTexts.has(content)
+				) {
 					beforeNodeTexts.add(content);
 				}
 			});
@@ -245,7 +248,10 @@ export const handleLearnCliCommand = async (
 		if (line.startsWith('+')) {
 			sourceFile.forEachChild((node) => {
 				const content = node.getFullText();
-				if (content.includes(codeString)) {
+				if (
+					content.includes(codeString) &&
+					!afterNodeTexts.has(content)
+				) {
 					afterNodeTexts.add(content);
 				}
 			});
