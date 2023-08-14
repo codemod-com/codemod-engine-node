@@ -41,13 +41,13 @@ const DEFAULT_USE_JSON = false;
 const DEFAULT_THREAD_COUNT = 4;
 
 const flowSettingsSchema = S.struct({
-	includePattern: S.optional(S.array(S.string)).withDefault(
+	include: S.optional(S.array(S.string)).withDefault(
 		() => DEFAULT_INCLUDE_PATTERNS,
 	),
-	excludePattern: S.optional(S.array(S.string)).withDefault(
+	exclude: S.optional(S.array(S.string)).withDefault(
 		() => DEFAULT_EXCLUDE_PATTERNS,
 	),
-	inputDirectoryPath: S.optional(S.string).withDefault(
+	targetPath: S.optional(S.string).withDefault(
 		() => DEFAULT_INPUT_DIRECTORY_PATH,
 	),
 	fileLimit: S.optional(
@@ -93,28 +93,24 @@ export const executeMainThread = async () => {
 	const argv = await Promise.resolve(
 		yargs(hideBin(process.argv))
 			.scriptName('intuita')
-			.command('*', 'run a codemod', (y) =>
+			.command('*', 'runs a codemod or recipe', (y) =>
 				y
-					.option('includePattern', {
+					.option('include', {
 						type: 'string',
 						array: true,
 						description: 'Glob pattern(s) for files to include',
 						default: DEFAULT_INCLUDE_PATTERNS,
 					})
-					.option('excludePattern', {
+					.option('exclude', {
 						type: 'string',
 						array: true,
 						description: 'Glob pattern(s) for files to exclude',
 						default: DEFAULT_EXCLUDE_PATTERNS,
 					})
-					.option('inputDirectoryPath', {
+					.option('targetPath', {
 						type: 'string',
 						description: 'Input directory path',
 						default: DEFAULT_INPUT_DIRECTORY_PATH,
-					})
-					.option('name', {
-						type: 'string',
-						description: 'Name of the codemod in the registry',
 					})
 					.option('sourcePath', {
 						type: 'string',
@@ -160,7 +156,7 @@ export const executeMainThread = async () => {
 						description: 'Output directory path for dry-run only',
 					}),
 			)
-			.command('listNames', 'list the codemod names', (y) =>
+			.command('list', 'lists all the codemods & recipes in the public registry', (y) =>
 				y
 					.option('useJson', {
 						type: 'boolean',
@@ -173,21 +169,18 @@ export const executeMainThread = async () => {
 						default: DEFAULT_USE_CACHE,
 					}),
 			)
-			.command(
-				'getMetadataPath',
-				'get the metadata path for a json',
-				(y) =>
-					y
-						.option('name', {
-							type: 'string',
-							description: 'Name of the codemod in the registry',
-						})
-						.option('useJson', {
-							type: 'boolean',
-							description: 'Respond with JSON',
-							default: DEFAULT_USE_JSON,
-						})
-						.demandOption('name'),
+			.command('path', 'provides the path of metadata file for the specified codemod or recipe', (y) =>
+				y
+					.option('name', {
+						type: 'string',
+						description: 'Name of the codemod or recipe in the registry',
+					})
+					.option('useJson', {
+						type: 'boolean',
+						description: 'Respond with JSON',
+						default: DEFAULT_USE_JSON,
+					})
+					.demandOption('name'),
 			)
 			.command(
 				'syncRegistry',
@@ -209,7 +202,7 @@ export const executeMainThread = async () => {
 							description: 'Respond with JSON',
 							default: DEFAULT_USE_JSON,
 						})
-						.option('inputFilePath', {
+						.option('targetPath', {
 							type: 'string',
 							description: 'Input file path',
 						}),
@@ -218,7 +211,7 @@ export const executeMainThread = async () => {
 			.version().argv,
 	);
 
-	if (String(argv._) === 'listNames') {
+	if (String(argv._) === 'list') {
 		const printer = new Printer(argv.useJson);
 
 		try {
@@ -234,7 +227,7 @@ export const executeMainThread = async () => {
 		return;
 	}
 
-	if (String(argv._) === 'getMetadataPath') {
+	if (String(argv._) === 'path') {
 		const printer = new Printer(argv.useJson);
 
 		try {
@@ -279,7 +272,7 @@ export const executeMainThread = async () => {
 		const printer = new Printer(argv.useJson);
 
 		try {
-			await handleLearnCliCommand(printer, argv.inputFilePath ?? null);
+			await handleLearnCliCommand(printer, argv.targetPath ?? null);
 		} catch (error) {
 			if (!(error instanceof Error)) {
 				return;
@@ -328,7 +321,7 @@ export const executeMainThread = async () => {
 			printer.info(
 				'Executing the "%s" codemod against "%s"',
 				codemodSettings.name,
-				flowSettings.inputDirectoryPath,
+				flowSettings.targetPath,
 			);
 
 			const codemod = await codemodDownloader.download(
