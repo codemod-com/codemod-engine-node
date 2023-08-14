@@ -254,8 +254,6 @@ export const executeMainThread = async () => {
 	const printer = new Printer(argv.useJson);
 
 	try {
-		console.log(argv._);
-
 		const codemodDownloader = new CodemodDownloader(printer);
 
 		const codemodSettings = S.parseSync(codemodSettingsSchema)(argv);
