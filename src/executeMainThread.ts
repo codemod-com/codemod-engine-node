@@ -17,7 +17,7 @@ import { handleLearnCliCommand } from './handleLearnCliCommand.js';
 
 const codemodSettingsSchema = S.union(
 	S.struct({
-		name: S.string,
+		_: S.array(S.string),
 	}),
 	S.struct({
 		sourcePath: S.string,
@@ -259,6 +259,10 @@ export const executeMainThread = async () => {
 		const codemodSettings = S.parseSync(codemodSettingsSchema)(argv);
 		const flowSettings = S.parseSync(flowSettingsSchema)(argv);
 		const runSettings = S.parseSync(runSettingsSchema)(argv);
+		const name =
+			argv._.length > 1 && typeof argv._[1] === 'string'
+				? argv._[1]
+				: null;
 
 		const handleCommand = async (
 			command: FormattedFileCommand,
@@ -283,17 +287,16 @@ export const executeMainThread = async () => {
 		const handleMessage = async (message: Message) => {
 			printer.log(message);
 		};
-		if ('name' in codemodSettings) {
-			printer.info(
-				'Executing the "%s" codemod against "%s"',
-				codemodSettings.name,
-				flowSettings.targetPath,
-			);
 
-			const codemod = await codemodDownloader.download(
-				codemodSettings.name,
-				flowSettings.useCache,
-			);
+		if (
+			'sourcePath' in codemodSettings &&
+			'codemodEngine' in codemodSettings
+		) {
+			const codemod = {
+				source: 'fileSystem' as const,
+				engine: codemodSettings.codemodEngine,
+				indexPath: codemodSettings.sourcePath,
+			};
 
 			await runCodemod(
 				// @ts-expect-error type inconsistency
@@ -305,12 +308,20 @@ export const executeMainThread = async () => {
 				handleCommand,
 				handleMessage,
 			);
-		} else {
-			const codemod = {
-				source: 'fileSystem' as const,
-				engine: codemodSettings.codemodEngine,
-				indexPath: codemodSettings.sourcePath,
-			};
+			return;
+		}
+
+		if (name !== null) {
+			printer.info(
+				'Executing the "%s" codemod against "%s"',
+				name,
+				flowSettings.targetPath,
+			);
+
+			const codemod = await codemodDownloader.download(
+				name,
+				flowSettings.useCache,
+			);
 
 			await runCodemod(
 				// @ts-expect-error type inconsistency
