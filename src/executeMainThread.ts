@@ -254,14 +254,16 @@ export const executeMainThread = async () => {
 	const printer = new Printer(argv.useJson);
 
 	try {
+		console.log(argv._);
+
 		const codemodDownloader = new CodemodDownloader(printer);
 
 		const codemodSettings = S.parseSync(codemodSettingsSchema)(argv);
 		const flowSettings = S.parseSync(flowSettingsSchema)(argv);
 		const runSettings = S.parseSync(runSettingsSchema)(argv);
 		const name =
-			argv._.length > 1 && typeof argv._[1] === 'string'
-				? argv._[1]
+			argv._.length > 0 && typeof argv._[0] === 'string'
+				? argv._[0]
 				: null;
 
 		const handleCommand = async (
