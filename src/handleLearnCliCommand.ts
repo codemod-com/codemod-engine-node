@@ -258,6 +258,19 @@ export const handleLearnCliCommand = async (
 		}
 	}
 
+	const irrelevantNodeTexts = new Set<string>();
+
+	beforeNodeTexts.forEach((text) => {
+		if (afterNodeTexts.has(text)) {
+			irrelevantNodeTexts.add(text);
+		}
+	});
+
+	irrelevantNodeTexts.forEach((text) => {
+		beforeNodeTexts.delete(text);
+		afterNodeTexts.delete(text);
+	});
+
 	const beforeSnippet = Array.from(beforeNodeTexts).join('');
 	const afterSnippet = Array.from(afterNodeTexts).join('');
 	const url = createCodemodStudioURL({
