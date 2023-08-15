@@ -259,10 +259,10 @@ export const executeMainThread = async () => {
 		const codemodSettings = S.parseSync(codemodSettingsSchema)(argv);
 		const flowSettings = S.parseSync(flowSettingsSchema)(argv);
 		const runSettings = S.parseSync(runSettingsSchema)(argv);
-		const name =
-			argv._.length > 0 && typeof argv._[0] === 'string'
-				? argv._[0]
-				: null;
+
+		const lastArgument = argv._[argv._.length - 1];
+
+		const name = typeof lastArgument === 'string' ? lastArgument : null;
 
 		const handleCommand = async (
 			command: FormattedFileCommand,
