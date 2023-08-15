@@ -19,6 +19,8 @@ import { getTransformer, transpile } from './getTransformer.js';
 import { Message } from './messages.js';
 import { minimatch } from 'minimatch';
 
+const TERMINATE_IDLE_THREADS_TIMEOUT = 30 * 1000;
+
 const buildPaths = async (
 	fileSystem: IFs,
 	flowSettings: FlowSettings,
@@ -373,7 +375,7 @@ export const runCodemod = async (
 					await workerThreadManager.terminateWorkers();
 
 					resolve();
-				}, 5000);
+				}, TERMINATE_IDLE_THREADS_TIMEOUT);
 			},
 			onCommand,
 			pathGenerator,
