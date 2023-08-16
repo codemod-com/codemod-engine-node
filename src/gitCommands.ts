@@ -60,15 +60,24 @@ export const findModifiedFiles = (): string[] | null => {
 
 export const findLastlyModifiedFile = async (): Promise<string | null> => {
 	try {
-		const modifiedFiles = execSync('git ls-files --modified', {
+		const modifiedAndDeletedFiles = execSync('git ls-files --modified', {
 			encoding: 'utf-8',
 		})
 			.trim()
 			.split('\n');
 
-		if (modifiedFiles.length === 0) {
+		if (modifiedAndDeletedFiles.length === 0) {
 			return null;
 		}
+
+		const deletedFiles = execSync('git ls-files --deleted', {
+			encoding: 'utf-8',
+		})
+			.trim()
+			.split('\n');
+		const modifiedFiles = modifiedAndDeletedFiles.filter(
+			(file) => !deletedFiles.includes(file),
+		);
 
 		let lastlyModifiedFile: string | null = null;
 		let maxTimestamp = 0;
