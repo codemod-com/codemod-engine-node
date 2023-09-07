@@ -1,4 +1,4 @@
-# codemod-engine-node
+# Intuita's Codemod Engine Node
 
 ## Instalation
 
@@ -17,14 +17,14 @@ Install the Codemod Engine Node as the global executable sourced from the projec
 
 Install the Codemod Engine Node as the global executable sourced from the NPM Registry https://www.npmjs.com/.
 
-    pnpm add --global @intuita-inc/intuita # install using PNPM
+    pnpm i -g intuita # install globally using PNPM
     which intuita # test if the installation was successful
 
 ## Execution
 
 This example shows how to execute a "next/13/app-router" codemod over the current working directory with PNPX:
 
-    pnpx @intuita-inc/intuita --name next/13/app-router
+    pnpx intuita --name next/13/app-router
 
 If you have installed the executable, you can achieve the same with the following line:
 
