@@ -8,6 +8,7 @@ const workerThreadMessageSchema = S.union(
 	S.struct({
 		kind: S.literal('error'),
 		message: S.string,
+		path: S.union(S.string, S.undefined),
 	}),
 );
 
