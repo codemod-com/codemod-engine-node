@@ -14,6 +14,7 @@ import { mdxjs } from 'micromark-extension-mdxjs';
 import { mdxFromMarkdown, mdxToMarkdown } from 'mdast-util-mdx';
 import { visit } from 'unist-util-visit';
 import { IFs } from 'memfs';
+import { ArgumentRecord } from './argumentRecord.js';
 
 const parseMdx = (data: string) =>
 	fromMarkdown(data, {
@@ -43,6 +44,7 @@ export const runRepomod = async (
 	repomod: Repomod<Dependencies>,
 	inputPath: string,
 	formatWithPrettier: boolean,
+	argumentRecord: ArgumentRecord,
 ): Promise<readonly FileCommand[]> => {
 	const fileSystemManager = new FileSystemManager(
 		// @ts-expect-error type inconsistency
@@ -68,12 +70,9 @@ export const runRepomod = async (
 		unifiedFileSystem,
 	}));
 
-	const externalFileCommands = await executeRepomod(
-		api,
-		repomod,
-		inputPath,
-		{},
-	);
+	const externalFileCommands = await executeRepomod(api, repomod, inputPath, {
+		...argumentRecord,
+	});
 
 	return Promise.all(
 		externalFileCommands.map(async (externalFileCommand) => {

@@ -3,6 +3,7 @@ import { MainThreadMessage } from './mainThreadMessages.js';
 import { Message } from './messages.js';
 import { decodeWorkerThreadMessage } from './workerThreadMessages.js';
 import { FormattedFileCommand } from './fileCommands.js';
+import { ArgumentRecord } from './argumentRecord.js';
 
 const WORKER_THREAD_TIME_LIMIT = 10000;
 
@@ -29,6 +30,7 @@ export class WorkerThreadManager {
 			command: FormattedFileCommand,
 		) => Promise<void>,
 		private readonly __pathGenerator: AsyncGenerator<string, void, void>,
+		private readonly __argumentRecord: ArgumentRecord,
 	) {
 		for (let i = 0; i < __workerCount; ++i) {
 			this.__idleWorkerIds.push(i);
@@ -140,6 +142,7 @@ export class WorkerThreadManager {
 			codemodSource: this.__codemodSource,
 			codemodEngine: this.__codemodEngine,
 			formatWithPrettier: this.__formatWithPrettier,
+			argumentRecord: this.__argumentRecord,
 		} satisfies MainThreadMessage);
 
 		this.__workerTimestamps[id] = Date.now();

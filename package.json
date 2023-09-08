@@ -10,7 +10,7 @@
 		"@babel/preset-env": "^7.20.2",
 		"@babel/traverse": "7.20.5",
 		"@effect/schema": "0.27.0",
-		"@intuita-inc/repomod-engine-api": "1.1.2",
+		"@intuita-inc/repomod-engine-api": "1.1.3",
 		"@svgr/hast-util-to-babel-ast": "^7.0.0",
 		"ast-types": "^0.14.2",
 		"axios": "^1.4.0",

@@ -14,6 +14,7 @@ import {
 } from './fileCommands.js';
 import { Message } from './messages.js';
 import { handleLearnCliCommand } from './handleLearnCliCommand.js';
+import { ArgumentRecord } from './argumentRecord.js';
 
 const codemodSettingsSchema = S.union(
 	S.struct({
@@ -288,6 +289,38 @@ export const executeMainThread = async () => {
 			printer.log(message);
 		};
 
+		const argumentRecord: {
+			-readonly [P in keyof ArgumentRecord]: ArgumentRecord[P];
+		} = {};
+
+		Object.keys(argv)
+			.filter((arg) => arg.startsWith('arg:'))
+			.forEach((arg) => {
+				const key = arg.slice(4);
+				const value = argv[arg];
+
+				if (S.is(S.number)(value)) {
+					argumentRecord[key] = value;
+					return;
+				}
+
+				if (!S.is(S.string)(value)) {
+					return;
+				}
+
+				if (value === 'true') {
+					argumentRecord[key] = true;
+					return;
+				}
+
+				if (value === 'boolean') {
+					argumentRecord[key] = false;
+					return;
+				}
+
+				argumentRecord[key] = value;
+			});
+
 		if (
 			'sourcePath' in codemodSettings &&
 			'codemodEngine' in codemodSettings
@@ -307,6 +340,7 @@ export const executeMainThread = async () => {
 				runSettings,
 				handleCommand,
 				handleMessage,
+				argumentRecord,
 			);
 			return;
 		}
@@ -332,6 +366,7 @@ export const executeMainThread = async () => {
 				runSettings,
 				handleCommand,
 				handleMessage,
+				argumentRecord,
 			);
 		}
 	} catch (error) {
