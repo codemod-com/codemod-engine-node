@@ -271,14 +271,19 @@ export const handleLearnCliCommand = async (
 		afterNodeTexts.delete(text);
 	});
 
-	const beforeSnippet = Array.from(beforeNodeTexts).join('');
-	const afterSnippet = Array.from(afterNodeTexts).join('');
+	const beforeSnippet = Array.from(beforeNodeTexts)
+		.join('')
+		// remove all occurrences of `\n` at the beginning
+		.replace(/^\n+/, '');
+	const afterSnippet = Array.from(afterNodeTexts)
+		.join('')
+		// remove all occurrences of `\n` at the beginning
+		.replace(/^\n+/, '');
 	const url = createCodemodStudioURL({
 		// TODO: Support other engines in the future
 		engine: 'jscodeshift',
-		// remove all occurrences of `\n` at the beginning
-		beforeSnippet: beforeSnippet.replace(/^\n+/, ''),
-		afterSnippet: afterSnippet.replace(/^\n+/, ''),
+		beforeSnippet,
+		afterSnippet,
 	});
 
 	if (url === null) {
