@@ -313,7 +313,7 @@ export const executeMainThread = async () => {
 					return;
 				}
 
-				if (value === 'boolean') {
+				if (value === 'false') {
 					argumentRecord[key] = false;
 					return;
 				}
