@@ -1,6 +1,7 @@
 import vm from 'node:vm';
 import jscodeshift, { API, FileInfo } from 'jscodeshift';
 import type { FileCommand } from './fileCommands.js';
+import { ArgumentRecord } from './argumentRecord.js';
 
 export const buildApi = (parser: string): API => ({
 	j: jscodeshift.withParser(parser),
@@ -15,7 +16,12 @@ const transform = (
 	codemodSource: string,
 	fileInfo: FileInfo,
 	api: API,
-	options: any,
+	options: {
+		// the options will be of type ArgumentRecord
+		// after the removal of the createFile function
+		[x: string]: unknown;
+		createFile: (newPath: string, newData: string) => void;
+	},
 ): string => {
 	const codeToExecute = `
 		${codemodSource}
@@ -44,6 +50,7 @@ export const runJscodeshiftCodemod = (
 	oldPath: string,
 	oldData: string,
 	formatWithPrettier: boolean,
+	argumentRecord: ArgumentRecord,
 ): readonly FileCommand[] => {
 	const commands: FileCommand[] = [];
 
@@ -66,6 +73,7 @@ export const runJscodeshiftCodemod = (
 		},
 		api,
 		{
+			...argumentRecord,
 			createFile,
 		},
 	);

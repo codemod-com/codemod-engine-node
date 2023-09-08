@@ -1,4 +1,5 @@
 import * as S from '@effect/schema/Schema';
+import { argumentRecordSchema } from './argumentRecord.js';
 
 const mainThreadMessageSchema = S.union(
 	S.struct({
@@ -16,6 +17,7 @@ const mainThreadMessageSchema = S.union(
 		path: S.string,
 		data: S.string,
 		formatWithPrettier: S.boolean,
+		argumentRecord: argumentRecordSchema,
 	}),
 );
 

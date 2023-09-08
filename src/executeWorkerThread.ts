@@ -29,12 +29,14 @@ const messageHandler = async (m: unknown) => {
 							message.path,
 							message.data,
 							message.formatWithPrettier,
+							message.argumentRecord,
 					  )
 					: runTsMorphCodemod(
 							message.codemodSource,
 							message.path,
 							message.data,
 							message.formatWithPrettier,
+							message.argumentRecord,
 					  );
 
 			const commands = await buildFormattedFileCommands(fileCommands);
