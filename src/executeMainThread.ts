@@ -15,6 +15,8 @@ import {
 import { Message } from './messages.js';
 import { handleLearnCliCommand } from './handleLearnCliCommand.js';
 import { ArgumentRecord } from './argumentRecord.js';
+import { IFs } from 'memfs';
+import { buildSafeArgumentRecord } from './safeArgumentRecord.js';
 
 const codemodSettingsSchema = S.union(
 	S.struct({
@@ -331,16 +333,20 @@ export const executeMainThread = async () => {
 				indexPath: codemodSettings.sourcePath,
 			};
 
+			const safeArgumentRecord = buildSafeArgumentRecord(
+				codemod,
+				argumentRecord,
+			);
+
 			await runCodemod(
-				// @ts-expect-error type inconsistency
-				fs,
+				fs as unknown as IFs,
 				printer,
 				codemod,
 				flowSettings,
 				runSettings,
 				handleCommand,
 				handleMessage,
-				argumentRecord,
+				safeArgumentRecord,
 			);
 			return;
 		}
@@ -357,16 +363,20 @@ export const executeMainThread = async () => {
 				flowSettings.useCache,
 			);
 
+			const safeArgumentRecord = buildSafeArgumentRecord(
+				codemod,
+				argumentRecord,
+			);
+
 			await runCodemod(
-				// @ts-expect-error type inconsistency
-				fs,
+				fs as unknown as IFs,
 				printer,
 				codemod,
 				flowSettings,
 				runSettings,
 				handleCommand,
 				handleMessage,
-				argumentRecord,
+				safeArgumentRecord,
 			);
 		}
 	} catch (error) {
