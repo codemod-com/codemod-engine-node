@@ -20,33 +20,37 @@ const argumentsSchema = S.array(
 	),
 );
 
+const optionalArgumentsSchema = S.optional(argumentsSchema).withDefault(
+	() => [],
+);
+
 export const codemodConfigSchema = S.union(
 	S.struct({
 		schemaVersion: S.literal('1.0.0'),
 		engine: S.literal('piranha'),
 		language: S.literal('java'),
-		arguments: S.union(argumentsSchema, S.undefined),
+		arguments: optionalArgumentsSchema,
 	}),
 	S.struct({
 		schemaVersion: S.literal('1.0.0'),
 		engine: S.literal('jscodeshift'),
-		arguments: S.union(argumentsSchema, S.undefined),
+		arguments: optionalArgumentsSchema,
 	}),
 	S.struct({
 		schemaVersion: S.literal('1.0.0'),
 		engine: S.literal('ts-morph'),
-		arguments: S.union(argumentsSchema, S.undefined),
+		arguments: optionalArgumentsSchema,
 	}),
 	S.struct({
 		schemaVersion: S.literal('1.0.0'),
 		engine: S.literal('repomod-engine'),
-		arguments: S.union(argumentsSchema, S.undefined),
+		arguments: optionalArgumentsSchema,
 	}),
 	S.struct({
 		schemaVersion: S.literal('1.0.0'),
 		engine: S.literal('recipe'),
 		names: S.array(S.string),
-		arguments: S.union(argumentsSchema, S.undefined),
+		arguments: optionalArgumentsSchema,
 	}),
 );
 
