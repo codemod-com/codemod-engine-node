@@ -17,7 +17,7 @@ const mainThreadMessageSchema = S.union(
 		path: S.string,
 		data: S.string,
 		formatWithPrettier: S.boolean,
-		argumentRecord: argumentRecordSchema,
+		safeArgumentRecord: S.tuple(argumentRecordSchema),
 	}),
 );
 

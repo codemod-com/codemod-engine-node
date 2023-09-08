@@ -290,7 +290,7 @@ export const executeMainThread = async () => {
 		};
 
 		const argumentRecord: {
-			-readonly [P in keyof ArgumentRecord]: ArgumentRecord[P];
+			[P in keyof ArgumentRecord]: ArgumentRecord[P];
 		} = {};
 
 		Object.keys(argv)

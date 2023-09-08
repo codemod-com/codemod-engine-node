@@ -1,7 +1,7 @@
 import vm from 'node:vm';
 import jscodeshift, { API, FileInfo } from 'jscodeshift';
 import type { FileCommand } from './fileCommands.js';
-import { ArgumentRecord } from './argumentRecord.js';
+import { SafeArgumentRecord } from './safeArgumentRecord.js';
 
 export const buildApi = (parser: string): API => ({
 	j: jscodeshift.withParser(parser),
@@ -50,7 +50,7 @@ export const runJscodeshiftCodemod = (
 	oldPath: string,
 	oldData: string,
 	formatWithPrettier: boolean,
-	argumentRecord: ArgumentRecord,
+	safeArgumentRecord: SafeArgumentRecord,
 ): readonly FileCommand[] => {
 	const commands: FileCommand[] = [];
 
@@ -73,7 +73,7 @@ export const runJscodeshiftCodemod = (
 		},
 		api,
 		{
-			...argumentRecord,
+			...safeArgumentRecord[0],
 			createFile,
 		},
 	);

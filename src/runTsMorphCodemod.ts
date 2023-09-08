@@ -1,13 +1,13 @@
 import vm from 'node:vm';
 import tsmorph from 'ts-morph';
-import { ArgumentRecord } from './argumentRecord.js';
 import type { FileCommand } from './fileCommands.js';
+import { SafeArgumentRecord } from './safeArgumentRecord.js';
 
 const transform = (
 	codemodSource: string,
 	oldPath: string,
 	oldData: string,
-	argumentRecord: ArgumentRecord,
+	safeArgumentRecord: SafeArgumentRecord,
 ): string => {
 	const codeToExecute = `
 		${codemodSource}
@@ -36,7 +36,7 @@ const transform = (
 		exports,
 		__INTUITA__oldPath: oldPath,
 		__INTUITA__oldData: oldData,
-		__INTUITA__argumentRecord: { ...argumentRecord },
+		__INTUITA__argumentRecord: { ...safeArgumentRecord[0] },
 		require: (name: string) => {
 			if (name === 'ts-morph') {
 				return tsmorph;
@@ -52,9 +52,14 @@ export const runTsMorphCodemod = (
 	oldPath: string,
 	oldData: string,
 	formatWithPrettier: boolean,
-	argumentRecord: ArgumentRecord,
+	safeArgumentRecord: SafeArgumentRecord,
 ): readonly FileCommand[] => {
-	const newData = transform(codemodSource, oldPath, oldData, argumentRecord);
+	const newData = transform(
+		codemodSource,
+		oldPath,
+		oldData,
+		safeArgumentRecord,
+	);
 
 	if (typeof newData !== 'string' || oldData === newData) {
 		return [];

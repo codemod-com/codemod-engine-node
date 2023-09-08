@@ -5,19 +5,25 @@ const argumentsSchema = S.array(
 		S.struct({
 			name: S.string,
 			kind: S.literal('string'),
-			default: S.union(S.string, S.undefined),
+			default: S.optional(S.string),
 		}),
 		S.struct({
 			name: S.string,
 			kind: S.literal('number'),
-			default: S.union(S.number, S.undefined),
+			default: S.optional(S.number),
 		}),
 		S.struct({
 			name: S.string,
 			kind: S.literal('boolean'),
-			default: S.union(S.boolean, S.undefined),
+			default: S.optional(S.boolean),
 		}),
 	),
+);
+
+type Arguments = S.To<typeof argumentsSchema>;
+
+const optionalArgumentsSchema = S.optional(argumentsSchema).withDefault(
+	() => [],
 );
 
 export const codemodConfigSchema = S.union(
@@ -25,28 +31,28 @@ export const codemodConfigSchema = S.union(
 		schemaVersion: S.literal('1.0.0'),
 		engine: S.literal('piranha'),
 		language: S.literal('java'),
-		arguments: S.union(argumentsSchema, S.undefined),
+		arguments: optionalArgumentsSchema,
 	}),
 	S.struct({
 		schemaVersion: S.literal('1.0.0'),
 		engine: S.literal('jscodeshift'),
-		arguments: S.union(argumentsSchema, S.undefined),
+		arguments: optionalArgumentsSchema,
 	}),
 	S.struct({
 		schemaVersion: S.literal('1.0.0'),
 		engine: S.literal('ts-morph'),
-		arguments: S.union(argumentsSchema, S.undefined),
+		arguments: optionalArgumentsSchema,
 	}),
 	S.struct({
 		schemaVersion: S.literal('1.0.0'),
 		engine: S.literal('repomod-engine'),
-		arguments: S.union(argumentsSchema, S.undefined),
+		arguments: optionalArgumentsSchema,
 	}),
 	S.struct({
 		schemaVersion: S.literal('1.0.0'),
 		engine: S.literal('recipe'),
 		names: S.array(S.string),
-		arguments: S.union(argumentsSchema, S.undefined),
+		arguments: optionalArgumentsSchema,
 	}),
 );
 
@@ -57,6 +63,7 @@ export type Codemod =
 			engine: 'recipe';
 			directoryPath: string;
 			codemods: ReadonlyArray<Codemod>;
+			arguments: Arguments;
 	  }>
 	| Readonly<{
 			source: 'registry';
@@ -64,12 +71,14 @@ export type Codemod =
 			engine: 'jscodeshift' | 'repomod-engine' | 'ts-morph';
 			directoryPath: string;
 			indexPath: string;
+			arguments: Arguments;
 	  }>
 	| Readonly<{
 			source: 'registry';
 			name: string;
 			engine: 'piranha';
 			directoryPath: string;
+			arguments: Arguments;
 	  }>
 	| Readonly<{
 			source: 'fileSystem';
