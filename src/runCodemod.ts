@@ -18,7 +18,7 @@ import { WorkerThreadManager } from './workerThreadManager.js';
 import { getTransformer, transpile } from './getTransformer.js';
 import { Message } from './messages.js';
 import { minimatch } from 'minimatch';
-import { ArgumentRecord } from './argumentRecord.js';
+import { SafeArgumentRecord } from './safeArgumentRecord.js';
 
 const TERMINATE_IDLE_THREADS_TIMEOUT = 30 * 1000;
 
@@ -134,7 +134,7 @@ export const runCodemod = async (
 	runSettings: RunSettings,
 	onCommand: (command: FormattedFileCommand) => Promise<void>,
 	onPrinterMessage: (message: Message) => void,
-	argumentRecord: ArgumentRecord,
+	safeArgumentRecord: SafeArgumentRecord,
 ): Promise<void> => {
 	const name = 'name' in codemod ? codemod.name : codemod.indexPath;
 
@@ -165,7 +165,7 @@ export const runCodemod = async (
 						// we are discarding any printer messages from subcodemods
 						// if we are within a recipe
 					},
-					argumentRecord,
+					safeArgumentRecord,
 				);
 
 				for (const command of commands) {
@@ -223,7 +223,7 @@ export const runCodemod = async (
 					// we are discarding any printer messages from subcodemods
 					// if we are within a recipe
 				},
-				argumentRecord,
+				safeArgumentRecord,
 			);
 
 			for (const command of commands) {
@@ -325,7 +325,7 @@ export const runCodemod = async (
 			{ ...transformer, includePatterns: paths, excludePatterns: [] },
 			flowSettings.targetPath,
 			flowSettings.usePrettier,
-			argumentRecord,
+			safeArgumentRecord,
 		);
 
 		const commands = await buildFormattedFileCommands(fileCommands);
@@ -384,7 +384,7 @@ export const runCodemod = async (
 			},
 			onCommand,
 			pathGenerator,
-			argumentRecord,
+			safeArgumentRecord,
 		);
 	});
 };

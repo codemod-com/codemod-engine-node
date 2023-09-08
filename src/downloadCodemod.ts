@@ -117,6 +117,7 @@ export class CodemodDownloader {
 				name,
 				engine: config.engine,
 				directoryPath,
+				arguments: config.arguments,
 			};
 		}
 
@@ -141,6 +142,7 @@ export class CodemodDownloader {
 				engine: config.engine,
 				indexPath,
 				directoryPath,
+				arguments: config.arguments,
 			};
 		}
 
@@ -158,6 +160,7 @@ export class CodemodDownloader {
 				engine: config.engine,
 				codemods,
 				directoryPath,
+				arguments: config.arguments,
 			};
 		}
 

@@ -20,6 +20,8 @@ const argumentsSchema = S.array(
 	),
 );
 
+type Arguments = S.To<typeof argumentsSchema>;
+
 const optionalArgumentsSchema = S.optional(argumentsSchema).withDefault(
 	() => [],
 );
@@ -61,6 +63,7 @@ export type Codemod =
 			engine: 'recipe';
 			directoryPath: string;
 			codemods: ReadonlyArray<Codemod>;
+			arguments: Arguments;
 	  }>
 	| Readonly<{
 			source: 'registry';
@@ -68,12 +71,14 @@ export type Codemod =
 			engine: 'jscodeshift' | 'repomod-engine' | 'ts-morph';
 			directoryPath: string;
 			indexPath: string;
+			arguments: Arguments;
 	  }>
 	| Readonly<{
 			source: 'registry';
 			name: string;
 			engine: 'piranha';
 			directoryPath: string;
+			arguments: Arguments;
 	  }>
 	| Readonly<{
 			source: 'fileSystem';
