@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { isMainThread } from 'worker_threads';
 import { executeMainThread } from './executeMainThread.js';
 import { executeWorkerThread } from './executeWorkerThread.js';

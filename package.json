@@ -1,6 +1,6 @@
 {
 	"name": "intuita",
-	"version": "0.0.22",
+	"version": "0.0.24",
 	"description": "A codemod engine for Node.js libraries (jscodeshift, ts-morph, etc.)",
 	"type": "module",
 	"exports": null,
@@ -30,8 +30,8 @@
 		"unist-util-visit": "^5.0.0",
 		"yargs": "^17.6.2"
 	},
-	"main": "./src/index.ts",
-	"bin": "dist/index.cjs",
+	"main": "./dist/index.cjs",
+	"bin": "./dist/index.cjs",
 	"devDependencies": {
 		"@types/babel__traverse": "^7.20.1",
 		"@types/jscodeshift": "^0.11.5",
