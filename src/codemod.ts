@@ -26,11 +26,26 @@ const optionalArgumentsSchema = S.optional(argumentsSchema).withDefault(
 	() => [],
 );
 
+export const PIRANHA_LANGUAGES = [
+	'java',
+	'kt',
+	'go',
+	'py',
+	'swift',
+	'ts',
+	'tsx',
+	'scala',
+] as const;
+
+const piranhaLanguageSchema = S.union(
+	...PIRANHA_LANGUAGES.map((language) => S.literal(language)),
+);
+
 export const codemodConfigSchema = S.union(
 	S.struct({
 		schemaVersion: S.literal('1.0.0'),
 		engine: S.literal('piranha'),
-		language: S.literal('java'),
+		language: piranhaLanguageSchema,
 		arguments: optionalArgumentsSchema,
 	}),
 	S.struct({
