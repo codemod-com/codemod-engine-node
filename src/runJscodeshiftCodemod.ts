@@ -23,15 +23,8 @@ const transform = (
 		createFile: (newPath: string, newData: string) => void;
 	},
 ): string => {
-	const codeToExecute = `
-		${codemodSource}
-
-		transform(__INTUITA__file, __INTUITA__api, __INTUITA__options);
-	`;
-
 	// Create a new context for the code execution
 	const exports = {};
-
 	const context = vm.createContext({
 		module: {
 			exports,
@@ -42,6 +35,22 @@ const transform = (
 		__INTUITA__options: options,
 	});
 
+	try {
+		const codeToExecute = `
+			${codemodSource}
+
+			transform(__INTUITA__file, __INTUITA__api, __INTUITA__options);
+		`;
+		return vm.runInContext(codeToExecute, context);
+	} catch (err) {
+		console.error(err);
+	}
+
+	const codeToExecute = `
+		${codemodSource}
+	
+		transformer(__INTUITA__file, __INTUITA__api, __INTUITA__options);
+	`;
 	return vm.runInContext(codeToExecute, context);
 };
 
