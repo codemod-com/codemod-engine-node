@@ -1,6 +1,6 @@
 {
 	"name": "intuita",
-	"version": "0.0.25",
+	"version": "0.0.26",
 	"description": "A codemod engine for Node.js libraries (jscodeshift, ts-morph, etc.)",
 	"type": "module",
 	"exports": null,
@@ -10,7 +10,7 @@
 		"@babel/preset-env": "^7.20.2",
 		"@babel/traverse": "7.20.5",
 		"@effect/schema": "0.27.0",
-		"@intuita-inc/repomod-engine-api": "1.1.4",
+		"@intuita-inc/repomod-engine-api": "1.1.5",
 		"@svgr/hast-util-to-babel-ast": "^7.0.0",
 		"ast-types": "^0.14.2",
 		"axios": "^1.4.0",

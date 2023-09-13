@@ -109,6 +109,13 @@ export const runRepomod = async (
 				totalFileNumber: totalPathHashDigests.size,
 			});
 		},
+		onError: (path, message) => {
+			onPrinterMessage({
+				kind: 'error',
+				path,
+				message,
+			});
+		},
 	};
 
 	const externalFileCommands = await executeRepomod(
