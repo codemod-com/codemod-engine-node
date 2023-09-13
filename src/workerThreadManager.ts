@@ -177,6 +177,7 @@ export class WorkerThreadManager {
 				this.__onPrinterMessage({
 					kind: 'error',
 					message: workerThreadMessage.message,
+					path: workerThreadMessage.path,
 				});
 			}
 
