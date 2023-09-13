@@ -201,7 +201,9 @@ export const runCodemod = async (
 			fileMap.set(path, dataHashDigest);
 		}
 
-		for (const subCodemod of codemod.codemods) {
+		for (let i = 0; i < codemod.codemods.length; ++i) {
+			const subCodemod = codemod.codemods[i];
+
 			const commands: FormattedFileCommand[] = [];
 
 			await runCodemod(
@@ -218,6 +220,18 @@ export const runCodemod = async (
 				(message) => {
 					if (message.kind === 'error') {
 						onPrinterMessage(message);
+					}
+
+					if (message.kind === 'progress') {
+						onPrinterMessage({
+							kind: 'progress',
+							processedFileNumber:
+								message.totalFileNumber * i +
+								message.processedFileNumber,
+							totalFileNumber:
+								message.totalFileNumber *
+								codemod.codemods.length,
+						});
 					}
 
 					// we are discarding any printer messages from subcodemods
@@ -326,6 +340,7 @@ export const runCodemod = async (
 			flowSettings.targetPath,
 			flowSettings.usePrettier,
 			safeArgumentRecord,
+			onPrinterMessage,
 		);
 
 		const commands = await buildFormattedFileCommands(fileCommands);
