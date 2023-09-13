@@ -1,4 +1,8 @@
-import { Repomod, executeRepomod } from '@intuita-inc/repomod-engine-api';
+import {
+	Repomod,
+	executeRepomod,
+	CallbackService,
+} from '@intuita-inc/repomod-engine-api';
 import { buildApi } from '@intuita-inc/repomod-engine-api';
 import { UnifiedFileSystem } from '@intuita-inc/repomod-engine-api';
 import { FileSystemManager } from '@intuita-inc/repomod-engine-api';
@@ -15,6 +19,8 @@ import { mdxFromMarkdown, mdxToMarkdown } from 'mdast-util-mdx';
 import { visit } from 'unist-util-visit';
 import { IFs } from 'memfs';
 import { SafeArgumentRecord } from './safeArgumentRecord.js';
+import { createHash } from 'node:crypto';
+import { Message } from './messages.js';
 
 const parseMdx = (data: string) =>
 	fromMarkdown(data, {
@@ -45,6 +51,7 @@ export const runRepomod = async (
 	inputPath: string,
 	formatWithPrettier: boolean,
 	safeArgumentRecord: SafeArgumentRecord,
+	onPrinterMessage: (message: Message) => void,
 ): Promise<readonly FileCommand[]> => {
 	const fileSystemManager = new FileSystemManager(
 		// @ts-expect-error type inconsistency
@@ -70,9 +77,49 @@ export const runRepomod = async (
 		unifiedFileSystem,
 	}));
 
-	const externalFileCommands = await executeRepomod(api, repomod, inputPath, {
-		...safeArgumentRecord[0],
-	});
+	const processedPathHashDigests = new Set<string>();
+
+	const totalPathHashDigests = new Set<string>();
+
+	for (const path of repomod.includePatterns ?? []) {
+		totalPathHashDigests.add(
+			createHash('ripemd160').update(path).digest('base64url'),
+		);
+	}
+
+	const callbackService: CallbackService = {
+		onCommandExecuted: (command) => {
+			if (
+				command.kind !== 'upsertData' &&
+				command.kind !== 'deleteFile'
+			) {
+				return;
+			}
+
+			const hashDigest = createHash('ripemd160')
+				.update(command.path)
+				.digest('base64url');
+
+			processedPathHashDigests.add(hashDigest);
+			totalPathHashDigests.add(hashDigest);
+
+			onPrinterMessage({
+				kind: 'progress',
+				processedFileNumber: processedPathHashDigests.size,
+				totalFileNumber: totalPathHashDigests.size,
+			});
+		},
+	};
+
+	const externalFileCommands = await executeRepomod(
+		api,
+		repomod,
+		inputPath,
+		{
+			...safeArgumentRecord[0],
+		},
+		callbackService,
+	);
 
 	return Promise.all(
 		externalFileCommands.map(async (externalFileCommand) => {
