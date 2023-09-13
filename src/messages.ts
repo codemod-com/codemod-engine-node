@@ -50,6 +50,7 @@ export type NamesMessage = Readonly<{
 export type ErrorMessage = Readonly<{
 	kind: 'error';
 	message: string;
+	path?: string;
 }>;
 
 // TODO I am considering naming it PrinterMessage
