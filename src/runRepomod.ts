@@ -17,6 +17,7 @@ import { toMarkdown } from 'mdast-util-to-markdown';
 import { mdxjs } from 'micromark-extension-mdxjs';
 import { mdxFromMarkdown, mdxToMarkdown } from 'mdast-util-mdx';
 import { visit } from 'unist-util-visit';
+import { filter } from 'unist-util-filter';
 import { IFs } from 'memfs';
 import { SafeArgumentRecord } from './safeArgumentRecord.js';
 import { createHash } from 'node:crypto';
@@ -41,6 +42,7 @@ export type Dependencies = Readonly<{
 	tsmorph: typeof tsmorph;
 	parseMdx: typeof parseMdx;
 	stringifyMdx: typeof stringifyMdx;
+	filterMdxAst: typeof filter;
 	visitMdxAst: typeof visit;
 	unifiedFileSystem: UnifiedFileSystem;
 }>;
@@ -74,6 +76,7 @@ export const runRepomod = async (
 		parseMdx,
 		stringifyMdx,
 		visitMdxAst: visit,
+		filterMdxAst: filter,
 		unifiedFileSystem,
 	}));
 
