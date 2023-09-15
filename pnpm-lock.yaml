@@ -1,4 +1,4 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
@@ -21,8 +21,8 @@ dependencies:
     specifier: 0.27.0
     version: 0.27.0
   '@intuita-inc/repomod-engine-api':
-    specifier: 1.1.5
-    version: 1.1.5
+    specifier: 1.2.1
+    version: 1.2.1
   '@svgr/hast-util-to-babel-ast':
     specifier: ^7.0.0
     version: 7.0.0
@@ -1631,8 +1631,8 @@ packages:
     resolution: {integrity: sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==}
     dev: true
 
-  /@intuita-inc/repomod-engine-api@1.1.5:
-    resolution: {integrity: sha512-gg0+xM1Rdke+fKuLCagiRyUBTWp6r2wh587bl8nbP8tpJpvVksstWOjB8UUoMB0+bMggxKt63TWLBRZHYRB/LQ==}
+  /@intuita-inc/repomod-engine-api@1.2.1:
+    resolution: {integrity: sha512-Z0dksB/hgoyR1kPsQ+hrE5M6ww5/vmE6b5VvMmO3ceurs7Pu5xQfu1pi49INBPRuWh1OH1vEXBlsmyGQeQMHzw==}
     dependencies:
       glob: 10.3.4
     dev: false
