@@ -12,6 +12,7 @@ const mainThreadMessageSchema = S.union(
 		codemodEngine: S.union(
 			S.literal('jscodeshift'),
 			S.literal('repomod-engine'),
+			S.literal('filemod'),
 			S.literal('ts-morph'),
 		),
 		path: S.string,

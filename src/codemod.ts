@@ -60,7 +60,7 @@ export const codemodConfigSchema = S.union(
 	}),
 	S.struct({
 		schemaVersion: S.literal('1.0.0'),
-		engine: S.literal('repomod-engine'),
+		engine: S.union(S.literal('repomod-engine'), S.literal('filemod')),
 		arguments: optionalArgumentsSchema,
 	}),
 	S.struct({
@@ -83,7 +83,7 @@ export type Codemod =
 	| Readonly<{
 			source: 'registry';
 			name: string;
-			engine: 'jscodeshift' | 'repomod-engine' | 'ts-morph';
+			engine: 'jscodeshift' | 'repomod-engine' | 'filemod' | 'ts-morph';
 			directoryPath: string;
 			indexPath: string;
 			arguments: Arguments;
@@ -97,6 +97,6 @@ export type Codemod =
 	  }>
 	| Readonly<{
 			source: 'fileSystem';
-			engine: 'jscodeshift' | 'repomod-engine' | 'ts-morph';
+			engine: 'jscodeshift' | 'repomod-engine' | 'filemod' | 'ts-morph';
 			indexPath: string;
 	  }>;

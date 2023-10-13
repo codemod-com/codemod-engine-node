@@ -1,11 +1,7 @@
-import {
-	Repomod,
-	executeRepomod,
-	CallbackService,
-} from '@intuita-inc/repomod-engine-api';
-import { buildApi } from '@intuita-inc/repomod-engine-api';
-import { UnifiedFileSystem } from '@intuita-inc/repomod-engine-api';
-import { FileSystemManager } from '@intuita-inc/repomod-engine-api';
+import { Filemod, executeFilemod, CallbackService } from '@intuita-inc/filemod';
+import { buildApi } from '@intuita-inc/filemod';
+import { UnifiedFileSystem } from '@intuita-inc/filemod';
+import { FileSystemManager } from '@intuita-inc/filemod';
 import jscodeshift from 'jscodeshift';
 import rehypeParse from 'rehype-parse';
 import { unified } from 'unified';
@@ -49,7 +45,7 @@ export type Dependencies = Readonly<{
 
 export const runRepomod = async (
 	fileSystem: IFs,
-	repomod: Repomod<Dependencies>,
+	filemod: Filemod<Dependencies, Record<string, unknown>>,
 	inputPath: string,
 	formatWithPrettier: boolean,
 	safeArgumentRecord: SafeArgumentRecord,
@@ -84,7 +80,7 @@ export const runRepomod = async (
 
 	const totalPathHashDigests = new Set<string>();
 
-	for (const path of repomod.includePatterns ?? []) {
+	for (const path of filemod.includePatterns ?? []) {
 		totalPathHashDigests.add(
 			createHash('ripemd160').update(path).digest('base64url'),
 		);
@@ -121,9 +117,9 @@ export const runRepomod = async (
 		},
 	};
 
-	const externalFileCommands = await executeRepomod(
+	const externalFileCommands = await executeFilemod(
 		api,
-		repomod,
+		filemod,
 		inputPath,
 		{
 			...safeArgumentRecord[0],
@@ -140,7 +136,7 @@ export const runRepomod = async (
 					return {
 						kind: 'updateFile',
 						oldPath: externalFileCommand.path,
-						oldData: '', // TODO get the old data from the repomod
+						oldData: '', // TODO get the old data from the filemod
 						newData: externalFileCommand.data,
 						formatWithPrettier,
 					};
