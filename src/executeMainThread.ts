@@ -27,6 +27,7 @@ const codemodSettingsSchema = S.union(
 		codemodEngine: S.union(
 			S.literal('jscodeshift'),
 			S.literal('repomod-engine'),
+			S.literal('filemod'),
 			S.literal('ts-morph'),
 		),
 	}),
@@ -122,7 +123,7 @@ export const executeMainThread = async () => {
 					.option('codemodEngine', {
 						type: 'string',
 						description:
-							'The engine to use with the local codemod: "jscodeshift", "ts-morph", "repomod-engine"',
+							'The engine to use with the local codemod: "jscodeshift", "ts-morph", "filemod"',
 					})
 					.option('fileLimit', {
 						type: 'number',

@@ -1,7 +1,7 @@
 import * as tsmorph from 'ts-morph';
 import ts from 'typescript';
 import nodePath from 'node:path';
-import { Repomod } from '@intuita-inc/repomod-engine-api';
+import { Filemod } from '@intuita-inc/filemod';
 import { Dependencies } from './runRepomod.js';
 
 export const transpile = (source: string): string => {
@@ -21,7 +21,8 @@ export const getTransformer = (source: string) => {
 				__esModule?: true;
 				default?: unknown;
 				handleSourceFile?: unknown;
-				repomod?: Repomod<Dependencies>;
+				repomod?: Filemod<Dependencies, Record<string, unknown>>;
+				filemod?: Filemod<Dependencies, Record<string, unknown>>;
 		  }
 		// eslint-disable-next-line @typescript-eslint/ban-types
 		| Function;
@@ -52,5 +53,7 @@ export const getTransformer = (source: string) => {
 		? module.exports.handleSourceFile
 		: module.exports.repomod !== undefined
 		? module.exports.repomod
+		: module.exports.filemod !== undefined
+		? module.exports.filemod
 		: null;
 };

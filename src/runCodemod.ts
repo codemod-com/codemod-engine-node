@@ -9,7 +9,7 @@ import { escape, glob, Glob } from 'glob';
 import type { FlowSettings, RunSettings } from './executeMainThread.js';
 import * as fs from 'fs';
 import { dirname } from 'node:path';
-import { Repomod } from '@intuita-inc/repomod-engine-api';
+import { Filemod } from '@intuita-inc/filemod';
 import { Printer } from './printer.js';
 import { Codemod } from './codemod.js';
 import { IFs, Volume, createFsFromVolume } from 'memfs';
@@ -26,17 +26,20 @@ const buildPaths = async (
 	fileSystem: IFs,
 	flowSettings: FlowSettings,
 	codemod: Codemod,
-	repomod: Repomod<Dependencies> | null,
+	filemod: Filemod<Dependencies, Record<string, unknown>> | null,
 ): Promise<ReadonlyArray<string>> => {
-	if (codemod.engine === 'repomod-engine' && repomod !== null) {
+	if (
+		(codemod.engine === 'repomod-engine' || codemod.engine === 'filemod') &&
+		filemod !== null
+	) {
 		const repomodPaths = await glob(
-			repomod.includePatterns?.slice() ?? [],
+			filemod.includePatterns?.slice() ?? [],
 			{
 				absolute: true,
 				cwd: flowSettings.targetPath,
 				// @ts-expect-error type inconsistency
 				fs: fileSystem,
-				ignore: repomod.excludePatterns?.slice(),
+				ignore: filemod.excludePatterns?.slice(),
 				nodir: true,
 			},
 		);
@@ -72,7 +75,7 @@ async function* buildPathGenerator(
 	fileSystem: IFs,
 	flowSettings: FlowSettings,
 	codemod: Codemod,
-	repomod: Repomod<Dependencies> | null,
+	filemod: Filemod<Dependencies, Record<string, unknown>> | null,
 ): AsyncGenerator<string, void, unknown> {
 	const controller = new AbortController();
 
@@ -102,9 +105,13 @@ async function* buildPathGenerator(
 
 		const path = typeof value === 'string' ? value : value.fullpath();
 
-		if (codemod.engine === 'repomod-engine' && repomod !== null) {
-			const includePatterns = repomod.includePatterns?.slice() ?? [];
-			const excludePatterns = repomod.excludePatterns?.slice() ?? [];
+		if (
+			(codemod.engine === 'repomod-engine' ||
+				codemod.engine === 'filemod') &&
+			filemod !== null
+		) {
+			const includePatterns = filemod.includePatterns?.slice() ?? [];
+			const excludePatterns = filemod.excludePatterns?.slice() ?? [];
 
 			if (
 				includePatterns.some((pattern) =>
@@ -326,12 +333,12 @@ export const runCodemod = async (
 		);
 	}
 
-	if (codemod.engine === 'repomod-engine') {
+	if (codemod.engine === 'repomod-engine' || codemod.engine === 'filemod') {
 		const paths = await buildPaths(
 			fileSystem,
 			flowSettings,
 			codemod,
-			transformer as Repomod<Dependencies>,
+			transformer as Filemod<Dependencies, Record<string, unknown>>,
 		);
 
 		const fileCommands = await runRepomod(
