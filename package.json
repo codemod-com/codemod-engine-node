@@ -4,6 +4,10 @@
 	"description": "A codemod engine for Node.js libraries (jscodeshift, ts-morph, etc.)",
 	"type": "module",
 	"exports": null,
+	"repository": {
+  		"type": "git",
+  		"url": "https://github.com/intuita-inc/codemod-engine-node"
+	},
 	"dependencies": {
 		"@babel/core": "^7.20.2",
 		"@babel/parser": "^7.22.10",
