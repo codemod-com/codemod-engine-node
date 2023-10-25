@@ -8,6 +8,21 @@
   		"type": "git",
   		"url": "https://github.com/intuita-inc/codemod-engine-node"
 	},
+	"keywords": [
+		"codemod",
+		"jscodeshift",
+		"ts-morph",
+		"refactor",
+		"transform",
+		"cli",
+		"dependencies",
+		"migrate",
+		"eslint",
+		"prettier",
+		"progress",
+		"AST",
+		"next.js"
+	],
 	"dependencies": {
 		"@babel/core": "^7.20.2",
 		"@babel/parser": "^7.22.10",
