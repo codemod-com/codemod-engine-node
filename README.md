@@ -1,31 +1,52 @@
 # Intuita's Codemod Engine Node
 
-## Instalation
+Intuita gives you multiple ways to discover, run & share supported codemods and code automation recipes. With the command-line interface (CLI) you can interact with the Intuita platform using a terminal or through an automated system. Intuita's CLI requires Node.js v16+.
 
-Use PNPM (instead of NPM and Yarn) to install the dependencies.
+## Installation
 
-    pnpm install
+    npm install intuita
 
-## Global installation (linking)
+## Global installation (recommended)
 
-Install the Codemod Engine Node as the global executable sourced from the project repository.
+    npm install -g intuita
 
-    pnpm link --global
-    which intuita
+## Usage
 
-## Global installation (registry)
+### Running a codemod
 
-Install the Codemod Engine Node as the global executable sourced from the NPM Registry https://www.npmjs.com/.
+    intuita [framework/version/codemod-name]
 
-    pnpm i -g intuita # install globally using PNPM
-    which intuita # test if the installation was successful
+#### Example (running Next.js app router receipe codemod)
 
-## Execution
+    intuita next/13/app-router-recipe
 
-This example shows how to execute a "next/13/app-router" codemod over the current working directory with PNPX:
+### List available codemods
+The `list` command can be used to list all codemods available in the [Codemod Registry](https://github.com/intuita-inc/codemod-registry).
 
-    pnpx intuita --name next/13/app-router
+    intuita list
 
-If you have installed the executable, you can achieve the same with the following line:
+### Sync registry
+The `syncRegistry` command can be used to sync local codemods with the public [Codemod Registry](https://github.com/intuita-inc/codemod-registry).
 
-    intuita --name next/13/app-router
+    intuita syncRegistry
+
+### Generate codemod from file diff
+The `learn` command can be used to send the diff of the latest edited file to Codemod Studio and have it automatically build an explainable and debuggable codemod.
+
+After running this command, if any git diff exists, Intuita will use the diff as before/after snippets in [Codemod Studio](https://codemod.studio).
+
+    intuita learn
+
+### Options
+
+- [`--include`](https://docs.intuita.io/docs/cli/advanced-usage#--include)
+- [`--exclude`](https://docs.intuita.io/docs/cli/advanced-usage#--exclude)
+- [`--targetPath`](https://docs.intuita.io/docs/cli/advanced-usage#--targetpath)
+- [`--sourcePath`](https://docs.intuita.io/docs/cli/advanced-usage#--sourcepath)
+- [`--codemodEngine`](https://docs.intuita.io/docs/cli/advanced-usage#--codemodengine)
+- [`--fileLimit`](https://docs.intuita.io/docs/cli/advanced-usage#--filelimit)
+- [`--usePrettier`](https://docs.intuita.io/docs/cli/advanced-usage#--useprettier)
+- [`--useCache`](https://docs.intuita.io/docs/cli/advanced-usage#--usecache)
+- [`--useJson`](https://docs.intuita.io/docs/cli/advanced-usage#--usejson)
+- [`--threadCount`](https://docs.intuita.io/docs/cli/advanced-usage#--threadcount)
+- [`--dryRun`](https://docs.intuita.io/docs/cli/advanced-usage#--dryrun)
