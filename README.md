@@ -21,16 +21,19 @@ Intuita gives you multiple ways to discover, run & share supported codemods and 
     intuita next/13/app-router-recipe
 
 ### List available codemods
+
 The `list` command can be used to list all codemods available in the [Codemod Registry](https://github.com/intuita-inc/codemod-registry).
 
     intuita list
 
 ### Sync registry
+
 The `syncRegistry` command can be used to sync local codemods with the public [Codemod Registry](https://github.com/intuita-inc/codemod-registry).
 
     intuita syncRegistry
 
 ### Generate codemod from file diff
+
 The `learn` command can be used to send the diff of the latest edited file to Codemod Studio and have it automatically build an explainable and debuggable codemod.
 
 After running this command, if any git diff exists, Intuita will use the diff as before/after snippets in [Codemod Studio](https://codemod.studio).
