@@ -4,11 +4,11 @@ Intuita gives you multiple ways to discover, run & share supported codemods and 
 
 ## Installation
 
-    npm install intuita
+    npm i intuita
 
 ## Global installation (recommended)
 
-    npm install -g intuita
+    npm i -g intuita
 
 ## Usage
 
