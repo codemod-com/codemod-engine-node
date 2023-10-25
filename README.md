@@ -1,6 +1,8 @@
 # Intuita's Codemod Engine Node
 
-Intuita gives you multiple ways to discover, run & share supported codemods and code automation recipes. With the command-line interface (CLI) you can interact with the Intuita platform using a terminal or through an automated system. Intuita's CLI requires Node.js v16+.
+Intuita gives you multiple ways to discover, run & share supported codemods and code automation recipes.
+
+![Running Intuita CLI](https://raw.githubusercontent.com/intuita-inc/intuita-website/main/theme/assets/images/hero-video.gif)
 
 ## Installation
 

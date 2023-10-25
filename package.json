@@ -21,7 +21,9 @@
 		"prettier",
 		"progress",
 		"AST",
-		"next.js"
+		"next.js",
+		"ember",
+		"react"
 	],
 	"dependencies": {
 		"@babel/core": "^7.20.2",
