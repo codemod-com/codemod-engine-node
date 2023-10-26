@@ -1,12 +1,12 @@
 {
 	"name": "intuita",
-	"version": "0.0.30",
+	"version": "0.0.31",
 	"description": "A codemod engine for Node.js libraries (jscodeshift, ts-morph, etc.)",
 	"type": "module",
 	"exports": null,
 	"repository": {
-  		"type": "git",
-  		"url": "https://github.com/intuita-inc/codemod-engine-node"
+		"type": "git",
+		"url": "https://github.com/intuita-inc/codemod-engine-node"
 	},
 	"keywords": [
 		"codemod",
@@ -86,7 +86,7 @@
 	"author": "Caartaa, Inc.",
 	"license": "Apache License, Version 2.0",
 	"files": [
-		"./dist",
+		"./dist/index.cjs",
 		"LICENSE",
 		"README.md"
 	],
