@@ -15,14 +15,18 @@ const CODEMOD_REGISTRY_URL =
 	'https://intuita-public.s3.us-west-1.amazonaws.com/codemod-registry';
 
 export class CodemodDownloader {
-	public constructor(private readonly __printer: Printer) {}
+	public constructor(
+		private readonly __printer: Printer,
+		private readonly __intuitaDirectoryPath: string,
+	) {}
 
 	public async syncRegistry() {
-		this.__printer.info('Syncing the Codemod Registry');
+		this.__printer.info(
+			'Syncing the Codemod Registry into %s',
+			this.__intuitaDirectoryPath,
+		);
 
-		const intuitaDirectoryPath = join(homedir(), '.intuita');
-
-		await mkdir(intuitaDirectoryPath, { recursive: true });
+		await mkdir(this.__intuitaDirectoryPath, { recursive: true });
 
 		const getResponse = await Axios.get(
 			`${CODEMOD_REGISTRY_URL}/registry.tar.gz`,
@@ -34,7 +38,7 @@ export class CodemodDownloader {
 		const buffer = Buffer.from(getResponse.data);
 
 		const extractStream = tar.extract({
-			cwd: intuitaDirectoryPath,
+			cwd: this.__intuitaDirectoryPath,
 			newer: false,
 			keep: false,
 		});
