@@ -1,10 +1,10 @@
 import { createHash } from 'node:crypto';
 import { join, extname, dirname } from 'node:path';
-import { format, resolveConfig, Options } from 'prettier';
+import { Options } from 'prettier';
 import { IFs } from 'memfs';
 import { filterNeitherNullNorUndefined } from './filterNeitherNullNorUndefined.js';
-import { RunSettings } from './executeMainThread.js';
 import { Message } from './messages.js';
+import { RunSettings } from './schemata/runSettingsSchema.js';
 
 export type CreateFileCommand = Readonly<{
 	kind: 'createFile';
@@ -61,6 +61,8 @@ export const DEFAULT_PRETTIER_OPTIONS: Options = {
 };
 
 export const getConfig = async (path: string): Promise<Options> => {
+	const { resolveConfig } = await import('prettier');
+
 	const config = await resolveConfig(path, {
 		editorconfig: false,
 	});
@@ -91,6 +93,7 @@ export const formatText = async (
 	}
 
 	try {
+		const { format } = await import('prettier');
 		const options = await getConfig(path);
 		return format(newData, options);
 	} catch (err) {

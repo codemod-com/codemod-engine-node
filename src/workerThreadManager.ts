@@ -36,7 +36,12 @@ export class WorkerThreadManager {
 			this.__idleWorkerIds.push(i);
 			this.__workerTimestamps.push(Date.now());
 
-			const worker = new Worker(__filename);
+			const filename =
+				typeof global.__filename === 'string'
+					? global.__filename
+					: './src/index.ts';
+
+			const worker = new Worker(filename);
 
 			worker.on('message', this.__buildOnWorkerMessage(i));
 
@@ -59,7 +64,12 @@ export class WorkerThreadManager {
 					// hanging promise on purpose
 					this.__workers[i].terminate();
 
-					const worker = new Worker(__filename);
+					const filename =
+						typeof global.__filename === 'string'
+							? global.__filename
+							: './src/index.ts';
+
+					const worker = new Worker(filename);
 					worker.on('message', this.__buildOnWorkerMessage(i));
 
 					this.__workers[i] = worker;

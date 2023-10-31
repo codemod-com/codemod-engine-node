@@ -61,6 +61,7 @@ describe('runJscodeshiftCodemod', () => {
 			'index.ts',
 			oldData,
 			true,
+			[{}],
 		);
 
 		deepStrictEqual(fileCommands.length, 1);

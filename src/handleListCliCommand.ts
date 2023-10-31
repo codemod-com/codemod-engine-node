@@ -3,10 +3,10 @@ import { join } from 'node:path';
 import { mkdir } from 'node:fs/promises';
 import * as S from '@effect/schema/Schema';
 import { downloadFile } from './fileSystemUtilities.js';
-import { Printer } from './printer.js';
+import { PrinterBlueprint } from './printer.js';
 
 export const handleListNamesCommand = async (
-	printer: Printer,
+	printer: PrinterBlueprint,
 	cache: boolean,
 ) => {
 	const intuitaDirectoryPath = join(homedir(), '.intuita');
