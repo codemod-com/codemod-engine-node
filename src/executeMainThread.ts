@@ -17,6 +17,19 @@ import { handleLearnCliCommand } from './handleLearnCliCommand.js';
 import { ArgumentRecord } from './argumentRecord.js';
 import { IFs } from 'memfs';
 import { buildSafeArgumentRecord } from './safeArgumentRecord.js';
+import { join } from 'node:path';
+import { homedir } from 'node:os';
+import {
+	DEFAULT_EXCLUDE_PATTERNS,
+	DEFAULT_FILE_LIMIT,
+	DEFAULT_INCLUDE_PATTERNS,
+	DEFAULT_INPUT_DIRECTORY_PATH,
+	DEFAULT_THREAD_COUNT,
+	DEFAULT_USE_CACHE,
+	DEFAULT_USE_JSON,
+	DEFAULT_USE_PRETTIER,
+} from './constants.js';
+import { buildOptions, buildUseJsonOption } from './buildOptions.js';
 
 const codemodSettingsSchema = S.union(
 	S.struct({
@@ -35,15 +48,6 @@ const codemodSettingsSchema = S.union(
 
 export type CodemodSettings = S.To<typeof codemodSettingsSchema>;
 
-const DEFAULT_INCLUDE_PATTERNS = ['**/*.*{ts,tsx,js,jsx,mjs,cjs,mdx}'] as const;
-const DEFAULT_EXCLUDE_PATTERNS = ['**/node_modules/**/*.*'] as const;
-const DEFAULT_INPUT_DIRECTORY_PATH = process.cwd();
-const DEFAULT_FILE_LIMIT = 1000;
-const DEFAULT_USE_PRETTIER = false;
-const DEFAULT_USE_CACHE = false;
-const DEFAULT_USE_JSON = false;
-const DEFAULT_THREAD_COUNT = 4;
-
 const flowSettingsSchema = S.struct({
 	include: S.optional(S.array(S.string)).withDefault(
 		() => DEFAULT_INCLUDE_PATTERNS,
@@ -54,6 +58,7 @@ const flowSettingsSchema = S.struct({
 	targetPath: S.optional(S.string).withDefault(
 		() => DEFAULT_INPUT_DIRECTORY_PATH,
 	),
+	files: S.optional(S.array(S.string)),
 	fileLimit: S.optional(
 		S.number.pipe(S.int()).pipe(S.positive()),
 	).withDefault(() => DEFAULT_FILE_LIMIT),
@@ -64,8 +69,6 @@ const flowSettingsSchema = S.struct({
 });
 
 export type FlowSettings = S.To<typeof flowSettingsSchema>;
-
-const DEFAULT_DRY_RUN = false;
 
 const runSettingsSchema = S.union(
 	S.struct({
@@ -97,109 +100,35 @@ export const executeMainThread = async () => {
 	const argv = await Promise.resolve(
 		yargs(hideBin(process.argv))
 			.scriptName('intuita')
-			.command('*', 'runs a codemod or recipe', (y) =>
-				y
-					.option('include', {
-						type: 'string',
-						array: true,
-						description: 'Glob pattern(s) for files to include',
-						default: DEFAULT_INCLUDE_PATTERNS,
-					})
-					.option('exclude', {
-						type: 'string',
-						array: true,
-						description: 'Glob pattern(s) for files to exclude',
-						default: DEFAULT_EXCLUDE_PATTERNS,
-					})
-					.option('targetPath', {
-						type: 'string',
-						description: 'Input directory path',
-						default: DEFAULT_INPUT_DIRECTORY_PATH,
-					})
-					.option('sourcePath', {
-						type: 'string',
-						description: 'Source path of the local codemod to run',
-					})
-					.option('codemodEngine', {
-						type: 'string',
-						description:
-							'The engine to use with the local codemod: "jscodeshift", "ts-morph", "filemod"',
-					})
-					.option('fileLimit', {
-						type: 'number',
-						description: 'File limit for processing',
-						default: 1000,
-					})
-					.option('usePrettier', {
-						type: 'boolean',
-						description: 'Format output with Prettier',
-						default: DEFAULT_USE_PRETTIER,
-					})
-					.option('useCache', {
-						type: 'boolean',
-						description: 'Use cache for HTTP(S) requests',
-						default: DEFAULT_USE_CACHE,
-					})
-					.option('useJson', {
-						type: 'boolean',
-						description: 'Use JSON responses in the console',
-						default: DEFAULT_USE_JSON,
-					})
-					.option('threadCount', {
-						type: 'number',
-						description: 'Number of worker threads',
-						default: DEFAULT_THREAD_COUNT,
-					})
-					.option('dryRun', {
-						type: 'boolean',
-						description: 'Perform a dry run',
-						default: DEFAULT_DRY_RUN,
-					})
-					.option('outputDirectoryPath', {
-						type: 'string',
-						description: 'Output directory path for dry-run only',
-					}),
+			.command('*', 'runs a codemod or recipe', (y) => buildOptions(y))
+			.command(
+				'run [files...]',
+				'run a particular codemod against files passed positionally',
+				(y) => buildOptions(y),
 			)
 			.command(
 				'list',
 				'lists all the codemods & recipes in the public registry',
 				(y) =>
-					y
-						.option('useJson', {
-							type: 'boolean',
-							description: 'Respond with JSON',
-							default: DEFAULT_USE_JSON,
-						})
-						.option('useCache', {
-							type: 'boolean',
-							description: 'Use cache for HTTP(S) requests',
-							default: DEFAULT_USE_CACHE,
-						}),
+					buildUseJsonOption(y).option('useCache', {
+						type: 'boolean',
+						description: 'Use cache for HTTP(S) requests',
+						default: DEFAULT_USE_CACHE,
+					}),
 			)
 			.command(
 				'syncRegistry',
 				'syncs all the codemods from the registry',
-				(y) =>
-					y.option('useJson', {
-						type: 'boolean',
-						description: 'Respond with JSON',
-						default: DEFAULT_USE_JSON,
-					}),
+				(y) => buildUseJsonOption(y),
 			)
 			.command(
 				'learn',
 				'exports the current `git diff` in a file to before/after panels in codemod studio',
 				(y) =>
-					y
-						.option('useJson', {
-							type: 'boolean',
-							description: 'Respond with JSON',
-							default: DEFAULT_USE_JSON,
-						})
-						.option('targetPath', {
-							type: 'string',
-							description: 'Input file path',
-						}),
+					buildUseJsonOption(y).option('targetPath', {
+						type: 'string',
+						description: 'Input file path',
+					}),
 			)
 			.help()
 			.version().argv,
@@ -224,7 +153,10 @@ export const executeMainThread = async () => {
 	if (String(argv._) === 'syncRegistry') {
 		const printer = new Printer(argv.useJson);
 
-		const codemodDownloader = new CodemodDownloader(printer);
+		const codemodDownloader = new CodemodDownloader(
+			printer,
+			join(homedir(), '.intuita'),
+		);
 
 		try {
 			await codemodDownloader.syncRegistry();
@@ -255,10 +187,18 @@ export const executeMainThread = async () => {
 		return;
 	}
 
+	const intuitaDirectoryPath = join(
+		String(argv._) === 'runOnFiles' ? process.cwd() : homedir(),
+		'.intuita',
+	);
+
 	const printer = new Printer(argv.useJson);
 
 	try {
-		const codemodDownloader = new CodemodDownloader(printer);
+		const codemodDownloader = new CodemodDownloader(
+			printer,
+			intuitaDirectoryPath,
+		);
 
 		const codemodSettings = S.parseSync(codemodSettingsSchema)(argv);
 		const flowSettings = S.parseSync(flowSettingsSchema)(argv);

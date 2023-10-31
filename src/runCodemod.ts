@@ -28,11 +28,13 @@ const buildPaths = async (
 	codemod: Codemod,
 	filemod: Filemod<Dependencies, Record<string, unknown>> | null,
 ): Promise<ReadonlyArray<string>> => {
+	const patterns = flowSettings.files ?? flowSettings.include ?? [];
+
 	if (
 		(codemod.engine === 'repomod-engine' || codemod.engine === 'filemod') &&
 		filemod !== null
 	) {
-		const repomodPaths = await glob(
+		const filemodPaths = await glob(
 			filemod.includePatterns?.slice() ?? [],
 			{
 				absolute: true,
@@ -44,7 +46,7 @@ const buildPaths = async (
 			},
 		);
 
-		const flowPaths = await glob(flowSettings.include.slice(), {
+		const flowPaths = await glob(patterns.slice(), {
 			absolute: true,
 			cwd: flowSettings.targetPath,
 			// @ts-expect-error type inconsistency
@@ -53,22 +55,22 @@ const buildPaths = async (
 			nodir: true,
 		});
 
-		return repomodPaths
+		return filemodPaths
 			.filter((path) => flowPaths.includes(path))
 			.map((path) => escape(path))
 			.slice(0, flowSettings.fileLimit);
-	} else {
-		const paths = await glob(flowSettings.include.slice(), {
-			absolute: true,
-			cwd: flowSettings.targetPath,
-			// @ts-expect-error type inconsistency
-			fs: fileSystem,
-			ignore: flowSettings.exclude.slice(),
-			nodir: true,
-		});
-
-		return paths.slice(0, flowSettings.fileLimit);
 	}
+
+	const paths = await glob(patterns.slice(), {
+		absolute: true,
+		cwd: flowSettings.targetPath,
+		// @ts-expect-error type inconsistency
+		fs: fileSystem,
+		ignore: flowSettings.exclude.slice(),
+		nodir: true,
+	});
+
+	return paths.slice(0, flowSettings.fileLimit);
 };
 
 async function* buildPathGenerator(
