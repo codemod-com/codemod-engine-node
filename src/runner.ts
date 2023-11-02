@@ -26,6 +26,7 @@ export class Runner {
 		protected readonly _runSettings: RunSettings,
 		protected readonly _argumentRecord: ArgumentRecord,
 		protected readonly _name: string | null,
+		protected readonly _currentWorkingDirectory: string,
 	) {}
 
 	public async run() {
@@ -54,6 +55,7 @@ export class Runner {
 					(command) => this._handleCommand(command),
 					(message) => this._printer.log(message),
 					safeArgumentRecord,
+					this._currentWorkingDirectory,
 				);
 				return;
 			}
@@ -83,6 +85,7 @@ export class Runner {
 							(command) => this._handleCommand(command),
 							(message) => this._printer.log(message),
 							safeArgumentRecord,
+							this._currentWorkingDirectory,
 						);
 					}
 				}
@@ -116,6 +119,7 @@ export class Runner {
 					(command) => this._handleCommand(command),
 					(message) => this._printer.log(message),
 					safeArgumentRecord,
+					this._currentWorkingDirectory,
 				);
 			}
 		} catch (error) {

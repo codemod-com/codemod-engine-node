@@ -154,6 +154,7 @@ export const executeMainThread = async () => {
 		runSettings,
 		argumentRecord,
 		name,
+		process.cwd(),
 	);
 
 	await runner.run();

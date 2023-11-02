@@ -50,6 +50,7 @@ export const runRepomod = async (
 	formatWithPrettier: boolean,
 	safeArgumentRecord: SafeArgumentRecord,
 	onPrinterMessage: (message: Message) => void,
+	currentWorkingDirectory: string,
 ): Promise<readonly FileCommand[]> => {
 	const fileSystemManager = new FileSystemManager(
 		// @ts-expect-error type inconsistency
@@ -63,18 +64,22 @@ export const runRepomod = async (
 		fileSystemManager,
 	);
 
-	const api = buildApi<Dependencies>(unifiedFileSystem, () => ({
-		jscodeshift,
-		unified,
-		rehypeParse,
-		hastToBabelAst,
-		tsmorph,
-		parseMdx,
-		stringifyMdx,
-		visitMdxAst: visit,
-		filterMdxAst: filter,
+	const api = buildApi<Dependencies>(
 		unifiedFileSystem,
-	}));
+		() => ({
+			jscodeshift,
+			unified,
+			rehypeParse,
+			hastToBabelAst,
+			tsmorph,
+			parseMdx,
+			stringifyMdx,
+			visitMdxAst: visit,
+			filterMdxAst: filter,
+			unifiedFileSystem,
+		}),
+		currentWorkingDirectory,
+	);
 
 	const processedPathHashDigests = new Set<string>();
 

@@ -107,6 +107,8 @@ describe('Runner', function (this) {
 			dryRun: false,
 		};
 
+		const currentWorkingDirectory = '/';
+
 		const runner = new Runner(
 			ifs,
 			printer,
@@ -117,6 +119,7 @@ describe('Runner', function (this) {
 			runSettings,
 			{},
 			null,
+			currentWorkingDirectory,
 		);
 
 		await runner.run();

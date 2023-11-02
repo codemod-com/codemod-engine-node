@@ -147,6 +147,7 @@ export const runCodemod = async (
 	onCommand: (command: FormattedFileCommand) => Promise<void>,
 	onPrinterMessage: (message: Message) => void,
 	safeArgumentRecord: SafeArgumentRecord,
+	currentWorkingDirectory: string,
 ): Promise<void> => {
 	const name = 'name' in codemod ? codemod.name : codemod.indexPath;
 
@@ -178,6 +179,7 @@ export const runCodemod = async (
 						// if we are within a recipe
 					},
 					safeArgumentRecord,
+					currentWorkingDirectory,
 				);
 
 				for (const command of commands) {
@@ -252,6 +254,7 @@ export const runCodemod = async (
 					// if we are within a recipe
 				},
 				safeArgumentRecord,
+				currentWorkingDirectory,
 			);
 
 			for (const command of commands) {
@@ -358,6 +361,7 @@ export const runCodemod = async (
 			flowSettings.usePrettier,
 			safeArgumentRecord,
 			onPrinterMessage,
+			currentWorkingDirectory,
 		);
 
 		const commands = await buildFormattedFileCommands(fileCommands);
