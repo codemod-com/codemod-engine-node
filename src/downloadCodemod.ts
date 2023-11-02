@@ -5,11 +5,12 @@ import { join } from 'node:path';
 import { downloadFile } from './fileSystemUtilities.js';
 
 import { PrinterBlueprint } from './printer.js';
-import { Codemod, codemodConfigSchema } from './codemod.js';
+import { Codemod } from './codemod.js';
 import * as tar from 'tar';
 
 import * as S from '@effect/schema/Schema';
 import Axios from 'axios';
+import { codemodConfigSchema } from './schemata/codemodConfigSchema.js';
 
 const CODEMOD_REGISTRY_URL =
 	'https://intuita-public.s3.us-west-1.amazonaws.com/codemod-registry';
