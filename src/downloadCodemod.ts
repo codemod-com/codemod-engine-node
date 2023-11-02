@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { downloadFile } from './fileSystemUtilities.js';
 
@@ -76,16 +75,14 @@ export class CodemodDownloader implements CodemodDownloaderBlueprint {
 			cache ? '' : 'not ',
 		);
 
-		// make the intuita directory
-		const intuitaDirectoryPath = join(homedir(), '.intuita');
-
-		await mkdir(intuitaDirectoryPath, { recursive: true });
+		await mkdir(this.__intuitaDirectoryPath, { recursive: true });
 
 		// make the codemod directory
 		const hashDigest = createHash('ripemd160')
 			.update(name)
 			.digest('base64url');
-		const directoryPath = join(intuitaDirectoryPath, hashDigest);
+
+		const directoryPath = join(this.__intuitaDirectoryPath, hashDigest);
 
 		await mkdir(directoryPath, { recursive: true });
 
