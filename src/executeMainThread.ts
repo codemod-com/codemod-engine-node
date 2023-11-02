@@ -124,7 +124,7 @@ export const executeMainThread = async () => {
 	}
 
 	const intuitaDirectoryPath = join(
-		String(argv._) === 'run' ? process.cwd() : homedir(),
+		String(argv._) === 'runOnPreCommit' ? process.cwd() : homedir(),
 		'.intuita',
 	);
 
