@@ -1,6 +1,6 @@
 {
 	"name": "intuita",
-	"version": "0.0.31",
+	"version": "0.1.0",
 	"description": "A codemod engine for Node.js libraries (jscodeshift, ts-morph, etc.)",
 	"type": "module",
 	"exports": null,
@@ -31,7 +31,7 @@
 		"@babel/preset-env": "^7.20.2",
 		"@babel/traverse": "7.20.5",
 		"@effect/schema": "0.27.0",
-		"@intuita-inc/filemod": "1.0.0",
+		"@intuita-inc/filemod": "1.1.0",
 		"@svgr/hast-util-to-babel-ast": "^7.0.0",
 		"ast-types": "^0.14.2",
 		"axios": "^1.4.0",
@@ -81,7 +81,7 @@
 		"lint:eslint": "eslint src --fix --ext ts",
 		"lint:prettier": "prettier --write .",
 		"package": "pkg --compress GZip .",
-		"test": "mocha"
+		"test": "TEST=1 mocha"
 	},
 	"pkg": {
 		"outputPath": "./package/"

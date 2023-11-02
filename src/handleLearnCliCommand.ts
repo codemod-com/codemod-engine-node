@@ -1,4 +1,4 @@
-import { Printer } from './printer.js';
+import { PrinterBlueprint } from './printer.js';
 import {
 	findLastlyModifiedFile,
 	findModifiedFiles,
@@ -131,7 +131,7 @@ const createCodemodStudioURL = ({
 };
 
 export const handleLearnCliCommand = async (
-	printer: Printer,
+	printer: PrinterBlueprint,
 	filePath: string | null,
 ) => {
 	if (filePath !== null && !isFileInGitDirectory(filePath)) {

@@ -6,11 +6,9 @@ import {
 } from './fileCommands.js';
 import { Dependencies, runRepomod } from './runRepomod.js';
 import { escape, glob, Glob } from 'glob';
-import type { FlowSettings, RunSettings } from './executeMainThread.js';
-import * as fs from 'fs';
 import { dirname } from 'node:path';
 import { Filemod } from '@intuita-inc/filemod';
-import { Printer } from './printer.js';
+import { PrinterBlueprint } from './printer.js';
 import { Codemod } from './codemod.js';
 import { IFs, Volume, createFsFromVolume } from 'memfs';
 import { createHash } from 'node:crypto';
@@ -19,6 +17,8 @@ import { getTransformer, transpile } from './getTransformer.js';
 import { Message } from './messages.js';
 import { minimatch } from 'minimatch';
 import { SafeArgumentRecord } from './safeArgumentRecord.js';
+import { FlowSettings } from './schemata/flowSettingsSchema.js';
+import { RunSettings } from './schemata/runSettingsSchema.js';
 
 const TERMINATE_IDLE_THREADS_TIMEOUT = 30 * 1000;
 
@@ -79,9 +79,11 @@ async function* buildPathGenerator(
 	codemod: Codemod,
 	filemod: Filemod<Dependencies, Record<string, unknown>> | null,
 ): AsyncGenerator<string, void, unknown> {
+	const patterns = flowSettings.files ?? flowSettings.include ?? [];
+
 	const controller = new AbortController();
 
-	const glob = new Glob(flowSettings.include.slice(), {
+	const glob = new Glob(patterns.slice(), {
 		absolute: true,
 		cwd: flowSettings.targetPath,
 		// @ts-expect-error type inconsistency
@@ -112,6 +114,7 @@ async function* buildPathGenerator(
 				codemod.engine === 'filemod') &&
 			filemod !== null
 		) {
+			// what about this one?
 			const includePatterns = filemod.includePatterns?.slice() ?? [];
 			const excludePatterns = filemod.excludePatterns?.slice() ?? [];
 
@@ -137,13 +140,14 @@ async function* buildPathGenerator(
 
 export const runCodemod = async (
 	fileSystem: IFs,
-	printer: Printer,
+	printer: PrinterBlueprint,
 	codemod: Codemod,
 	flowSettings: FlowSettings,
 	runSettings: RunSettings,
 	onCommand: (command: FormattedFileCommand) => Promise<void>,
 	onPrinterMessage: (message: Message) => void,
 	safeArgumentRecord: SafeArgumentRecord,
+	currentWorkingDirectory: string,
 ): Promise<void> => {
 	const name = 'name' in codemod ? codemod.name : codemod.indexPath;
 
@@ -175,6 +179,7 @@ export const runCodemod = async (
 						// if we are within a recipe
 					},
 					safeArgumentRecord,
+					currentWorkingDirectory,
 				);
 
 				for (const command of commands) {
@@ -198,7 +203,9 @@ export const runCodemod = async (
 		const fileMap = new Map<string, string>();
 
 		for (const path of paths) {
-			const data = await fs.promises.readFile(path, { encoding: 'utf8' });
+			const data = await fileSystem.promises.readFile(path, {
+				encoding: 'utf8',
+			});
 
 			await mfs.promises.mkdir(dirname(path), { recursive: true });
 			await mfs.promises.writeFile(path, data);
@@ -247,6 +254,7 @@ export const runCodemod = async (
 					// if we are within a recipe
 				},
 				safeArgumentRecord,
+				currentWorkingDirectory,
 			);
 
 			for (const command of commands) {
@@ -319,13 +327,16 @@ export const runCodemod = async (
 		return;
 	}
 
-	const codemodSource = fs.readFileSync(codemod.indexPath, {
-		encoding: 'utf8',
-	});
+	const codemodSource = await fileSystem.promises.readFile(
+		codemod.indexPath,
+		{
+			encoding: 'utf8',
+		},
+	);
 
 	const transpiledSource = codemod.indexPath.endsWith('.ts')
-		? transpile(codemodSource)
-		: codemodSource;
+		? transpile(codemodSource.toString())
+		: codemodSource.toString();
 
 	const transformer = getTransformer(transpiledSource);
 
@@ -350,6 +361,7 @@ export const runCodemod = async (
 			flowSettings.usePrettier,
 			safeArgumentRecord,
 			onPrinterMessage,
+			currentWorkingDirectory,
 		);
 
 		const commands = await buildFormattedFileCommands(fileCommands);

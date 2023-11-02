@@ -1,6 +1,13 @@
-import { Message } from './messages.js';
+import type { Message } from './messages.js';
 
-export class Printer {
+export type PrinterBlueprint = Readonly<{
+	log(message: Message): void;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	info(message: string, ...optionalParams: any[]): void;
+	warn(message: string): void;
+}>;
+
+export class Printer implements PrinterBlueprint {
 	public constructor(private readonly __useJson: boolean) {}
 
 	public log(message: Message) {

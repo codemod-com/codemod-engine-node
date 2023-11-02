@@ -4,83 +4,20 @@ import { hideBin } from 'yargs/helpers';
 import * as S from '@effect/schema/Schema';
 import { handleListNamesCommand } from './handleListCliCommand.js';
 import { CodemodDownloader } from './downloadCodemod.js';
-import { runCodemod } from './runCodemod.js';
 import { Printer } from './printer.js';
-import * as fs from 'fs';
-import {
-	FormattedFileCommand,
-	buildPrinterMessageUponCommand,
-	modifyFileSystemUponCommand,
-} from './fileCommands.js';
-import { Message } from './messages.js';
 import { handleLearnCliCommand } from './handleLearnCliCommand.js';
-import { ArgumentRecord } from './argumentRecord.js';
-import { IFs } from 'memfs';
-import { buildSafeArgumentRecord } from './safeArgumentRecord.js';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
-import {
-	DEFAULT_EXCLUDE_PATTERNS,
-	DEFAULT_FILE_LIMIT,
-	DEFAULT_INCLUDE_PATTERNS,
-	DEFAULT_INPUT_DIRECTORY_PATH,
-	DEFAULT_THREAD_COUNT,
-	DEFAULT_USE_CACHE,
-	DEFAULT_USE_JSON,
-	DEFAULT_USE_PRETTIER,
-} from './constants.js';
+import { DEFAULT_USE_CACHE } from './constants.js';
 import { buildOptions, buildUseJsonOption } from './buildOptions.js';
-
-const codemodSettingsSchema = S.union(
-	S.struct({
-		_: S.array(S.string),
-	}),
-	S.struct({
-		sourcePath: S.string,
-		codemodEngine: S.union(
-			S.literal('jscodeshift'),
-			S.literal('repomod-engine'),
-			S.literal('filemod'),
-			S.literal('ts-morph'),
-		),
-	}),
-);
-
-export type CodemodSettings = S.To<typeof codemodSettingsSchema>;
-
-const flowSettingsSchema = S.struct({
-	include: S.optional(S.array(S.string)).withDefault(
-		() => DEFAULT_INCLUDE_PATTERNS,
-	),
-	exclude: S.optional(S.array(S.string)).withDefault(
-		() => DEFAULT_EXCLUDE_PATTERNS,
-	),
-	targetPath: S.optional(S.string).withDefault(
-		() => DEFAULT_INPUT_DIRECTORY_PATH,
-	),
-	files: S.optional(S.array(S.string)),
-	fileLimit: S.optional(
-		S.number.pipe(S.int()).pipe(S.positive()),
-	).withDefault(() => DEFAULT_FILE_LIMIT),
-	usePrettier: S.optional(S.boolean).withDefault(() => DEFAULT_USE_PRETTIER),
-	useCache: S.optional(S.boolean).withDefault(() => DEFAULT_USE_CACHE),
-	useJson: S.optional(S.boolean).withDefault(() => DEFAULT_USE_JSON),
-	threadCount: S.optional(S.number).withDefault(() => DEFAULT_THREAD_COUNT),
-});
-
-export type FlowSettings = S.To<typeof flowSettingsSchema>;
-
-const runSettingsSchema = S.union(
-	S.struct({
-		dryRun: S.literal(false),
-	}),
-	S.struct({
-		dryRun: S.literal(true),
-		outputDirectoryPath: S.string,
-	}),
-);
-
-export type RunSettings = S.To<typeof runSettingsSchema>;
+import { Runner } from './runner.js';
+import * as fs from 'fs';
+import { IFs } from 'memfs';
+import { loadRepositoryConfiguration } from './repositoryConfiguration.js';
+import { codemodSettingsSchema } from './schemata/codemodSettingsSchema.js';
+import { flowSettingsSchema } from './schemata/flowSettingsSchema.js';
+import { runSettingsSchema } from './schemata/runSettingsSchema.js';
+import { buildArgumentRecord } from './buildArgumentRecord.js';
 
 export const executeMainThread = async () => {
 	const interfaze = readline.createInterface(process.stdin);
@@ -102,9 +39,8 @@ export const executeMainThread = async () => {
 			.scriptName('intuita')
 			.command('*', 'runs a codemod or recipe', (y) => buildOptions(y))
 			.command(
-				'run [files...]',
-				'run a particular codemod against files passed positionally',
-				(y) => buildOptions(y),
+				'runOnPreCommit [files...]',
+				'run pre-commit codemods against staged files passed positionally',
 			)
 			.command(
 				'list',
@@ -188,143 +124,38 @@ export const executeMainThread = async () => {
 	}
 
 	const intuitaDirectoryPath = join(
-		String(argv._) === 'runOnFiles' ? process.cwd() : homedir(),
+		String(argv._) === 'run' ? process.cwd() : homedir(),
 		'.intuita',
 	);
 
-	const printer = new Printer(argv.useJson);
+	const codemodSettings = S.parseSync(codemodSettingsSchema)(argv);
+	const flowSettings = S.parseSync(flowSettingsSchema)(argv);
+	const runSettings = S.parseSync(runSettingsSchema)(argv);
+	const argumentRecord = buildArgumentRecord(argv);
 
-	try {
-		const codemodDownloader = new CodemodDownloader(
-			printer,
-			intuitaDirectoryPath,
-		);
+	const lastArgument = argv._[argv._.length - 1];
 
-		const codemodSettings = S.parseSync(codemodSettingsSchema)(argv);
-		const flowSettings = S.parseSync(flowSettingsSchema)(argv);
-		const runSettings = S.parseSync(runSettingsSchema)(argv);
+	const name = typeof lastArgument === 'string' ? lastArgument : null;
 
-		const lastArgument = argv._[argv._.length - 1];
+	const printer = new Printer(flowSettings.useJson);
 
-		const name = typeof lastArgument === 'string' ? lastArgument : null;
+	const codemodDownloader = new CodemodDownloader(
+		printer,
+		intuitaDirectoryPath,
+	);
 
-		const handleCommand = async (
-			command: FormattedFileCommand,
-		): Promise<void> => {
-			await modifyFileSystemUponCommand(
-				// @ts-expect-error type inconsistency
-				fs,
-				runSettings,
-				command,
-			);
+	const runner = new Runner(
+		fs as unknown as IFs,
+		printer,
+		codemodDownloader,
+		loadRepositoryConfiguration,
+		codemodSettings,
+		flowSettings,
+		runSettings,
+		argumentRecord,
+		name,
+		process.cwd(),
+	);
 
-			const printerMessage = buildPrinterMessageUponCommand(
-				runSettings,
-				command,
-			);
-
-			if (printerMessage) {
-				printer.log(printerMessage);
-			}
-		};
-
-		const handleMessage = async (message: Message) => {
-			printer.log(message);
-		};
-
-		const argumentRecord: {
-			[P in keyof ArgumentRecord]: ArgumentRecord[P];
-		} = {};
-
-		Object.keys(argv)
-			.filter((arg) => arg.startsWith('arg:'))
-			.forEach((arg) => {
-				const key = arg.slice(4);
-				const value = argv[arg];
-
-				if (S.is(S.number)(value)) {
-					argumentRecord[key] = value;
-					return;
-				}
-
-				if (!S.is(S.string)(value)) {
-					return;
-				}
-
-				if (value === 'true') {
-					argumentRecord[key] = true;
-					return;
-				}
-
-				if (value === 'false') {
-					argumentRecord[key] = false;
-					return;
-				}
-
-				argumentRecord[key] = value;
-			});
-
-		if (
-			'sourcePath' in codemodSettings &&
-			'codemodEngine' in codemodSettings
-		) {
-			const codemod = {
-				source: 'fileSystem' as const,
-				engine: codemodSettings.codemodEngine,
-				indexPath: codemodSettings.sourcePath,
-			};
-
-			const safeArgumentRecord = buildSafeArgumentRecord(
-				codemod,
-				argumentRecord,
-			);
-
-			await runCodemod(
-				fs as unknown as IFs,
-				printer,
-				codemod,
-				flowSettings,
-				runSettings,
-				handleCommand,
-				handleMessage,
-				safeArgumentRecord,
-			);
-			return;
-		}
-
-		if (name !== null) {
-			printer.info(
-				'Executing the "%s" codemod against "%s"',
-				name,
-				flowSettings.targetPath,
-			);
-
-			const codemod = await codemodDownloader.download(
-				name,
-				flowSettings.useCache,
-			);
-
-			const safeArgumentRecord = buildSafeArgumentRecord(
-				codemod,
-				argumentRecord,
-			);
-
-			await runCodemod(
-				fs as unknown as IFs,
-				printer,
-				codemod,
-				flowSettings,
-				runSettings,
-				handleCommand,
-				handleMessage,
-				safeArgumentRecord,
-			);
-		}
-	} catch (error) {
-		if (!(error instanceof Error)) {
-			return;
-		}
-
-		printer.log({ kind: 'error', message: error.message });
-	}
+	await runner.run();
 };

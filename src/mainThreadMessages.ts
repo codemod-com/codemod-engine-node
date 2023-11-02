@@ -1,5 +1,5 @@
 import * as S from '@effect/schema/Schema';
-import { argumentRecordSchema } from './argumentRecord.js';
+import { argumentRecordSchema } from './schemata/argumentRecordSchema.js';
 
 const mainThreadMessageSchema = S.union(
 	S.struct({
@@ -18,6 +18,7 @@ const mainThreadMessageSchema = S.union(
 		path: S.string,
 		data: S.string,
 		formatWithPrettier: S.boolean,
+		// TODO check that
 		safeArgumentRecord: S.tuple(argumentRecordSchema),
 	}),
 );

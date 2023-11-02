@@ -23,6 +23,7 @@ describe('runTsMorphCodemod', () => {
 			'index.ts',
 			``,
 			true,
+			[{}],
 		);
 
 		deepStrictEqual(fileCommands.length, 1);
