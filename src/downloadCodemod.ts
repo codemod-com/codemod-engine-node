@@ -1,7 +1,6 @@
 import { createHash } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { downloadFile } from './fileSystemUtilities.js';
 
 import { PrinterBlueprint } from './printer.js';
 import { Codemod } from './codemod.js';
@@ -10,6 +9,7 @@ import * as tar from 'tar';
 import * as S from '@effect/schema/Schema';
 import Axios from 'axios';
 import { codemodConfigSchema } from './schemata/codemodConfigSchema.js';
+import { FileDownloadServiceBlueprint } from './fileDownloadService.js';
 
 const CODEMOD_REGISTRY_URL =
 	'https://intuita-public.s3.us-west-1.amazonaws.com/codemod-registry';
@@ -26,6 +26,8 @@ export class CodemodDownloader implements CodemodDownloaderBlueprint {
 	public constructor(
 		private readonly __printer: PrinterBlueprint,
 		private readonly __intuitaDirectoryPath: string,
+		protected readonly _cacheUsed: boolean,
+		protected readonly _fileDownloadService: FileDownloadServiceBlueprint,
 	) {}
 
 	public async syncRegistry() {
@@ -67,12 +69,11 @@ export class CodemodDownloader implements CodemodDownloaderBlueprint {
 
 	public async download(
 		name: string,
-		cache: boolean,
 	): Promise<Codemod & { source: 'registry' }> {
 		this.__printer.info(
 			'Downloading the "%s" codemod, %susing cache',
 			name,
-			cache ? '' : 'not ',
+			this._cacheUsed ? '' : 'not ',
 		);
 
 		await mkdir(this.__intuitaDirectoryPath, { recursive: true });
@@ -89,10 +90,9 @@ export class CodemodDownloader implements CodemodDownloaderBlueprint {
 		// download the config
 		const configPath = join(directoryPath, 'config.json');
 
-		const buffer = await downloadFile(
+		const buffer = await this._fileDownloadService.download(
 			`${CODEMOD_REGISTRY_URL}/${hashDigest}/config.json`,
 			configPath,
-			cache,
 		);
 
 		const parsedConfig = JSON.parse(buffer.toString('utf8'));
@@ -103,10 +103,9 @@ export class CodemodDownloader implements CodemodDownloaderBlueprint {
 			const descriptionPath = join(directoryPath, 'description.md');
 
 			try {
-				await downloadFile(
+				await this._fileDownloadService.download(
 					`${CODEMOD_REGISTRY_URL}/${hashDigest}/description.md`,
 					descriptionPath,
-					cache,
 				);
 			} catch {
 				// do nothing, descriptions might not exist
@@ -116,10 +115,9 @@ export class CodemodDownloader implements CodemodDownloaderBlueprint {
 		if (config.engine === 'piranha') {
 			const rulesPath = join(directoryPath, 'rules.toml');
 
-			await downloadFile(
+			await this._fileDownloadService.download(
 				`${CODEMOD_REGISTRY_URL}/${hashDigest}/rules.toml`,
 				rulesPath,
-				cache,
 			);
 
 			return {
@@ -139,10 +137,9 @@ export class CodemodDownloader implements CodemodDownloaderBlueprint {
 		) {
 			const indexPath = join(directoryPath, 'index.cjs');
 
-			const data = await downloadFile(
+			const data = await this._fileDownloadService.download(
 				`${CODEMOD_REGISTRY_URL}/${hashDigest}/index.cjs`,
 				indexPath,
-				cache,
 			);
 
 			await writeFile(indexPath, data);
@@ -161,7 +158,7 @@ export class CodemodDownloader implements CodemodDownloaderBlueprint {
 			const codemods: Codemod[] = [];
 
 			for (const name of config.names) {
-				const codemod = await this.download(name, cache);
+				const codemod = await this.download(name);
 				codemods.push(codemod);
 			}
 

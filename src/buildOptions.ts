@@ -19,63 +19,68 @@ export const buildUseJsonOption = <T extends {}>(y: Argv<T>) =>
 	});
 
 // eslint-disable-next-line @typescript-eslint/ban-types
+export const buildUseCacheOption = <T extends {}>(y: Argv<T>) =>
+	y.option('useCache', {
+		type: 'boolean',
+		description: 'Use cache for HTTP(S) requests',
+		default: DEFAULT_USE_CACHE,
+	});
+
+// eslint-disable-next-line @typescript-eslint/ban-types
 export const buildOptions = <T extends {}>(y: Argv<T>) => {
-	return buildUseJsonOption(
-		y
-			.option('include', {
-				type: 'string',
-				array: true,
-				description: 'Glob pattern(s) for files to include',
-				default: DEFAULT_INCLUDE_PATTERNS,
-			})
-			.option('exclude', {
-				type: 'string',
-				array: true,
-				description: 'Glob pattern(s) for files to exclude',
-				default: DEFAULT_EXCLUDE_PATTERNS,
-			})
-			.option('targetPath', {
-				type: 'string',
-				description: 'Input directory path',
-				default: DEFAULT_INPUT_DIRECTORY_PATH,
-			})
-			.option('sourcePath', {
-				type: 'string',
-				description: 'Source path of the local codemod to run',
-			})
-			.option('codemodEngine', {
-				type: 'string',
-				description:
-					'The engine to use with the local codemod: "jscodeshift", "ts-morph", "filemod"',
-			})
-			.option('fileLimit', {
-				type: 'number',
-				description: 'File limit for processing',
-				default: 1000,
-			})
-			.option('usePrettier', {
-				type: 'boolean',
-				description: 'Format output with Prettier',
-				default: DEFAULT_USE_PRETTIER,
-			})
-			.option('useCache', {
-				type: 'boolean',
-				description: 'Use cache for HTTP(S) requests',
-				default: DEFAULT_USE_CACHE,
-			})
-			.option('threadCount', {
-				type: 'number',
-				description: 'Number of worker threads',
-				default: DEFAULT_THREAD_COUNT,
-			})
-			.option('dryRun', {
-				type: 'boolean',
-				description: 'Perform a dry run',
-				default: DEFAULT_DRY_RUN,
-			})
-			.option('outputDirectoryPath', {
-				type: 'string',
-				description: 'Output directory path for dry-run only',
-			}),
+	return buildUseCacheOption(
+		buildUseJsonOption(
+			y
+				.option('include', {
+					type: 'string',
+					array: true,
+					description: 'Glob pattern(s) for files to include',
+					default: DEFAULT_INCLUDE_PATTERNS,
+				})
+				.option('exclude', {
+					type: 'string',
+					array: true,
+					description: 'Glob pattern(s) for files to exclude',
+					default: DEFAULT_EXCLUDE_PATTERNS,
+				})
+				.option('targetPath', {
+					type: 'string',
+					description: 'Input directory path',
+					default: DEFAULT_INPUT_DIRECTORY_PATH,
+				})
+				.option('sourcePath', {
+					type: 'string',
+					description: 'Source path of the local codemod to run',
+				})
+				.option('codemodEngine', {
+					type: 'string',
+					description:
+						'The engine to use with the local codemod: "jscodeshift", "ts-morph", "filemod"',
+				})
+				.option('fileLimit', {
+					type: 'number',
+					description: 'File limit for processing',
+					default: 1000,
+				})
+				.option('usePrettier', {
+					type: 'boolean',
+					description: 'Format output with Prettier',
+					default: DEFAULT_USE_PRETTIER,
+				})
+				.option('threadCount', {
+					type: 'number',
+					description: 'Number of worker threads',
+					default: DEFAULT_THREAD_COUNT,
+				})
+				.option('dryRun', {
+					type: 'boolean',
+					description: 'Perform a dry run',
+					default: DEFAULT_DRY_RUN,
+				})
+				.option('outputDirectoryPath', {
+					type: 'string',
+					description: 'Output directory path for dry-run only',
+				}),
+		),
 	);
 };

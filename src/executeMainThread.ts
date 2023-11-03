@@ -9,7 +9,11 @@ import { handleLearnCliCommand } from './handleLearnCliCommand.js';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { DEFAULT_USE_CACHE } from './constants.js';
-import { buildOptions, buildUseJsonOption } from './buildOptions.js';
+import {
+	buildOptions,
+	buildUseCacheOption,
+	buildUseJsonOption,
+} from './buildOptions.js';
 import { Runner } from './runner.js';
 import * as fs from 'fs';
 import { IFs } from 'memfs';
@@ -18,6 +22,8 @@ import { codemodSettingsSchema } from './schemata/codemodSettingsSchema.js';
 import { flowSettingsSchema } from './schemata/flowSettingsSchema.js';
 import { runSettingsSchema } from './schemata/runSettingsSchema.js';
 import { buildArgumentRecord } from './buildArgumentRecord.js';
+import { FileDownloadService } from './fileDownloadService.js';
+import Axios from 'axios';
 
 export const executeMainThread = async () => {
 	const interfaze = readline.createInterface(process.stdin);
@@ -41,6 +47,7 @@ export const executeMainThread = async () => {
 			.command(
 				'runOnPreCommit [files...]',
 				'run pre-commit codemods against staged files passed positionally',
+				(y) => buildUseCacheOption(y),
 			)
 			.command(
 				'list',
@@ -70,11 +77,26 @@ export const executeMainThread = async () => {
 			.version().argv,
 	);
 
+	const fetchBuffer = async (url: string) => {
+		const { data } = await Axios.get(url, {
+			responseType: 'arraybuffer',
+		});
+
+		return Buffer.from(data);
+	};
+
+	const fileDownloadService = new FileDownloadService(
+		argv.useCache,
+		fetchBuffer,
+		() => Date.now(),
+		fs as unknown as IFs,
+	);
+
 	if (String(argv._) === 'list') {
 		const printer = new Printer(argv.useJson);
 
 		try {
-			await handleListNamesCommand(printer, argv.useCache);
+			await handleListNamesCommand(fileDownloadService, printer);
 		} catch (error) {
 			if (!(error instanceof Error)) {
 				return;
@@ -92,6 +114,8 @@ export const executeMainThread = async () => {
 		const codemodDownloader = new CodemodDownloader(
 			printer,
 			join(homedir(), '.intuita'),
+			argv.useCache,
+			fileDownloadService,
 		);
 
 		try {
@@ -142,6 +166,8 @@ export const executeMainThread = async () => {
 	const codemodDownloader = new CodemodDownloader(
 		printer,
 		intuitaDirectoryPath,
+		argv.useCache,
+		fileDownloadService,
 	);
 
 	const runner = new Runner(
