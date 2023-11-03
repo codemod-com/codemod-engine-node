@@ -24,6 +24,7 @@ import { runSettingsSchema } from './schemata/runSettingsSchema.js';
 import { buildArgumentRecord } from './buildArgumentRecord.js';
 import { FileDownloadService } from './fileDownloadService.js';
 import Axios from 'axios';
+import { TarService } from './services/tarService.js';
 
 export const executeMainThread = async () => {
 	const interfaze = readline.createInterface(process.stdin);
@@ -108,6 +109,8 @@ export const executeMainThread = async () => {
 		return;
 	}
 
+	const tarService = new TarService(fs as unknown as IFs);
+
 	if (String(argv._) === 'syncRegistry') {
 		const printer = new Printer(argv.useJson);
 
@@ -116,6 +119,7 @@ export const executeMainThread = async () => {
 			join(homedir(), '.intuita'),
 			argv.useCache,
 			fileDownloadService,
+			tarService,
 		);
 
 		try {
@@ -168,6 +172,7 @@ export const executeMainThread = async () => {
 		intuitaDirectoryPath,
 		argv.useCache,
 		fileDownloadService,
+		tarService,
 	);
 
 	const runner = new Runner(
