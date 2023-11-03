@@ -8,7 +8,6 @@ import { Printer } from './printer.js';
 import { handleLearnCliCommand } from './handleLearnCliCommand.js';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
-import { DEFAULT_USE_CACHE } from './constants.js';
 import {
 	buildOptions,
 	buildUseCacheOption,
@@ -48,17 +47,12 @@ export const executeMainThread = async () => {
 			.command(
 				'runOnPreCommit [files...]',
 				'run pre-commit codemods against staged files passed positionally',
-				(y) => buildUseCacheOption(y),
+				(y) => buildUseJsonOption(buildUseCacheOption(y)),
 			)
 			.command(
 				'list',
 				'lists all the codemods & recipes in the public registry',
-				(y) =>
-					buildUseJsonOption(y).option('useCache', {
-						type: 'boolean',
-						description: 'Use cache for HTTP(S) requests',
-						default: DEFAULT_USE_CACHE,
-					}),
+				(y) => buildUseJsonOption(buildUseCacheOption(y)),
 			)
 			.command(
 				'syncRegistry',
@@ -86,16 +80,17 @@ export const executeMainThread = async () => {
 		return Buffer.from(data);
 	};
 
+	const printer = new Printer(argv.useJson);
+
 	const fileDownloadService = new FileDownloadService(
 		argv.useCache,
 		fetchBuffer,
 		() => Date.now(),
 		fs as unknown as IFs,
+		printer,
 	);
 
 	if (String(argv._) === 'list') {
-		const printer = new Printer(argv.useJson);
-
 		try {
 			await handleListNamesCommand(fileDownloadService, printer);
 		} catch (error) {
@@ -112,8 +107,6 @@ export const executeMainThread = async () => {
 	const tarService = new TarService(fs as unknown as IFs);
 
 	if (String(argv._) === 'syncRegistry') {
-		const printer = new Printer(argv.useJson);
-
 		const codemodDownloader = new CodemodDownloader(
 			printer,
 			join(homedir(), '.intuita'),
@@ -164,8 +157,6 @@ export const executeMainThread = async () => {
 	const lastArgument = argv._[argv._.length - 1];
 
 	const name = typeof lastArgument === 'string' ? lastArgument : null;
-
-	const printer = new Printer(flowSettings.useJson);
 
 	const codemodDownloader = new CodemodDownloader(
 		printer,
