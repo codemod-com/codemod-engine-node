@@ -4,12 +4,12 @@ import { join } from 'node:path';
 
 import { PrinterBlueprint } from './printer.js';
 import { Codemod } from './codemod.js';
-import * as tar from 'tar';
 
 import * as S from '@effect/schema/Schema';
 import Axios from 'axios';
 import { codemodConfigSchema } from './schemata/codemodConfigSchema.js';
 import { FileDownloadServiceBlueprint } from './fileDownloadService.js';
+import { TarService } from './services/tarService.js';
 
 const CODEMOD_REGISTRY_URL =
 	'https://intuita-public.s3.us-west-1.amazonaws.com/codemod-registry';
@@ -28,6 +28,7 @@ export class CodemodDownloader implements CodemodDownloaderBlueprint {
 		private readonly __intuitaDirectoryPath: string,
 		protected readonly _cacheUsed: boolean,
 		protected readonly _fileDownloadService: FileDownloadServiceBlueprint,
+		protected readonly _tarService: TarService,
 	) {}
 
 	public async syncRegistry() {
@@ -47,24 +48,7 @@ export class CodemodDownloader implements CodemodDownloaderBlueprint {
 
 		const buffer = Buffer.from(getResponse.data);
 
-		const extractStream = tar.extract({
-			cwd: this.__intuitaDirectoryPath,
-			newer: false,
-			keep: false,
-		});
-
-		return new Promise<void>((resolve, reject) => {
-			extractStream.once('error', (error) => {
-				reject(error);
-			});
-
-			extractStream.once('finish', () => {
-				resolve();
-			});
-
-			extractStream.write(buffer);
-			extractStream.end();
-		});
+		await this._tarService.extract(this.__intuitaDirectoryPath, buffer);
 	}
 
 	public async download(
