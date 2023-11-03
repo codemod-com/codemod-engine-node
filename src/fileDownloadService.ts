@@ -31,8 +31,6 @@ export class FileDownloadService implements FileDownloadServiceBlueprint {
 
 				const now = this._getNow();
 
-				console.log(now, mtime);
-
 				if (now - mtime < CACHE_EVICTION_THRESHOLD) {
 					const tDataOut = await this._ifs.promises.readFile(path);
 
