@@ -2,12 +2,12 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { mkdir } from 'node:fs/promises';
 import * as S from '@effect/schema/Schema';
-import { downloadFile } from './fileSystemUtilities.js';
-import { PrinterBlueprint } from './printer.js';
+import type { FileDownloadService } from './fileDownloadService.js';
+import type { PrinterBlueprint } from './printer.js';
 
 export const handleListNamesCommand = async (
+	fileDownloadService: FileDownloadService,
 	printer: PrinterBlueprint,
-	cache: boolean,
 ) => {
 	const intuitaDirectoryPath = join(homedir(), '.intuita');
 
@@ -15,10 +15,9 @@ export const handleListNamesCommand = async (
 
 	const path = join(intuitaDirectoryPath, 'names.json');
 
-	const buffer = await downloadFile(
+	const buffer = await fileDownloadService.download(
 		'https://intuita-public.s3.us-west-1.amazonaws.com/codemod-registry/names.json',
 		path,
-		cache,
 	);
 
 	const data = buffer.toString('utf8');
