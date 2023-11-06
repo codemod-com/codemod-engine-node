@@ -26,6 +26,12 @@ import Axios from 'axios';
 import { TarService } from './services/tarService.js';
 
 export const executeMainThread = async () => {
+	const slicedArgv = hideBin(process.argv);
+
+	if (slicedArgv.length === 0) {
+		return;
+	}
+
 	const interfaze = readline.createInterface(process.stdin);
 
 	const lineHandler = (line: string): void => {
@@ -41,7 +47,7 @@ export const executeMainThread = async () => {
 	process.stdin.unref();
 
 	const argv = await Promise.resolve(
-		yargs(hideBin(process.argv))
+		yargs(slicedArgv)
 			.scriptName('intuita')
 			.command('*', 'runs a codemod or recipe', (y) => buildOptions(y))
 			.command(

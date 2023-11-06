@@ -1,6 +1,6 @@
 {
 	"name": "intuita",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"description": "A codemod engine for Node.js libraries (jscodeshift, ts-morph, etc.)",
 	"type": "module",
 	"exports": null,
