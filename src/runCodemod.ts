@@ -80,6 +80,10 @@ async function* buildPathGenerator(
 	filemod: Filemod<Dependencies, Record<string, unknown>> | null,
 ): AsyncGenerator<string, void, unknown> {
 	const patterns = flowSettings.files ?? flowSettings.include ?? [];
+	const ignore =
+		flowSettings.files === undefined
+			? flowSettings.exclude.slice()
+			: undefined;
 
 	const controller = new AbortController();
 
@@ -88,7 +92,7 @@ async function* buildPathGenerator(
 		cwd: flowSettings.targetPath,
 		// @ts-expect-error type inconsistency
 		fs: fileSystem,
-		ignore: flowSettings.exclude.slice(),
+		ignore,
 		nodir: true,
 		withFileTypes: false,
 		signal: controller.signal,
