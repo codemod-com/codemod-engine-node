@@ -26,6 +26,8 @@ import Axios from 'axios';
 import { TarService } from './services/tarService.js';
 
 export const executeMainThread = async () => {
+	const slicedArgv = hideBin(process.argv);
+
 	const interfaze = readline.createInterface(process.stdin);
 
 	const lineHandler = (line: string): void => {
@@ -40,37 +42,42 @@ export const executeMainThread = async () => {
 
 	process.stdin.unref();
 
-	const argv = await Promise.resolve(
-		yargs(hideBin(process.argv))
-			.scriptName('intuita')
-			.command('*', 'runs a codemod or recipe', (y) => buildOptions(y))
-			.command(
-				'runOnPreCommit [files...]',
-				'run pre-commit codemods against staged files passed positionally',
-				(y) => buildUseJsonOption(buildUseCacheOption(y)),
-			)
-			.command(
-				'list',
-				'lists all the codemods & recipes in the public registry',
-				(y) => buildUseJsonOption(buildUseCacheOption(y)),
-			)
-			.command(
-				'syncRegistry',
-				'syncs all the codemods from the registry',
-				(y) => buildUseJsonOption(y),
-			)
-			.command(
-				'learn',
-				'exports the current `git diff` in a file to before/after panels in codemod studio',
-				(y) =>
-					buildUseJsonOption(y).option('targetPath', {
-						type: 'string',
-						description: 'Input file path',
-					}),
-			)
-			.help()
-			.version().argv,
-	);
+	const argvObject = yargs(slicedArgv)
+		.scriptName('intuita')
+		.command('*', 'runs a codemod or recipe', (y) => buildOptions(y))
+		.command(
+			'runOnPreCommit [files...]',
+			'run pre-commit codemods against staged files passed positionally',
+			(y) => buildUseJsonOption(buildUseCacheOption(y)),
+		)
+		.command(
+			'list',
+			'lists all the codemods & recipes in the public registry',
+			(y) => buildUseJsonOption(buildUseCacheOption(y)),
+		)
+		.command(
+			'syncRegistry',
+			'syncs all the codemods from the registry',
+			(y) => buildUseJsonOption(y),
+		)
+		.command(
+			'learn',
+			'exports the current `git diff` in a file to before/after panels in codemod studio',
+			(y) =>
+				buildUseJsonOption(y).option('targetPath', {
+					type: 'string',
+					description: 'Input file path',
+				}),
+		)
+		.help()
+		.version();
+
+	if (slicedArgv.length === 0) {
+		argvObject.showHelp();
+		return;
+	}
+
+	const argv = await Promise.resolve(argvObject.argv);
 
 	const fetchBuffer = async (url: string) => {
 		const { data } = await Axios.get(url, {
