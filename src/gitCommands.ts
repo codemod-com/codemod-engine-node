@@ -4,7 +4,6 @@ import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { doubleQuotify } from './utils.js';
 
-
 export const isGitDirectory = (directoryPath: string): boolean => {
 	const gitPath = join(directoryPath, '.git');
 	return existsSync(gitPath) && lstatSync(gitPath).isDirectory();
@@ -24,7 +23,9 @@ export const getGitDiffForFile = (
 	filePath: string,
 ): string | null => {
 	try {
-		const diff = execSync(`git diff ${commitHash} --unified=0 ${doubleQuotify(filePath)}`);
+		const diff = execSync(
+			`git diff ${commitHash} --unified=0 ${doubleQuotify(filePath)}`,
+		);
 		return diff.toString();
 	} catch (error) {
 		if (!(error instanceof Error)) {
@@ -37,7 +38,9 @@ export const getGitDiffForFile = (
 
 export const getLatestCommitHash = (directoryPath: string): string | null => {
 	try {
-		const gitLog = execSync(`git -C ${doubleQuotify(directoryPath)} log -n 1 --format=%H`);
+		const gitLog = execSync(
+			`git -C ${doubleQuotify(directoryPath)} log -n 1 --format=%H`,
+		);
 		return gitLog.toString().trim();
 	} catch (error) {
 		if (!(error instanceof Error)) {

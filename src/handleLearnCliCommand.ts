@@ -11,8 +11,6 @@ import { dirname, extname } from 'node:path';
 import { Project } from 'ts-morph';
 import { doubleQuotify } from './utils.js';
 
-
-
 // remove all special characters and whitespaces
 const removeSpecialCharacters = (str: string) =>
 	str.replace(/[{}()[\]:;,/?'"<>|=`!]/g, '').replace(/\s/g, '');
@@ -35,10 +33,8 @@ const getOldSourceFile = (
 
 	try {
 		const commitWithFileName = doubleQuotify(`${commitHash}:${filePath}`);
-		const output = execSync(
-			`git show ${commitWithFileName}`,
-		).toString();
-		
+		const output = execSync(`git show ${commitWithFileName}`).toString();
+
 		const project = new Project({
 			useInMemoryFileSystem: true,
 			compilerOptions: {
