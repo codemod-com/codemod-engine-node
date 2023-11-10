@@ -35,7 +35,6 @@ const getOldSourceFile = (
 
 	try {
 		const commitWithFileName = doubleQuotify(`${commitHash}:${filePath}`);
-		console.log(commitWithFileName)
 		const output = execSync(
 			`git show ${commitWithFileName}`,
 		).toString();
