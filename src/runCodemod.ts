@@ -14,11 +14,12 @@ import { IFs, Volume, createFsFromVolume } from 'memfs';
 import { createHash } from 'node:crypto';
 import { WorkerThreadManager } from './workerThreadManager.js';
 import { getTransformer, transpile } from './getTransformer.js';
-import { Message } from './messages.js';
+import { OperationMessage } from './messages.js';
 import { minimatch } from 'minimatch';
 import { SafeArgumentRecord } from './safeArgumentRecord.js';
 import { FlowSettings } from './schemata/flowSettingsSchema.js';
 import { RunSettings } from './schemata/runSettingsSchema.js';
+import { WorkerThreadMessage } from './workerThreadMessages.js';
 
 const TERMINATE_IDLE_THREADS_TIMEOUT = 30 * 1000;
 
@@ -149,13 +150,18 @@ export const runCodemod = async (
 	flowSettings: FlowSettings,
 	runSettings: RunSettings,
 	onCommand: (command: FormattedFileCommand) => Promise<void>,
-	onPrinterMessage: (message: Message) => void,
+	onPrinterMessage: (
+		message: OperationMessage | (WorkerThreadMessage & { kind: 'console' }),
+	) => void,
 	safeArgumentRecord: SafeArgumentRecord,
 	currentWorkingDirectory: string,
 ): Promise<void> => {
 	const name = 'name' in codemod ? codemod.name : codemod.indexPath;
 
-	printer.info('Running the "%s" codemod using "%s"', name, codemod.engine);
+	printer.printConsoleMessage(
+		'info',
+		`Running the "${name}" codemod using "${codemod.engine}"`,
+	);
 
 	if (codemod.engine === 'piranha') {
 		throw new Error('Piranha not supported');

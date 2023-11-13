@@ -105,7 +105,10 @@ export const executeMainThread = async () => {
 				return;
 			}
 
-			printer.log({ kind: 'error', message: error.message });
+			printer.printOperationMessage({
+				kind: 'error',
+				message: error.message,
+			});
 		}
 
 		return;
@@ -129,7 +132,10 @@ export const executeMainThread = async () => {
 				return;
 			}
 
-			printer.log({ kind: 'error', message: error.message });
+			printer.printOperationMessage({
+				kind: 'error',
+				message: error.message,
+			});
 		}
 
 		return;
@@ -145,7 +151,10 @@ export const executeMainThread = async () => {
 				return;
 			}
 
-			printer.log({ kind: 'error', message: error.message });
+			printer.printOperationMessage({
+				kind: 'error',
+				message: error.message,
+			});
 		}
 
 		return;

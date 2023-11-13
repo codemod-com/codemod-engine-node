@@ -2,14 +2,20 @@ import vm from 'node:vm';
 import tsmorph from 'ts-morph';
 import type { FileCommand } from './fileCommands.js';
 import { SafeArgumentRecord } from './safeArgumentRecord.js';
+import { ConsoleKind } from './schemata/consoleKindSchema.js';
+import { CONSOLE_OVERRIDE } from './consoleOverride.js';
+import { buildVmConsole } from './buildVmConsole.js';
 
 const transform = (
 	codemodSource: string,
 	oldPath: string,
 	oldData: string,
 	safeArgumentRecord: SafeArgumentRecord,
+	consoleCallback: (kind: ConsoleKind, message: string) => void,
 ): string => {
 	const codeToExecute = `
+		${CONSOLE_OVERRIDE}
+
 		${codemodSource}
 
 		const { Project } = require('ts-morph');
@@ -37,6 +43,7 @@ const transform = (
 		__INTUITA__oldPath: oldPath,
 		__INTUITA__oldData: oldData,
 		__INTUITA__argumentRecord: { ...safeArgumentRecord[0] },
+		__INTUITA__console__: buildVmConsole(consoleCallback),
 		require: (name: string) => {
 			if (name === 'ts-morph') {
 				return tsmorph;
@@ -53,12 +60,14 @@ export const runTsMorphCodemod = (
 	oldData: string,
 	formatWithPrettier: boolean,
 	safeArgumentRecord: SafeArgumentRecord,
+	consoleCallback: (kind: ConsoleKind, message: string) => void,
 ): readonly FileCommand[] => {
 	const newData = transform(
 		codemodSource,
 		oldPath,
 		oldData,
 		safeArgumentRecord,
+		consoleCallback,
 	);
 
 	if (typeof newData !== 'string' || oldData === newData) {

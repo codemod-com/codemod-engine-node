@@ -13,9 +13,9 @@ describe('FileDownloadService', function () {
 	const NEW_MTIME = NOW + OLD_MTIME * 1000;
 
 	const printer: PrinterBlueprint = {
-		log: () => {},
-		info: () => {},
-		warn: () => {},
+		printMessage: () => {},
+		printOperationMessage: () => {},
+		printConsoleMessage: () => {},
 	};
 
 	const URL = 'http://example.com';

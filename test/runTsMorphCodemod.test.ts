@@ -1,6 +1,7 @@
 import { deepStrictEqual } from 'node:assert';
 import { transpile } from '../src/getTransformer.js';
 import { runTsMorphCodemod } from '../src/runTsMorphCodemod.js';
+import type { ConsoleKind } from '../src/schemata/consoleKindSchema.js';
 
 const codemodSource = transpile(`
 import { SourceFile, EmitHint } from 'ts-morph';
@@ -8,6 +9,8 @@ import { SourceFile, EmitHint } from 'ts-morph';
 export const handleSourceFile = (
     sourceFile: SourceFile,
 ): string | undefined => {
+	console.log(sourceFile.getFilePath())
+
     sourceFile.addClass({
         name: 'Test'
     })
@@ -18,12 +21,17 @@ export const handleSourceFile = (
 
 describe('runTsMorphCodemod', () => {
 	it('should return transformed output', () => {
+		const messages: [ConsoleKind, string][] = [];
+
 		const fileCommands = runTsMorphCodemod(
 			codemodSource,
 			'index.ts',
 			``,
 			true,
 			[{}],
+			(consoleKind, message) => {
+				messages.push([consoleKind, message]);
+			},
 		);
 
 		deepStrictEqual(fileCommands.length, 1);
@@ -37,5 +45,7 @@ describe('runTsMorphCodemod', () => {
 			newData: 'class Test {\n}\n',
 			formatWithPrettier: true,
 		});
+
+		deepStrictEqual(messages, [['log', '/index.ts']]);
 	});
 });

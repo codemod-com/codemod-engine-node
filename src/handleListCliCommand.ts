@@ -26,5 +26,5 @@ export const handleListNamesCommand = async (
 
 	const names = S.parseSync(S.array(S.string))(parsedJson);
 
-	printer.log({ kind: 'names', names });
+	printer.printOperationMessage({ kind: 'names', names });
 };

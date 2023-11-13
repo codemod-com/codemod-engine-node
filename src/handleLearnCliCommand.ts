@@ -135,7 +135,7 @@ export const handleLearnCliCommand = async (
 	filePath: string | null,
 ) => {
 	if (filePath !== null && !isFileInGitDirectory(filePath)) {
-		printer.log({
+		printer.printOperationMessage({
 			kind: 'error',
 			message:
 				'The file on which you tried to run operation is not in a git repository.',
@@ -146,7 +146,7 @@ export const handleLearnCliCommand = async (
 	const path = filePath ?? (await findLastlyModifiedFile());
 
 	if (path === null) {
-		printer.log({
+		printer.printOperationMessage({
 			kind: 'error',
 			message:
 				'We could not find any modified file to run the command on.',
@@ -157,7 +157,7 @@ export const handleLearnCliCommand = async (
 	const fileExtension = getFileExtension(path);
 
 	if (!isJSorTS(fileExtension)) {
-		printer.log({
+		printer.printOperationMessage({
 			kind: 'error',
 			message: 'File must be either a JavaScript or TypeScript file.',
 		});
@@ -166,7 +166,7 @@ export const handleLearnCliCommand = async (
 
 	const latestCommitHash = getLatestCommitHash(dirname(path));
 	if (latestCommitHash === null) {
-		printer.log({
+		printer.printOperationMessage({
 			kind: 'error',
 			message:
 				'Unexpected error occurred while getting the latest commit hash.',
@@ -176,16 +176,20 @@ export const handleLearnCliCommand = async (
 
 	const modifiedFiles = findModifiedFiles();
 	if (modifiedFiles !== null && modifiedFiles.length > 1) {
-		printer.warn(
+		printer.printConsoleMessage(
+			'warn',
 			'Only the changes in the most recently edited file will be processed.',
 		);
 	}
 
-	printer.info(`Learning \`git diff\` starts on ${path}...`);
+	printer.printConsoleMessage(
+		'info',
+		`Learning \`git diff\` starts on ${path}...`,
+	);
 
 	const gitDiff = getGitDiffForFile(latestCommitHash, path);
 	if (gitDiff === null) {
-		printer.log({
+		printer.printOperationMessage({
 			kind: 'error',
 			message:
 				'Unexpected error occurred while running `git diff` command.',
@@ -194,7 +198,7 @@ export const handleLearnCliCommand = async (
 	}
 
 	if (gitDiff.length === 0) {
-		printer.log({
+		printer.printOperationMessage({
 			kind: 'error',
 			message:
 				'There is no difference between the status of the file and that at the previous commit.',
@@ -210,7 +214,7 @@ export const handleLearnCliCommand = async (
 	const sourceFile = getSourceFile(path, fileExtension);
 
 	if (oldSourceFile === null || sourceFile === null) {
-		printer.log({
+		printer.printOperationMessage({
 			kind: 'error',
 			message: 'Unexpected error occurred while getting AST of the file.',
 		});
@@ -287,18 +291,21 @@ export const handleLearnCliCommand = async (
 	});
 
 	if (url === null) {
-		printer.log({
+		printer.printOperationMessage({
 			kind: 'error',
 			message: 'Unexpected error occurred while creating a URL.',
 		});
 		return;
 	}
 
-	printer.info('Learning went successful! Opening Codemod Studio...');
+	printer.printConsoleMessage(
+		'info',
+		'Learning went successful! Opening Codemod Studio...',
+	);
 
 	const success = openURL(url);
 	if (!success) {
-		printer.log({
+		printer.printOperationMessage({
 			kind: 'error',
 			message: 'Unexpected error occurred while opening Codemod Studio.',
 		});

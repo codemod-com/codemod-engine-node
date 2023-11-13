@@ -5,12 +5,21 @@ import { runJscodeshiftCodemod } from './runJscodeshiftCodemod.js';
 import { runTsMorphCodemod } from './runTsMorphCodemod.js';
 
 import { buildFormattedFileCommands } from './fileCommands.js';
+import { ConsoleKind } from './schemata/consoleKindSchema.js';
 
 class PathAwareError extends Error {
 	constructor(public readonly path: string, message?: string | undefined) {
 		super(message);
 	}
 }
+
+const consoleCallback = (consoleKind: ConsoleKind, message: string): void => {
+	parentPort?.postMessage({
+		kind: 'console',
+		consoleKind,
+		message,
+	} satisfies WorkerThreadMessage);
+};
 
 const messageHandler = async (m: unknown) => {
 	try {
@@ -30,6 +39,7 @@ const messageHandler = async (m: unknown) => {
 							message.data,
 							message.formatWithPrettier,
 							message.safeArgumentRecord,
+							consoleCallback,
 					  )
 					: runTsMorphCodemod(
 							message.codemodSource,
@@ -37,6 +47,7 @@ const messageHandler = async (m: unknown) => {
 							message.data,
 							message.formatWithPrettier,
 							message.safeArgumentRecord,
+							consoleCallback,
 					  );
 
 			const commands = await buildFormattedFileCommands(fileCommands);

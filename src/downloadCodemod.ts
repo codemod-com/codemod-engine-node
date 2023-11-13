@@ -32,9 +32,9 @@ export class CodemodDownloader implements CodemodDownloaderBlueprint {
 	) {}
 
 	public async syncRegistry() {
-		this.__printer.info(
-			'Syncing the Codemod Registry into %s',
-			this.__intuitaDirectoryPath,
+		this.__printer.printConsoleMessage(
+			'info',
+			`Syncing the Codemod Registry into ${this.__intuitaDirectoryPath}`,
 		);
 
 		await mkdir(this.__intuitaDirectoryPath, { recursive: true });
@@ -54,10 +54,11 @@ export class CodemodDownloader implements CodemodDownloaderBlueprint {
 	public async download(
 		name: string,
 	): Promise<Codemod & { source: 'registry' }> {
-		this.__printer.info(
-			'Downloading the "%s" codemod, %susing cache',
-			name,
-			this._cacheUsed ? '' : 'not ',
+		this.__printer.printConsoleMessage(
+			'info',
+			`Downloading the "${name}" codemod, ${
+				this._cacheUsed ? '' : 'not '
+			}using cache`,
 		);
 
 		await mkdir(this.__intuitaDirectoryPath, { recursive: true });

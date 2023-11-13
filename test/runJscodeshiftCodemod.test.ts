@@ -1,6 +1,7 @@
 import { deepStrictEqual } from 'node:assert';
 import { transpile } from '../src/getTransformer.js';
 import { runJscodeshiftCodemod } from '../src/runJscodeshiftCodemod.js';
+import type { ConsoleKind } from '../src/schemata/consoleKindSchema.js';
 
 const codemodSource = transpile(`
 import type { FileInfo, API, Options } from 'jscodeshift';
@@ -11,6 +12,8 @@ export default function transform(
     api: API,
     options: Options,
 ): string | undefined {
+    console.log(file.path);
+
     const j = api.jscodeshift;
     const root = j(file.source);
 
@@ -54,14 +57,19 @@ export default function transform(
 
 describe('runJscodeshiftCodemod', () => {
 	it('should return transformed output', () => {
+		const messages: [ConsoleKind, string][] = [];
+
 		const oldData = `function mapStateToProps(state) {}`;
 
 		const fileCommands = runJscodeshiftCodemod(
 			codemodSource,
-			'index.ts',
+			'/index.ts',
 			oldData,
 			true,
 			[{}],
+			(consoleKind, message) => {
+				messages.push([consoleKind, message]);
+			},
 		);
 
 		deepStrictEqual(fileCommands.length, 1);
@@ -72,10 +80,12 @@ describe('runJscodeshiftCodemod', () => {
 
 		deepStrictEqual(fileCommand, {
 			kind: 'updateFile',
-			oldPath: 'index.ts',
+			oldPath: '/index.ts',
 			oldData,
 			newData,
 			formatWithPrettier: true,
 		});
+
+		deepStrictEqual(messages, [['log', '/index.ts']]);
 	});
 });

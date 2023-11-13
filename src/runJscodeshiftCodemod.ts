@@ -1,7 +1,10 @@
 import vm from 'node:vm';
 import jscodeshift, { API, FileInfo } from 'jscodeshift';
 import type { FileCommand } from './fileCommands.js';
-import { SafeArgumentRecord } from './safeArgumentRecord.js';
+import type { SafeArgumentRecord } from './safeArgumentRecord.js';
+import { buildVmConsole } from './buildVmConsole.js';
+import { ConsoleKind } from './schemata/consoleKindSchema.js';
+import { CONSOLE_OVERRIDE } from './consoleOverride.js';
 
 export const buildApi = (parser: string): API => ({
 	j: jscodeshift.withParser(parser),
@@ -22,8 +25,11 @@ const transform = (
 		[x: string]: unknown;
 		createFile: (newPath: string, newData: string) => void;
 	},
+	consoleCallback: (kind: ConsoleKind, message: string) => void,
 ): string => {
 	const codeToExecute = `
+		${CONSOLE_OVERRIDE}
+
 		${codemodSource}
 
 		transform(__INTUITA__file, __INTUITA__api, __INTUITA__options);
@@ -40,6 +46,7 @@ const transform = (
 		__INTUITA__file: fileInfo,
 		__INTUITA__api: api,
 		__INTUITA__options: options,
+		__INTUITA__console__: buildVmConsole(consoleCallback),
 	});
 
 	return vm.runInContext(codeToExecute, context);
@@ -51,6 +58,7 @@ export const runJscodeshiftCodemod = (
 	oldData: string,
 	formatWithPrettier: boolean,
 	safeArgumentRecord: SafeArgumentRecord,
+	consoleCallback: (kind: ConsoleKind, message: string) => void,
 ): readonly FileCommand[] => {
 	const commands: FileCommand[] = [];
 
@@ -76,6 +84,7 @@ export const runJscodeshiftCodemod = (
 			...safeArgumentRecord[0],
 			createFile,
 		},
+		consoleCallback,
 	);
 
 	if (typeof newData !== 'string' || oldData === newData) {

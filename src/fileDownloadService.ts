@@ -34,9 +34,9 @@ export class FileDownloadService implements FileDownloadServiceBlueprint {
 				const now = this._getNow();
 
 				if (now - mtime < CACHE_EVICTION_THRESHOLD) {
-					this._printer.info(
-						'Loading the cached content of "%s".',
-						url,
+					this._printer.printConsoleMessage(
+						'info',
+						`Loading the cached content of "${url}".`,
 					);
 
 					const tDataOut = await this._ifs.promises.readFile(path);

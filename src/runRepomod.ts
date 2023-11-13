@@ -17,7 +17,7 @@ import { filter } from 'unist-util-filter';
 import { IFs } from 'memfs';
 import { SafeArgumentRecord } from './safeArgumentRecord.js';
 import { createHash } from 'node:crypto';
-import { Message } from './messages.js';
+import { OperationMessage } from './messages.js';
 
 const parseMdx = (data: string) =>
 	fromMarkdown(data, {
@@ -49,7 +49,7 @@ export const runRepomod = async (
 	inputPath: string,
 	formatWithPrettier: boolean,
 	safeArgumentRecord: SafeArgumentRecord,
-	onPrinterMessage: (message: Message) => void,
+	onPrinterMessage: (message: OperationMessage) => void,
 	currentWorkingDirectory: string,
 ): Promise<readonly FileCommand[]> => {
 	const fileSystemManager = new FileSystemManager(
