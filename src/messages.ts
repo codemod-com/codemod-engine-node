@@ -53,8 +53,7 @@ export type ErrorMessage = Readonly<{
 	path?: string;
 }>;
 
-// TODO I am considering naming it PrinterMessage
-export type Message =
+export type OperationMessage =
 	| RewriteMessage
 	| FinishMessage
 	| ProgressMessage

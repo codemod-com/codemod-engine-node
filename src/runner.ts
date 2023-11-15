@@ -53,7 +53,7 @@ export class Runner {
 					this._flowSettings,
 					this._runSettings,
 					(command) => this._handleCommand(command),
-					(message) => this._printer.log(message),
+					(message) => this._printer.printMessage(message),
 					safeArgumentRecord,
 					this._currentWorkingDirectory,
 				);
@@ -83,7 +83,7 @@ export class Runner {
 							this._flowSettings,
 							this._runSettings,
 							(command) => this._handleCommand(command),
-							(message) => this._printer.log(message),
+							(message) => this._printer.printMessage(message),
 							safeArgumentRecord,
 							this._currentWorkingDirectory,
 						);
@@ -94,10 +94,9 @@ export class Runner {
 			}
 
 			if (this._name !== null) {
-				this._printer.info(
-					'Executing the "%s" codemod against "%s"',
-					this._name,
-					this._flowSettings.targetPath,
+				this._printer.printConsoleMessage(
+					'info',
+					`Executing the "${this._name}" codemod against "${this._flowSettings.targetPath}"`,
 				);
 
 				const codemod = await this._codemodDownloader.download(
@@ -117,7 +116,7 @@ export class Runner {
 					this._flowSettings,
 					this._runSettings,
 					(command) => this._handleCommand(command),
-					(message) => this._printer.log(message),
+					(message) => this._printer.printMessage(message),
 					safeArgumentRecord,
 					this._currentWorkingDirectory,
 				);
@@ -127,7 +126,10 @@ export class Runner {
 				return;
 			}
 
-			this._printer.log({ kind: 'error', message: error.message });
+			this._printer.printOperationMessage({
+				kind: 'error',
+				message: error.message,
+			});
 		}
 	}
 
@@ -142,7 +144,7 @@ export class Runner {
 		);
 
 		if (printerMessage) {
-			this._printer.log(printerMessage);
+			this._printer.printOperationMessage(printerMessage);
 		}
 	}
 }

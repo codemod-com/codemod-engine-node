@@ -1,7 +1,10 @@
 import { Worker } from 'node:worker_threads';
 import { MainThreadMessage } from './mainThreadMessages.js';
-import { Message } from './messages.js';
-import { decodeWorkerThreadMessage } from './workerThreadMessages.js';
+import { OperationMessage } from './messages.js';
+import {
+	WorkerThreadMessage,
+	decodeWorkerThreadMessage,
+} from './workerThreadMessages.js';
 import { FormattedFileCommand } from './fileCommands.js';
 import { SafeArgumentRecord } from './safeArgumentRecord.js';
 
@@ -25,7 +28,11 @@ export class WorkerThreadManager {
 		private readonly __codemodSource: string,
 		private readonly __formatWithPrettier: boolean,
 		private readonly __getData: (path: string) => Promise<string>,
-		private readonly __onPrinterMessage: (message: Message) => void,
+		private readonly __onPrinterMessage: (
+			message:
+				| OperationMessage
+				| (WorkerThreadMessage & { kind: 'console' }),
+		) => void,
 		private readonly __onCommand: (
 			command: FormattedFileCommand,
 		) => Promise<void>,
@@ -172,6 +179,11 @@ export class WorkerThreadManager {
 	private __buildOnWorkerMessage(i: number) {
 		return async (m: unknown): Promise<void> => {
 			const workerThreadMessage = decodeWorkerThreadMessage(m);
+
+			if (workerThreadMessage.kind === 'console') {
+				this.__onPrinterMessage(workerThreadMessage);
+				return;
+			}
 
 			if (workerThreadMessage.kind === 'commands') {
 				const commands =

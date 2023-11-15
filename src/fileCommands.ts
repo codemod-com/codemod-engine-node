@@ -3,7 +3,7 @@ import { join, extname, dirname } from 'node:path';
 import { Options } from 'prettier';
 import { IFs } from 'memfs';
 import { filterNeitherNullNorUndefined } from './filterNeitherNullNorUndefined.js';
-import { Message } from './messages.js';
+import { OperationMessage } from './messages.js';
 import { RunSettings } from './schemata/runSettingsSchema.js';
 
 export type CreateFileCommand = Readonly<{
@@ -258,7 +258,7 @@ export const modifyFileSystemUponCommand = (
 export const buildPrinterMessageUponCommand = (
 	runSettings: RunSettings,
 	command: FormattedFileCommand,
-): Message | null => {
+): OperationMessage | null => {
 	if (!runSettings.dryRun) {
 		return null;
 	}

@@ -1,16 +1,30 @@
-import type { Message } from './messages.js';
+import type { OperationMessage } from './messages.js';
+import { ConsoleKind } from './schemata/consoleKindSchema.js';
+import { WorkerThreadMessage } from './workerThreadMessages.js';
 
 export type PrinterBlueprint = Readonly<{
-	log(message: Message): void;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	info(message: string, ...optionalParams: any[]): void;
-	warn(message: string): void;
+	printMessage(
+		message: OperationMessage | (WorkerThreadMessage & { kind: 'console' }),
+	): void;
+	printOperationMessage(message: OperationMessage): void;
+	printConsoleMessage(kind: ConsoleKind, message: string): void;
 }>;
 
 export class Printer implements PrinterBlueprint {
 	public constructor(private readonly __useJson: boolean) {}
 
-	public log(message: Message) {
+	public printMessage(
+		message: OperationMessage | (WorkerThreadMessage & { kind: 'console' }),
+	) {
+		if (message.kind === 'console') {
+			this.printConsoleMessage(message.consoleKind, message.message);
+			return;
+		}
+
+		this.printOperationMessage(message);
+	}
+
+	public printOperationMessage(message: OperationMessage) {
 		if (this.__useJson) {
 			if (message.kind === 'error') {
 				console.error(JSON.stringify(message));
@@ -40,20 +54,11 @@ export class Printer implements PrinterBlueprint {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	public info(message: string, ...optionalParams: any[]) {
+	public printConsoleMessage(kind: ConsoleKind, message: string) {
 		if (this.__useJson) {
 			return;
 		}
 
-		console.info(message, ...optionalParams);
-	}
-
-	public warn(message: string) {
-		if (this.__useJson) {
-			return;
-		}
-
-		console.warn(message);
+		console[kind](message);
 	}
 }

@@ -36,9 +36,9 @@ describe('Runner', function (this) {
 
 		const ifs = createFsFromVolume(volume);
 		const printer: PrinterBlueprint = {
-			log: () => {},
-			info: () => {},
-			warn: () => {},
+			printMessage: () => {},
+			printOperationMessage: () => {},
+			printConsoleMessage: () => {},
 		};
 
 		const codemodDownloader: CodemodDownloaderBlueprint = {
