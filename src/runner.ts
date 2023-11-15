@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import type { ArgumentRecord } from './schemata/argumentRecordSchema.js';
 import {
 	modifyFileSystemUponCommand,
@@ -14,11 +15,23 @@ import type { RepositoryConfiguration } from './repositoryConfiguration.js';
 import type { CodemodSettings } from './schemata/codemodSettingsSchema.js';
 import type { FlowSettings } from './schemata/flowSettingsSchema.js';
 import type { RunSettings } from './schemata/runSettingsSchema.js';
+import type { TelemetryBlueprint } from './telemetryService.js';
+
+type Stats = {
+	id: string;
+	filesModified: number;
+};
+
+export const buildRunStatsId = (): string =>
+	randomBytes(20).toString('base64url');
 
 export class Runner {
+	private __stats: Stats | null = null;
+
 	public constructor(
 		protected readonly _fs: IFs,
 		protected readonly _printer: PrinterBlueprint,
+		protected readonly _telemetry: TelemetryBlueprint,
 		protected readonly _codemodDownloader: CodemodDownloaderBlueprint,
 		protected readonly _loadRepositoryConfiguration: () => Promise<RepositoryConfiguration>,
 		protected readonly _codemodSettings: CodemodSettings,
@@ -31,6 +44,11 @@ export class Runner {
 
 	public async run() {
 		try {
+			this.__stats = {
+				filesModified: 0,
+				id: buildRunStatsId(),
+			};
+
 			if (
 				'sourcePath' in this._codemodSettings &&
 				'codemodEngine' in this._codemodSettings
@@ -57,6 +75,14 @@ export class Runner {
 					safeArgumentRecord,
 					this._currentWorkingDirectory,
 				);
+
+				this._telemetry.sendEvent({
+					kind: 'codemodExecuted',
+					codemodName: 'Codemod from FS',
+					executionId: this.__stats.id,
+					fileCount: this.__stats.filesModified,
+				});
+
 				return;
 			}
 
@@ -87,6 +113,13 @@ export class Runner {
 							safeArgumentRecord,
 							this._currentWorkingDirectory,
 						);
+
+						this._telemetry.sendEvent({
+							kind: 'codemodExecuted',
+							codemodName: codemod.name,
+							executionId: this.__stats.id,
+							fileCount: this.__stats.filesModified,
+						});
 					}
 				}
 
@@ -120,6 +153,13 @@ export class Runner {
 					safeArgumentRecord,
 					this._currentWorkingDirectory,
 				);
+
+				this._telemetry.sendEvent({
+					kind: 'codemodExecuted',
+					codemodName: codemod.name,
+					executionId: this.__stats.id,
+					fileCount: this.__stats.filesModified,
+				});
 			}
 		} catch (error) {
 			if (!(error instanceof Error)) {
@@ -130,6 +170,10 @@ export class Runner {
 				kind: 'error',
 				message: error.message,
 			});
+			this._telemetry.sendEvent({
+				kind: 'failedToExecuteCommand',
+				commandName: 'intuita.executeCodemod',
+			});
 		}
 	}
 
@@ -137,6 +181,10 @@ export class Runner {
 		command: FormattedFileCommand,
 	): Promise<void> {
 		await modifyFileSystemUponCommand(this._fs, this._runSettings, command);
+
+		if (!this._runSettings.dryRun && this.__stats !== null) {
+			this.__stats.filesModified++;
+		}
 
 		const printerMessage = buildPrinterMessageUponCommand(
 			this._runSettings,

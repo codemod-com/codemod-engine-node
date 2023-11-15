@@ -24,6 +24,11 @@ import { buildArgumentRecord } from './buildArgumentRecord.js';
 import { FileDownloadService } from './fileDownloadService.js';
 import Axios from 'axios';
 import { TarService } from './services/tarService.js';
+import {
+	AppInsightsTelemetryService,
+	NoTelemetryService,
+} from './telemetryService.js';
+import { APP_INSIGHTS_INSTRUMENTATION_STRING } from './constants.js';
 
 export const executeMainThread = async () => {
 	const slicedArgv = hideBin(process.argv);
@@ -96,6 +101,19 @@ export const executeMainThread = async () => {
 		fs as unknown as IFs,
 		printer,
 	);
+
+	// hack to prevent appInsights from trying to read applicationinsights.json
+	// this env should be set before appinsights is imported
+	// https://github.com/microsoft/ApplicationInsights-node.js/blob/0217324c477a96b5dd659510bbccad27934084a3/Library/JsonConfig.ts#L122
+	process.env['APPLICATIONINSIGHTS_CONFIGURATION_CONTENT'] = '{}';
+	const appInsights = await import('applicationinsights');
+
+	// .start() is skipped intentionally, to prevent any non-custom events from tracking
+	appInsights.setup(APP_INSIGHTS_INSTRUMENTATION_STRING);
+
+	const telemetryService = argv.telemetryDisable
+		? new NoTelemetryService()
+		: new AppInsightsTelemetryService(appInsights.defaultClient);
 
 	if (String(argv._) === 'list') {
 		try {
@@ -185,6 +203,7 @@ export const executeMainThread = async () => {
 	const runner = new Runner(
 		fs as unknown as IFs,
 		printer,
+		telemetryService,
 		codemodDownloader,
 		loadRepositoryConfiguration,
 		codemodSettings,
