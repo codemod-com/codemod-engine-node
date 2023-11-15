@@ -55,9 +55,17 @@ After running this command, if any git diff exists, Intuita will use the diff as
 -   [`--useJson`](https://docs.intuita.io/docs/cli/advanced-usage#--usejson)
 -   [`--threadCount`](https://docs.intuita.io/docs/cli/advanced-usage#--threadcount)
 -   [`--dryRun`](https://docs.intuita.io/docs/cli/advanced-usage#--dryrun)
+-   [`--telemetryDisable`](https://docs.intuita.io/docs/cli/advanced-usage#--telemetrydisable)
 
 ## Contribution
 
 We'd love for you to contribute to the [Codemod Engine](https://github.com/intuita-inc/codemod-engine-node) and the [Codemod Registry](https://github.com/intuita-inc/codemod-registry). Please note that once you create a pull request, you will be asked to sign our [Contributor License Agreement](https://cla-assistant.io/intuita-inc/codemod-registry).
 
 We're always excited to support codemods for more frameworks and libraries. Contributing allows us to make codemods more accessible to more framework builders, developers, and more.
+
+## Telemetry 🔭
+
+- The extension collects telemetry data to help us improve the product for you.
+- **We never send PII, file, or folder names.**
+- Telemetry can be disabled by providing `--telemetryDisable` flag.
+- See more details in our [telemetry compliance considerations](https://docs.intuita.io/docs/about-intuita/legal/telemetry-compliance) doc.

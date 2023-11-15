@@ -54,3 +54,7 @@ export class AppInsightsTelemetryService implements TelemetryBlueprint {
 		);
 	}
 }
+
+export class NoTelemetryService implements TelemetryBlueprint {
+	public sendEvent(event: Event): void {}
+}
