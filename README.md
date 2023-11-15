@@ -44,17 +44,17 @@ After running this command, if any git diff exists, Intuita will use the diff as
 
 ### Options
 
-- [`--include`](https://docs.intuita.io/docs/cli/advanced-usage#--include)
-- [`--exclude`](https://docs.intuita.io/docs/cli/advanced-usage#--exclude)
-- [`--targetPath`](https://docs.intuita.io/docs/cli/advanced-usage#--targetpath)
-- [`--sourcePath`](https://docs.intuita.io/docs/cli/advanced-usage#--sourcepath)
-- [`--codemodEngine`](https://docs.intuita.io/docs/cli/advanced-usage#--codemodengine)
-- [`--fileLimit`](https://docs.intuita.io/docs/cli/advanced-usage#--filelimit)
-- [`--usePrettier`](https://docs.intuita.io/docs/cli/advanced-usage#--useprettier)
-- [`--useCache`](https://docs.intuita.io/docs/cli/advanced-usage#--usecache)
-- [`--useJson`](https://docs.intuita.io/docs/cli/advanced-usage#--usejson)
-- [`--threadCount`](https://docs.intuita.io/docs/cli/advanced-usage#--threadcount)
-- [`--dryRun`](https://docs.intuita.io/docs/cli/advanced-usage#--dryrun)
+-   [`--include`](https://docs.intuita.io/docs/cli/advanced-usage#--include)
+-   [`--exclude`](https://docs.intuita.io/docs/cli/advanced-usage#--exclude)
+-   [`--targetPath`](https://docs.intuita.io/docs/cli/advanced-usage#--targetpath)
+-   [`--sourcePath`](https://docs.intuita.io/docs/cli/advanced-usage#--sourcepath)
+-   [`--codemodEngine`](https://docs.intuita.io/docs/cli/advanced-usage#--codemodengine)
+-   [`--fileLimit`](https://docs.intuita.io/docs/cli/advanced-usage#--filelimit)
+-   [`--usePrettier`](https://docs.intuita.io/docs/cli/advanced-usage#--useprettier)
+-   [`--useCache`](https://docs.intuita.io/docs/cli/advanced-usage#--usecache)
+-   [`--useJson`](https://docs.intuita.io/docs/cli/advanced-usage#--usejson)
+-   [`--threadCount`](https://docs.intuita.io/docs/cli/advanced-usage#--threadcount)
+-   [`--dryRun`](https://docs.intuita.io/docs/cli/advanced-usage#--dryrun)
 
 ## Contribution
 
