@@ -159,7 +159,9 @@ export const handleLearnCliCommand = async (
 	if (!isJSorTS(fileExtension)) {
 		printer.log({
 			kind: 'error',
-			message: 'File must be either a JavaScript or TypeScript file.',
+			message:
+				'At this moment, we are supporting only Jscodeshift engine, so the file must be either a JavaScript or TypeScript file (.js, .jsx, .ts, .tsx).\n' +
+				'Soon, we will support other engines and hence other extensions including .md, .mdx and more!',
 		});
 		return;
 	}
