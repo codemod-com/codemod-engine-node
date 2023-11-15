@@ -65,7 +65,6 @@ We're always excited to support codemods for more frameworks and libraries. Cont
 
 ## Telemetry 🔭
 
-
-We collect anonymous usage data to improve our product. Collected data cannot be linked to individual users. We do not store personal data/code. 
+We collect anonymous usage data to improve our product. Collected data cannot be linked to individual users. We do not store personal data/code.
 
 For more details and samples of collected data see our [telemetry compliance considerations](https://docs.intuita.io/docs/about-intuita/legal/telemetry-compliance) doc.

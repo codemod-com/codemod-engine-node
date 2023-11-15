@@ -24,7 +24,10 @@ import { buildArgumentRecord } from './buildArgumentRecord.js';
 import { FileDownloadService } from './fileDownloadService.js';
 import Axios from 'axios';
 import { TarService } from './services/tarService.js';
-import { AppInsightsTelemetryService, NoTelemetryService } from './telemetryService.js';
+import {
+	AppInsightsTelemetryService,
+	NoTelemetryService,
+} from './telemetryService.js';
 import { APP_INSIGHTS_INSTRUMENTATION_STRING } from './constants.js';
 
 export const executeMainThread = async () => {
@@ -108,9 +111,9 @@ export const executeMainThread = async () => {
 	// .start() is skipped intentionally, to prevent any non-custom events from tracking
 	appInsights.setup(APP_INSIGHTS_INSTRUMENTATION_STRING);
 
-	const telemetryService = argv.telemetryDisable ? new NoTelemetryService() : new AppInsightsTelemetryService(
-		appInsights.defaultClient,
-	);
+	const telemetryService = argv.telemetryDisable
+		? new NoTelemetryService()
+		: new AppInsightsTelemetryService(appInsights.defaultClient);
 
 	if (String(argv._) === 'list') {
 		try {

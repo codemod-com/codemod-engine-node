@@ -17,7 +17,6 @@ import type { FlowSettings } from './schemata/flowSettingsSchema.js';
 import type { RunSettings } from './schemata/runSettingsSchema.js';
 import type { TelemetryBlueprint } from './telemetryService.js';
 
-
 type Stats = {
 	id: string;
 	filesModified: number;
