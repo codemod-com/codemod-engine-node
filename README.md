@@ -65,7 +65,7 @@ We're always excited to support codemods for more frameworks and libraries. Cont
 
 ## Telemetry 🔭
 
-- The extension collects telemetry data to help us improve the product for you.
-- **We never send PII, file, or folder names.**
-- Telemetry can be disabled by providing `--telemetryDisable` flag.
-- See more details in our [telemetry compliance considerations](https://docs.intuita.io/docs/about-intuita/legal/telemetry-compliance) doc.
+
+We collect anonymous usage data to improve our product. Collected data cannot be linked to individual users. We do not store personal data/code. 
+
+For more details and samples of collected data see our [telemetry compliance considerations](https://docs.intuita.io/docs/about-intuita/legal/telemetry-compliance) doc.
