@@ -1,20 +1,18 @@
 import type { Contracts, TelemetryClient } from 'applicationinsights';
 import { APP_INSIGHTS_TAG } from './constants.js';
 
-export type ErrorEvent = Readonly<{
-	kind: 'failedToExecuteCommand';
-	commandName: string;
-}>;
-
 export type Event = Readonly<{
 	kind: 'codemodExecuted';
 	fileCount: number;
 	executionId: string;
 	codemodName: string;
+}> |  Readonly<{
+	kind: 'failedToExecuteCommand';
+	commandName: string;
 }>;
 
 export type TelemetryBlueprint = {
-	sendEvent(event: Event | ErrorEvent): void;
+	sendEvent(event: Event): void;
 };
 
 export class AppInsightsTelemetryService implements TelemetryBlueprint {
@@ -24,9 +22,9 @@ export class AppInsightsTelemetryService implements TelemetryBlueprint {
 		] = APP_INSIGHTS_TAG;
 	}
 
-	// AppInsights exepect numeric values to be placed under "measurments" and string values under "properties"
+	// AppInsights expects numeric values to be placed under "measurements" and string values under "properties"
 	private __rawEventToTelemetryEvent(
-		event: ErrorEvent | Event,
+		event: Event,
 	): Contracts.EventTelemetry {
 		const properties: Record<string, string> = {};
 		const measurements: Record<string, number> = {};
@@ -50,7 +48,7 @@ export class AppInsightsTelemetryService implements TelemetryBlueprint {
 		};
 	}
 
-	public sendEvent(event: Event | ErrorEvent): void {
+	public sendEvent(event: Event): void {
 		this.__telemetryClient.trackEvent(
 			this.__rawEventToTelemetryEvent(event),
 		);

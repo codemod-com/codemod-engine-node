@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import type { ArgumentRecord } from './schemata/argumentRecordSchema.js';
 import {
 	modifyFileSystemUponCommand,
@@ -14,8 +15,8 @@ import type { RepositoryConfiguration } from './repositoryConfiguration.js';
 import type { CodemodSettings } from './schemata/codemodSettingsSchema.js';
 import type { FlowSettings } from './schemata/flowSettingsSchema.js';
 import type { RunSettings } from './schemata/runSettingsSchema.js';
-import { TelemetryBlueprint } from './telemetryService.js';
-import { randomBytes } from 'crypto';
+import type { TelemetryBlueprint } from './telemetryService.js';
+
 
 type Stats = {
 	id: string;
