@@ -1,5 +1,6 @@
 import vm from 'node:vm';
 import tsmorph from 'ts-morph';
+import * as S from '@effect/schema/Schema';
 import type { FileCommand } from './fileCommands.js';
 import { SafeArgumentRecord } from './safeArgumentRecord.js';
 import { ConsoleKind } from './schemata/consoleKindSchema.js';
@@ -12,11 +13,25 @@ const transform = (
 	oldData: string,
 	safeArgumentRecord: SafeArgumentRecord,
 	consoleCallback: (kind: ConsoleKind, message: string) => void,
-): string => {
+): string | undefined | null => {
 	const codeToExecute = `
 		${CONSOLE_OVERRIDE}
 
-		${codemodSource}
+		const __module__ = { exports: {} };
+
+		const keys = ['module', 'exports'];
+		const values = [__module__, __module__.exports];
+
+		new Function(...keys, __CODEMOD_SOURCE__).apply(null, values);
+
+		const handleSourceFile = typeof __module__.exports === 'function'
+			? __module__.exports
+			: __module__.exports.__esModule &&
+			typeof __module__.exports.default === 'function'
+			? __module__.exports.default
+			: typeof __module__.exports.handleSourceFile === 'function'
+			? __module__.exports.handleSourceFile
+			: null;
 
 		const { Project } = require('ts-morph');
 
@@ -33,17 +48,18 @@ const transform = (
 		handleSourceFile(sourceFile, __INTUITA__argumentRecord);
 	`;
 
-	const exports = {};
+	const exports = Object.freeze({});
 
 	const context = vm.createContext({
-		module: {
+		module: Object.freeze({
 			exports,
-		},
+		}),
 		exports,
 		__INTUITA__oldPath: oldPath,
 		__INTUITA__oldData: oldData,
 		__INTUITA__argumentRecord: { ...safeArgumentRecord[0] },
 		__INTUITA__console__: buildVmConsole(consoleCallback),
+		__CODEMOD_SOURCE__: codemodSource,
 		require: (name: string) => {
 			if (name === 'ts-morph') {
 				return tsmorph;
@@ -51,7 +67,9 @@ const transform = (
 		},
 	});
 
-	return vm.runInContext(codeToExecute, context);
+	const value = vm.runInContext(codeToExecute, context);
+
+	return S.parseSync(S.union(S.string, S.undefined, S.null))(value);
 };
 
 export const runTsMorphCodemod = (
