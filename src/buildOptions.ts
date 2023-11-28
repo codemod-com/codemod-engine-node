@@ -43,14 +43,25 @@ export const buildOptions = <T extends {}>(y: Argv<T>) => {
 					description: 'Glob pattern(s) for files to exclude',
 					default: DEFAULT_EXCLUDE_PATTERNS,
 				})
-				.option('targetPath', {
+				.option('target', {
 					type: 'string',
 					description: 'Input directory path',
 					default: DEFAULT_INPUT_DIRECTORY_PATH,
 				})
-				.option('sourcePath', {
+				.option('targetPath', {
+					type: 'string',
+					description:
+						'(DEPRECATED by "target") Input directory path',
+					default: DEFAULT_INPUT_DIRECTORY_PATH,
+				})
+				.option('source', {
 					type: 'string',
 					description: 'Source path of the local codemod to run',
+				})
+				.option('sourcePath', {
+					type: 'string',
+					description:
+						'(DEPRECATED by "source") Source path of the local codemod to run',
 				})
 				.option('codemodEngine', {
 					type: 'string',

@@ -34,7 +34,7 @@ export class Runner {
 		protected readonly _telemetry: TelemetryBlueprint,
 		protected readonly _codemodDownloader: CodemodDownloaderBlueprint,
 		protected readonly _loadRepositoryConfiguration: () => Promise<RepositoryConfiguration>,
-		protected readonly _codemodSettings: CodemodSettings,
+		protected readonly _codemodSettings: CodemodSettings | null,
 		protected readonly _flowSettings: FlowSettings,
 		protected readonly _runSettings: RunSettings,
 		protected readonly _argumentRecord: ArgumentRecord,
@@ -49,10 +49,7 @@ export class Runner {
 				id: buildRunStatsId(),
 			};
 
-			if (
-				'sourcePath' in this._codemodSettings &&
-				'codemodEngine' in this._codemodSettings
-			) {
+			if (this._codemodSettings?.kind === 'runSourced') {
 				const codemod = {
 					source: 'fileSystem' as const,
 					engine: this._codemodSettings.codemodEngine,
@@ -86,7 +83,7 @@ export class Runner {
 				return;
 			}
 
-			if (this._codemodSettings._.includes('runOnPreCommit')) {
+			if (this._codemodSettings?.kind === 'runOnPreCommit') {
 				const { preCommitCodemods } =
 					await this._loadRepositoryConfiguration();
 

@@ -17,6 +17,7 @@ export const flowSettingsSchema = S.struct({
 	exclude: S.optional(S.array(S.string)).withDefault(
 		() => DEFAULT_EXCLUDE_PATTERNS,
 	),
+	target: S.optional(S.string),
 	targetPath: S.optional(S.string).withDefault(
 		() => DEFAULT_INPUT_DIRECTORY_PATH,
 	),
@@ -30,4 +31,13 @@ export const flowSettingsSchema = S.struct({
 	threadCount: S.optional(S.number).withDefault(() => DEFAULT_THREAD_COUNT),
 });
 
-export type FlowSettings = S.To<typeof flowSettingsSchema>;
+export type FlowSettings = Omit<S.To<typeof flowSettingsSchema>, 'target'>;
+
+export const parseFlowSettings = (input: unknown): FlowSettings => {
+	const flowSettings = S.parseSync(flowSettingsSchema)(input);
+
+	return {
+		...flowSettings,
+		targetPath: flowSettings.target ?? flowSettings.targetPath,
+	};
+};
