@@ -30,6 +30,9 @@ import {
 } from './telemetryService.js';
 import { APP_INSIGHTS_INSTRUMENTATION_STRING } from './constants.js';
 
+// the build script contains the version
+declare const __INTUITA_CLI_VERSION__: string;
+
 export const executeMainThread = async () => {
 	const slicedArgv = hideBin(process.argv);
 
@@ -75,7 +78,7 @@ export const executeMainThread = async () => {
 				}),
 		)
 		.help()
-		.version();
+		.version(__INTUITA_CLI_VERSION__);
 
 	if (slicedArgv.length === 0) {
 		argvObject.showHelp();
