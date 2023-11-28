@@ -88,7 +88,7 @@ describe('Runner', function (this) {
 			});
 
 		const codemodSettings: CodemodSettings = {
-			_: ['runOnPreCommit'],
+			kind: 'runOnPreCommit',
 		};
 
 		const flowSettings: FlowSettings = {
@@ -112,6 +112,9 @@ describe('Runner', function (this) {
 		const runner = new Runner(
 			ifs,
 			printer,
+			{
+				sendEvent: () => {},
+			},
 			codemodDownloader,
 			loadRepositoryConfiguration,
 			codemodSettings,
