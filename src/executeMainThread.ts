@@ -17,8 +17,8 @@ import { Runner } from './runner.js';
 import * as fs from 'fs';
 import { IFs } from 'memfs';
 import { loadRepositoryConfiguration } from './repositoryConfiguration.js';
-import { codemodSettingsSchema } from './schemata/codemodSettingsSchema.js';
-import { flowSettingsSchema } from './schemata/flowSettingsSchema.js';
+import { parseCodemodSettings } from './schemata/codemodSettingsSchema.js';
+import { parseFlowSettings } from './schemata/flowSettingsSchema.js';
 import { runSettingsSchema } from './schemata/runSettingsSchema.js';
 import { buildArgumentRecord } from './buildArgumentRecord.js';
 import { FileDownloadService } from './fileDownloadService.js';
@@ -164,9 +164,10 @@ export const executeMainThread = async () => {
 
 	if (String(argv._) === 'learn') {
 		const printer = new Printer(argv.useJson);
+		const targetPath = argv.target ?? argv.targetPath ?? null;
 
 		try {
-			await handleLearnCliCommand(printer, argv.targetPath ?? null);
+			await handleLearnCliCommand(printer, targetPath);
 		} catch (error) {
 			if (!(error instanceof Error)) {
 				return;
@@ -186,8 +187,8 @@ export const executeMainThread = async () => {
 		'.intuita',
 	);
 
-	const codemodSettings = S.parseSync(codemodSettingsSchema)(argv);
-	const flowSettings = S.parseSync(flowSettingsSchema)(argv);
+	const codemodSettings = parseCodemodSettings(argv);
+	const flowSettings = parseFlowSettings(argv);
 	const runSettings = S.parseSync(runSettingsSchema)(argv);
 	const argumentRecord = buildArgumentRecord(argv);
 
