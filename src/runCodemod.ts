@@ -339,9 +339,7 @@ export const runCodemod = async (
 
 	const codemodSource = await fileSystem.promises.readFile(
 		codemod.indexPath,
-		{
-			encoding: 'utf8',
-		},
+		{ encoding: 'utf8' },
 	);
 
 	const transpiledSource = codemod.indexPath.endsWith('.ts')

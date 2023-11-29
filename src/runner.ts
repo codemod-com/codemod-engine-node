@@ -16,6 +16,7 @@ import type { CodemodSettings } from './schemata/codemodSettingsSchema.js';
 import type { FlowSettings } from './schemata/flowSettingsSchema.js';
 import type { RunSettings } from './schemata/runSettingsSchema.js';
 import type { TelemetryBlueprint } from './telemetryService.js';
+import { buildSourcedCodemodOptions } from './buildCodemodOptions.js';
 
 type Stats = {
 	id: string;
@@ -48,23 +49,30 @@ export class Runner {
 				filesModified: 0,
 				id: buildRunStatsId(),
 			};
+			this._printer.printConsoleMessage(
+				'info',
+				JSON.stringify(this._codemodSettings),
+			);
 
 			if (this._codemodSettings?.kind === 'runSourced') {
-				const codemod = {
-					source: 'fileSystem' as const,
-					engine: this._codemodSettings.codemodEngine,
-					indexPath: this._codemodSettings.sourcePath,
-				};
+				const codemodOptions = await buildSourcedCodemodOptions(
+					this._fs,
+					this._codemodSettings,
+				);
+				this._printer.printConsoleMessage(
+					'info',
+					JSON.stringify(codemodOptions),
+				);
 
 				const safeArgumentRecord = buildSafeArgumentRecord(
-					codemod,
+					codemodOptions,
 					this._argumentRecord,
 				);
 
 				await runCodemod(
 					this._fs,
 					this._printer,
-					codemod,
+					codemodOptions,
 					this._flowSettings,
 					this._runSettings,
 					(command) => this._handleCommand(command),
