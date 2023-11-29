@@ -27,6 +27,12 @@ export const buildSourcedCodemodOptions = async (
 		.then((pathStat) => pathStat.isDirectory());
 
 	if (!isDirectorySource) {
+		if (codemodOptions.codemodEngine === null) {
+			throw new Error(
+				'--codemodEngine has to be defined when running local codemod',
+			);
+		}
+
 		return {
 			source: 'fileSystem' as const,
 			engine: codemodOptions.codemodEngine,
@@ -64,7 +70,7 @@ export const buildSourcedCodemodOptions = async (
 
 	const engine = await readJsonField(
 		fs,
-		path.join(codemodOptions.sourcePath, 'package.json'),
+		path.join(codemodOptions.sourcePath, 'config.json'),
 		'engine',
 	);
 	if (!engine) {
@@ -78,17 +84,9 @@ export const buildSourcedCodemodOptions = async (
 		);
 	}
 
-	throw new Error(
-		JSON.stringify({
-			source: 'fileSystem' as const,
-			engine,
-			indexPath: mainScriptPath,
-		}),
-	);
-
-	// return {
-	// 	source: 'fileSystem' as const,
-	// 	engine,
-	// 	indexPath: mainScriptPath,
-	// };
+	return {
+		source: 'fileSystem' as const,
+		engine,
+		indexPath: mainScriptPath,
+	};
 };

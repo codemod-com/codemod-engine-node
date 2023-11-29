@@ -49,19 +49,15 @@ export class Runner {
 				filesModified: 0,
 				id: buildRunStatsId(),
 			};
-			this._printer.printConsoleMessage(
-				'info',
-				JSON.stringify(this._codemodSettings),
-			);
 
-			if (this._codemodSettings?.kind === 'runSourced') {
+			if (this._codemodSettings === null) {
+				return;
+			}
+
+			if (this._codemodSettings.kind === 'runSourced') {
 				const codemodOptions = await buildSourcedCodemodOptions(
 					this._fs,
 					this._codemodSettings,
-				);
-				this._printer.printConsoleMessage(
-					'info',
-					JSON.stringify(codemodOptions),
 				);
 
 				const safeArgumentRecord = buildSafeArgumentRecord(
@@ -91,7 +87,7 @@ export class Runner {
 				return;
 			}
 
-			if (this._codemodSettings?.kind === 'runOnPreCommit') {
+			if (this._codemodSettings.kind === 'runOnPreCommit') {
 				const { preCommitCodemods } =
 					await this._loadRepositoryConfiguration();
 

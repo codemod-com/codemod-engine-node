@@ -10,14 +10,9 @@ const codemodEngineSchema = S.union(
 export const codemodSettingsSchema = S.union(
 	S.struct({
 		_: S.array(S.string),
-	}),
-	S.struct({
-		source: S.string,
-		codemodEngine: codemodEngineSchema,
-	}),
-	S.struct({
-		sourcePath: S.string,
-		codemodEngine: codemodEngineSchema,
+		source: S.optional(S.string),
+		sourcePath: S.optional(S.string),
+		codemodEngine: S.optional(codemodEngineSchema),
 	}),
 );
 
@@ -26,9 +21,13 @@ export type CodemodSettings =
 			kind: 'runOnPreCommit';
 	  }>
 	| Readonly<{
+			kind: 'runNamed';
+			name: string;
+	  }>
+	| Readonly<{
 			kind: 'runSourced';
 			sourcePath: string;
-			codemodEngine: S.To<typeof codemodEngineSchema>;
+			codemodEngine: S.To<typeof codemodEngineSchema> | null;
 	  }>;
 
 export const parseCodemodSettings = (
@@ -36,22 +35,32 @@ export const parseCodemodSettings = (
 ): CodemodSettings | null => {
 	const codemodSettings = S.parseSync(codemodSettingsSchema)(input);
 
-	if (!('_' in codemodSettings)) {
-		return {
-			kind: 'runSourced',
-			sourcePath:
-				'source' in codemodSettings
-					? codemodSettings.source
-					: codemodSettings.sourcePath,
-			codemodEngine: codemodSettings.codemodEngine,
-		};
-	}
-
 	if (codemodSettings._.includes('runOnPreCommit')) {
 		return {
 			kind: 'runOnPreCommit',
 		};
 	}
 
-	return null;
+	const codemodName = codemodSettings._.at(-1);
+	if (codemodName) {
+		return {
+			kind: 'runNamed',
+			name: codemodName,
+		};
+	}
+
+	const sourcePath =
+		'source' in codemodSettings
+			? codemodSettings.source
+			: codemodSettings.sourcePath;
+
+	if (!sourcePath) {
+		throw new Error('sourcePath is not present');
+	}
+
+	return {
+		kind: 'runSourced',
+		sourcePath,
+		codemodEngine: codemodSettings.codemodEngine ?? null,
+	};
 };
