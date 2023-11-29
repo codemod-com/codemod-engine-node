@@ -1,22 +1,54 @@
 import { IFs } from 'memfs';
+import * as S from '@effect/schema/Schema';
 import path from 'node:path';
-import { Codemod, isJavaScriptCodemodEngineSchema } from './codemod.js';
+import {
+	Codemod,
+	JavaScriptCodemodEngine,
+	javaScriptCodemodEngineSchema,
+} from './codemod.js';
 import { CodemodSettings } from './schemata/codemodSettingsSchema.js';
 
-async function readJsonField(
+const extractMainScriptRelativePath = async (
 	fs: IFs,
 	filePath: string,
-	field: string,
-): Promise<string | null> {
-	const json = await fs.promises.readFile(filePath, { encoding: 'utf-8' });
+): Promise<string | null> => {
+	try {
+		const data = await fs.promises.readFile(filePath, {
+			encoding: 'utf-8',
+		});
 
-	const parsedJson = JSON.parse(json.toString());
-	if (!parsedJson[field]) {
+		const schema = S.struct({
+			main: S.string,
+		});
+
+		const { main } = S.parseSync(schema)(data);
+
+		return main;
+	} catch {
 		return null;
 	}
+};
 
-	return parsedJson[field];
-}
+const extractEngine = async (
+	fs: IFs,
+	filePath: string,
+): Promise<JavaScriptCodemodEngine | null> => {
+	try {
+		const data = await fs.promises.readFile(filePath, {
+			encoding: 'utf-8',
+		});
+
+		const schema = S.struct({
+			engine: javaScriptCodemodEngineSchema,
+		});
+
+		const { engine } = S.parseSync(schema)(data);
+
+		return engine;
+	} catch {
+		return null;
+	}
+};
 
 export const buildSourcedCodemodOptions = async (
 	fs: IFs,
@@ -52,11 +84,11 @@ export const buildSourcedCodemodOptions = async (
 		);
 	}
 
-	const mainScriptRelativePath = await readJsonField(
+	const mainScriptRelativePath = await extractMainScriptRelativePath(
 		fs,
 		path.join(codemodOptions.sourcePath, 'package.json'),
-		'main',
 	);
+
 	if (!mainScriptRelativePath) {
 		throw new Error(
 			`No main script specified for codemod at ${codemodOptions.sourcePath}`,
@@ -68,19 +100,14 @@ export const buildSourcedCodemodOptions = async (
 		mainScriptRelativePath,
 	);
 
-	const engine = await readJsonField(
+	const engine = await extractEngine(
 		fs,
 		path.join(codemodOptions.sourcePath, 'config.json'),
-		'engine',
 	);
-	if (!engine) {
+
+	if (engine === null) {
 		throw new Error(
-			`No engine file specified for codemod at ${codemodOptions.sourcePath}`,
-		);
-	}
-	if (!isJavaScriptCodemodEngineSchema(engine)) {
-		throw new Error(
-			`Engine specified in config.json at ${codemodOptions.sourcePath} could not be recognized.`,
+			`Engine specified in config.json at ${codemodOptions.sourcePath} is not a JavaScript codemod engine or does not exist.`,
 		);
 	}
 

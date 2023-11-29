@@ -9,10 +9,6 @@ export const javaScriptCodemodEngineSchema = S.union(
 	S.literal('ts-morph'),
 );
 
-export const isJavaScriptCodemodEngineSchema = S.is(
-	javaScriptCodemodEngineSchema,
-);
-
 export type JavaScriptCodemodEngine = S.To<
 	typeof javaScriptCodemodEngineSchema
 >;
