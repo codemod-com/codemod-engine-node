@@ -1,6 +1,6 @@
 import { IFs } from 'memfs';
 import path from 'node:path';
-import { Codemod, isSupportedEngine } from './codemod.js';
+import { Codemod, isJavaScriptCodemodEngineSchema } from './codemod.js';
 import { CodemodSettings } from './schemata/codemodSettingsSchema.js';
 
 async function readJsonField(
@@ -78,7 +78,7 @@ export const buildSourcedCodemodOptions = async (
 			`No engine file specified for codemod at ${codemodOptions.sourcePath}`,
 		);
 	}
-	if (!isSupportedEngine(engine)) {
+	if (!isJavaScriptCodemodEngineSchema(engine)) {
 		throw new Error(
 			`Engine specified in config.json at ${codemodOptions.sourcePath} could not be recognized.`,
 		);

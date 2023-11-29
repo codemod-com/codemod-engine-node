@@ -1,15 +1,21 @@
 import { Arguments } from './schemata/argumentsSchema.js';
 
-export const CODEMOD_ENGINES = [
-	'jscodeshift',
-	'repomod-engine',
-	'filemod',
-	'ts-morph',
-] as const;
-export type CodemodEngine = (typeof CODEMOD_ENGINES)[number];
-export function isSupportedEngine(engine: string): engine is CodemodEngine {
-	return !!CODEMOD_ENGINES.includes(engine as CodemodEngine);
-}
+import * as S from '@effect/schema/Schema';
+
+export const javaScriptCodemodEngineSchema = S.union(
+	S.literal('jscodeshift'),
+	S.literal('repomod-engine'),
+	S.literal('filemod'),
+	S.literal('ts-morph'),
+);
+
+export const isJavaScriptCodemodEngineSchema = S.is(
+	javaScriptCodemodEngineSchema,
+);
+
+export type JavaScriptCodemodEngine = S.To<
+	typeof javaScriptCodemodEngineSchema
+>;
 
 export type Codemod =
 	| Readonly<{
@@ -23,7 +29,7 @@ export type Codemod =
 	| Readonly<{
 			source: 'registry';
 			name: string;
-			engine: CodemodEngine;
+			engine: JavaScriptCodemodEngine;
 			directoryPath: string;
 			indexPath: string;
 			arguments: Arguments;
@@ -37,6 +43,6 @@ export type Codemod =
 	  }>
 	| Readonly<{
 			source: 'fileSystem';
-			engine: CodemodEngine;
+			engine: JavaScriptCodemodEngine;
 			indexPath: string;
 	  }>;
