@@ -58,18 +58,25 @@ export class Runner {
 	}
 
 	public async run() {
-		try {
-			if (this._dryRun) {
-				this._printer.printConsoleMessage(
-					'log',
-					terminalLink(
-						'Click to view results of this run in VSCode extension',
-						`vscode://intuita.intuita-vscode-extension/case/${this.__caseHashDigest}`,
-					),
-				);
-			}
+		const EXTENSION_LINK_START = terminalLink(
+			'Click to view the live results of this run in the Intuita VSCode Extension!',
+			`vscode://intuita.intuita-vscode-extension/case/${this.__caseHashDigest}`,
+		);
 
+		const EXTENSION_LINK_END = terminalLink(
+			'The run has finished! Click to open the Intuita VSCode Extension and view the results.',
+			`vscode://intuita.intuita-vscode-extension/case/${this.__caseHashDigest}`,
+		);
+
+		try {
 			if (this._codemodSettings.kind === 'runSourced') {
+				if (this._dryRun) {
+					this._printer.printConsoleMessage(
+						'log',
+						EXTENSION_LINK_START,
+					);
+				}
+
 				const codemodOptions = await buildSourcedCodemodOptions(
 					this._fs,
 					this._codemodSettings,
@@ -98,6 +105,13 @@ export class Runner {
 					executionId: this.__caseHashDigest.toString('base64url'),
 					fileCount: this.__modifiedFileCount,
 				});
+
+				if (this._dryRun) {
+					this._printer.printConsoleMessage(
+						'log',
+						EXTENSION_LINK_END,
+					);
+				}
 
 				return;
 			}
@@ -149,6 +163,13 @@ export class Runner {
 					`Executing the "${this._name}" codemod against "${this._flowSettings.targetPath}"`,
 				);
 
+				if (this._dryRun) {
+					this._printer.printConsoleMessage(
+						'log',
+						EXTENSION_LINK_START,
+					);
+				}
+
 				const codemod = await this._codemodDownloader.download(
 					this._name,
 					this._flowSettings.useCache,
@@ -177,16 +198,13 @@ export class Runner {
 					executionId: this.__caseHashDigest.toString('base64url'),
 					fileCount: this.__modifiedFileCount,
 				});
-			}
 
-			if (this._dryRun) {
-				this._printer.printConsoleMessage(
-					'log',
-					terminalLink(
-						'Run has finished! Click to open VSCode extension and view the results',
-						`vscode://intuita.intuita-vscode-extension/case/${this.__caseHashDigest}`,
-					),
-				);
+				if (this._dryRun) {
+					this._printer.printConsoleMessage(
+						'log',
+						EXTENSION_LINK_END,
+					);
+				}
 			}
 		} catch (error) {
 			if (!(error instanceof Error)) {
