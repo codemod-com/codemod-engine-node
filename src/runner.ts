@@ -1,5 +1,4 @@
 import { randomBytes } from 'crypto';
-import { join } from 'path';
 import terminalLink from 'terminal-link';
 
 import type { ArgumentRecord } from './schemata/argumentRecordSchema.js';
@@ -20,6 +19,8 @@ import type { FlowSettings } from './schemata/flowSettingsSchema.js';
 import type { TelemetryBlueprint } from './telemetryService.js';
 import { buildSourcedCodemodOptions } from './buildCodemodOptions.js';
 import { RunSettings } from './runSettings.js';
+import { join } from 'path';
+import { SurfaceAgnosticCaseService } from './services/surfaceAgnosticCaseService.js';
 
 export class Runner {
 	private __caseHashDigest: Buffer;
@@ -43,14 +44,17 @@ export class Runner {
 		this.__caseHashDigest = randomBytes(20);
 		this.__modifiedFileCount = 0;
 
+		const outputDirectoryPath = join(
+			homeDirectoryPath,
+			'.intuita',
+			'cases',
+			this.__caseHashDigest.toString('base64url'),
+		);
+
 		this.__runSettings = _dryRun
 			? {
 					dryRun: true,
-					outputDirectoryPath: join(
-						homeDirectoryPath,
-						'cases',
-						this.__caseHashDigest.toString('base64url'),
-					),
+					outputDirectoryPath,
 			  }
 			: {
 					dryRun: false,
@@ -180,17 +184,34 @@ export class Runner {
 					this._argumentRecord,
 				);
 
+				const surfaceAgnosticCaseService =
+					new SurfaceAgnosticCaseService(
+						this._fs,
+						this.__runSettings,
+						this._flowSettings,
+						this._argumentRecord,
+						this.__caseHashDigest,
+					);
+
+				await surfaceAgnosticCaseService.emitPreamble();
+
 				await runCodemod(
 					this._fs,
 					this._printer,
 					codemod,
 					this._flowSettings,
 					this.__runSettings,
-					(command) => this._handleCommand(command),
+					async (command) => {
+						await this._handleCommand(command);
+
+						surfaceAgnosticCaseService.emitJob(command);
+					},
 					(message) => this._printer.printMessage(message),
 					safeArgumentRecord,
 					this._currentWorkingDirectory,
 				);
+
+				surfaceAgnosticCaseService.emitPostamble();
 
 				this._telemetry.sendEvent({
 					kind: 'codemodExecuted',
