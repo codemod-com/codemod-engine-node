@@ -4,7 +4,7 @@ import { Options } from 'prettier';
 import { IFs } from 'memfs';
 import { filterNeitherNullNorUndefined } from './filterNeitherNullNorUndefined.js';
 import { OperationMessage } from './messages.js';
-import { RunSettings } from './schemata/runSettingsSchema.js';
+import { RunSettings } from './runSettings.js';
 
 export type CreateFileCommand = Readonly<{
 	kind: 'createFile';

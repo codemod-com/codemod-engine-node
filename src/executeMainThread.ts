@@ -19,7 +19,7 @@ import { IFs } from 'memfs';
 import { loadRepositoryConfiguration } from './repositoryConfiguration.js';
 import { parseCodemodSettings } from './schemata/codemodSettingsSchema.js';
 import { parseFlowSettings } from './schemata/flowSettingsSchema.js';
-import { runSettingsSchema } from './schemata/runSettingsSchema.js';
+import { runArgvSettingsSchema } from './schemata/runArgvSettingsSchema.js';
 import { buildArgumentRecord } from './buildArgumentRecord.js';
 import { FileDownloadService } from './fileDownloadService.js';
 import Axios from 'axios';
@@ -189,7 +189,7 @@ export const executeMainThread = async () => {
 
 	const codemodSettings = parseCodemodSettings(argv);
 	const flowSettings = parseFlowSettings(argv);
-	const runSettings = S.parseSync(runSettingsSchema)(argv);
+	const runSettings = S.parseSync(runArgvSettingsSchema)(argv);
 	const argumentRecord = buildArgumentRecord(argv);
 
 	const lastArgument = argv._[argv._.length - 1];
@@ -212,10 +212,11 @@ export const executeMainThread = async () => {
 		loadRepositoryConfiguration,
 		codemodSettings,
 		flowSettings,
-		runSettings,
+		runSettings.dryRun,
 		argumentRecord,
 		name,
 		process.cwd(),
+		homedir(),
 	);
 
 	await runner.run();

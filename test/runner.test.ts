@@ -6,7 +6,6 @@ import { RepositoryConfiguration } from '../src/repositoryConfiguration.js';
 import { equal } from 'node:assert';
 import { CodemodSettings } from '../src/schemata/codemodSettingsSchema.js';
 import { FlowSettings } from '../src/schemata/flowSettingsSchema.js';
-import { RunSettings } from '../src/schemata/runSettingsSchema.js';
 
 const CODEMOD_D_INDEX_TS = `
 export default function transform(file, api, options) {
@@ -88,7 +87,7 @@ describe('Runner', function (this) {
 			});
 
 		const codemodSettings: CodemodSettings = {
-			_: ['runOnPreCommit'],
+			kind: 'runOnPreCommit',
 		};
 
 		const flowSettings: FlowSettings = {
@@ -103,23 +102,24 @@ describe('Runner', function (this) {
 			threadCount: 1,
 		};
 
-		const runSettings: RunSettings = {
-			dryRun: false,
-		};
-
 		const currentWorkingDirectory = '/';
+		const homedir = '/home/abc';
 
 		const runner = new Runner(
 			ifs,
 			printer,
+			{
+				sendEvent: () => {},
+			},
 			codemodDownloader,
 			loadRepositoryConfiguration,
 			codemodSettings,
 			flowSettings,
-			runSettings,
+			false,
 			{},
 			null,
 			currentWorkingDirectory,
+			homedir,
 		);
 
 		await runner.run();

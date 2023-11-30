@@ -90,7 +90,8 @@ export const buildOptions = <T extends {}>(y: Argv<T>) => {
 				})
 				.option('outputDirectoryPath', {
 					type: 'string',
-					description: 'Output directory path for dry-run only',
+					description:
+						'(DEPRECATED, do not use) Output directory path for dry-run only',
 				})
 				.option('telemetryDisable', {
 					type: 'boolean',
