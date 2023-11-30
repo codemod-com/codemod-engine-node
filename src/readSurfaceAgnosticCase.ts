@@ -24,7 +24,7 @@ const buildCase = (outerCase: OuterCase): SurfaceAgnosticCase => {
 
 	if (Buffer.compare(innerDataHashDigest, outerCase.hashDigest) !== 0) {
 		throw new Error(
-			"The inner case's hash digest does not match the inner case",
+			"The inner case's hash digest does not match the calculated hash digest",
 		);
 	}
 
@@ -39,11 +39,11 @@ const buildCase = (outerCase: OuterCase): SurfaceAgnosticCase => {
 
 	const pathByteLength = outerCase.innerData.subarray(48, 50).readUint16BE();
 
-	const absoluteTargetPath = outerCase.innerData
-		.subarray(50, 50 + pathByteLength)
-		.toString();
-
 	const recordByteLengthStart = 50 + pathByteLength;
+
+	const absoluteTargetPath = outerCase.innerData
+		.subarray(50, recordByteLengthStart)
+		.toString();
 
 	const recordByteLength = outerCase.innerData
 		.subarray(recordByteLengthStart, recordByteLengthStart + 2)
@@ -74,21 +74,22 @@ const buildJob = (outerJob: OuterJob): SurfaceAgnosticJob => {
 
 	if (Buffer.compare(innerDataHashDigest, outerJob.hashDigest) !== 0) {
 		throw new Error(
-			"The inner job's hash digest does not match the inner data",
+			"The inner job's hash digest does not match the calculated hash digest",
 		);
 	}
 
 	const jobHashDigest = outerJob.innerData
 		.subarray(0, 20)
 		.toString('base64url');
+
 	const kind = parseJobKind(outerJob.innerData.subarray(20).readUInt8());
 	const oldUriByteLength = outerJob.innerData.subarray(21, 23).readUint16BE();
 
-	const oldUri = outerJob.innerData
-		.subarray(23, 23 + oldUriByteLength)
-		.toString();
-
 	const newUriByteLengthStart = 23 + oldUriByteLength;
+
+	const oldUri = outerJob.innerData
+		.subarray(23, newUriByteLengthStart)
+		.toString();
 
 	const newUriByteLength = outerJob.innerData
 		.subarray(newUriByteLengthStart, newUriByteLengthStart + 2)
@@ -160,7 +161,9 @@ const read = (readStream: ReadStream, state: State): StateRecipe | null => {
 		if (Buffer.compare(buffer, Buffer.from('INTC')) !== 0) {
 			return {
 				event: 'error',
-				error: new Error(),
+				error: new Error(
+					'You tried to read a file that is not Intuita Case',
+				),
 			};
 		}
 
@@ -287,7 +290,12 @@ const read = (readStream: ReadStream, state: State): StateRecipe | null => {
 			};
 		}
 
-		return null;
+		return {
+			event: 'error',
+			error: new Error(
+				'Could not recognize neither INTJ or INTE headers',
+			),
+		};
 	}
 
 	if (state.position === POSITION.BEFORE_INNER_JOB_BYTE_LENGTH) {
