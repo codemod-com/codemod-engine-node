@@ -30,9 +30,7 @@ export type CodemodSettings =
 			codemodEngine: S.To<typeof codemodEngineSchema> | null;
 	  }>;
 
-export const parseCodemodSettings = (
-	input: unknown,
-): CodemodSettings | null => {
+export const parseCodemodSettings = (input: unknown): CodemodSettings => {
 	const codemodSettings = S.parseSync(codemodSettingsSchema)(input);
 
 	if (codemodSettings._.includes('runOnPreCommit')) {

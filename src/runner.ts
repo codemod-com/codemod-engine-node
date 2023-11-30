@@ -35,7 +35,7 @@ export class Runner {
 		protected readonly _telemetry: TelemetryBlueprint,
 		protected readonly _codemodDownloader: CodemodDownloaderBlueprint,
 		protected readonly _loadRepositoryConfiguration: () => Promise<RepositoryConfiguration>,
-		protected readonly _codemodSettings: CodemodSettings | null,
+		protected readonly _codemodSettings: CodemodSettings,
 		protected readonly _flowSettings: FlowSettings,
 		protected readonly _runSettings: RunSettings,
 		protected readonly _argumentRecord: ArgumentRecord,
@@ -49,10 +49,6 @@ export class Runner {
 				filesModified: 0,
 				id: buildRunStatsId(),
 			};
-
-			if (this._codemodSettings === null) {
-				return;
-			}
 
 			if (this._codemodSettings.kind === 'runSourced') {
 				const codemodOptions = await buildSourcedCodemodOptions(
