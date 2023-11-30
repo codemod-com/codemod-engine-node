@@ -18,8 +18,8 @@ import { OperationMessage } from './messages.js';
 import { minimatch } from 'minimatch';
 import { SafeArgumentRecord } from './safeArgumentRecord.js';
 import { FlowSettings } from './schemata/flowSettingsSchema.js';
-import { RunSettings } from './schemata/runSettingsSchema.js';
 import { WorkerThreadMessage } from './workerThreadMessages.js';
+import { RunSettings } from './runSettings.js';
 
 const TERMINATE_IDLE_THREADS_TIMEOUT = 30 * 1000;
 

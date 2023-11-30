@@ -14,20 +14,15 @@ import type { CodemodDownloaderBlueprint } from './downloadCodemod.js';
 import type { RepositoryConfiguration } from './repositoryConfiguration.js';
 import type { CodemodSettings } from './schemata/codemodSettingsSchema.js';
 import type { FlowSettings } from './schemata/flowSettingsSchema.js';
-import type { RunSettings } from './schemata/runSettingsSchema.js';
 import type { TelemetryBlueprint } from './telemetryService.js';
 import { buildSourcedCodemodOptions } from './buildCodemodOptions.js';
-
-type Stats = {
-	id: string;
-	filesModified: number;
-};
-
-export const buildRunStatsId = (): string =>
-	randomBytes(20).toString('base64url');
+import { RunSettings } from './runSettings.js';
+import { join } from 'path';
 
 export class Runner {
-	private __stats: Stats | null = null;
+	private __caseHashDigest: Buffer;
+	private __modifiedFileCount: number;
+	private __runSettings: RunSettings;
 
 	public constructor(
 		protected readonly _fs: IFs,
@@ -37,19 +32,31 @@ export class Runner {
 		protected readonly _loadRepositoryConfiguration: () => Promise<RepositoryConfiguration>,
 		protected readonly _codemodSettings: CodemodSettings,
 		protected readonly _flowSettings: FlowSettings,
-		protected readonly _runSettings: RunSettings,
+		protected readonly _dryRun: boolean,
 		protected readonly _argumentRecord: ArgumentRecord,
 		protected readonly _name: string | null,
 		protected readonly _currentWorkingDirectory: string,
-	) {}
+		homeDirectoryPath: string,
+	) {
+		this.__caseHashDigest = randomBytes(20);
+		this.__modifiedFileCount = 0;
+
+		this.__runSettings = _dryRun
+			? {
+					dryRun: true,
+					outputDirectoryPath: join(
+						homeDirectoryPath,
+						'cases',
+						this.__caseHashDigest.toString('base64url'),
+					),
+			  }
+			: {
+					dryRun: false,
+			  };
+	}
 
 	public async run() {
 		try {
-			this.__stats = {
-				filesModified: 0,
-				id: buildRunStatsId(),
-			};
-
 			if (this._codemodSettings.kind === 'runSourced') {
 				const codemodOptions = await buildSourcedCodemodOptions(
 					this._fs,
@@ -66,7 +73,7 @@ export class Runner {
 					this._printer,
 					codemodOptions,
 					this._flowSettings,
-					this._runSettings,
+					this.__runSettings,
 					(command) => this._handleCommand(command),
 					(message) => this._printer.printMessage(message),
 					safeArgumentRecord,
@@ -76,8 +83,8 @@ export class Runner {
 				this._telemetry.sendEvent({
 					kind: 'codemodExecuted',
 					codemodName: 'Codemod from FS',
-					executionId: this.__stats.id,
-					fileCount: this.__stats.filesModified,
+					executionId: this.__caseHashDigest.toString('base64url'),
+					fileCount: this.__modifiedFileCount,
 				});
 
 				return;
@@ -104,7 +111,7 @@ export class Runner {
 							this._printer,
 							codemod,
 							this._flowSettings,
-							this._runSettings,
+							this.__runSettings,
 							(command) => this._handleCommand(command),
 							(message) => this._printer.printMessage(message),
 							safeArgumentRecord,
@@ -114,8 +121,9 @@ export class Runner {
 						this._telemetry.sendEvent({
 							kind: 'codemodExecuted',
 							codemodName: codemod.name,
-							executionId: this.__stats.id,
-							fileCount: this.__stats.filesModified,
+							executionId:
+								this.__caseHashDigest.toString('base64url'),
+							fileCount: this.__modifiedFileCount,
 						});
 					}
 				}
@@ -144,7 +152,7 @@ export class Runner {
 					this._printer,
 					codemod,
 					this._flowSettings,
-					this._runSettings,
+					this.__runSettings,
 					(command) => this._handleCommand(command),
 					(message) => this._printer.printMessage(message),
 					safeArgumentRecord,
@@ -154,8 +162,8 @@ export class Runner {
 				this._telemetry.sendEvent({
 					kind: 'codemodExecuted',
 					codemodName: codemod.name,
-					executionId: this.__stats.id,
-					fileCount: this.__stats.filesModified,
+					executionId: this.__caseHashDigest.toString('base64url'),
+					fileCount: this.__modifiedFileCount,
 				});
 			}
 		} catch (error) {
@@ -177,14 +185,18 @@ export class Runner {
 	protected async _handleCommand(
 		command: FormattedFileCommand,
 	): Promise<void> {
-		await modifyFileSystemUponCommand(this._fs, this._runSettings, command);
+		await modifyFileSystemUponCommand(
+			this._fs,
+			this.__runSettings,
+			command,
+		);
 
-		if (!this._runSettings.dryRun && this.__stats !== null) {
-			this.__stats.filesModified++;
+		if (!this.__runSettings.dryRun) {
+			++this.__modifiedFileCount;
 		}
 
 		const printerMessage = buildPrinterMessageUponCommand(
-			this._runSettings,
+			this.__runSettings,
 			command,
 		);
 
