@@ -1,4 +1,7 @@
 import { randomBytes } from 'crypto';
+import { join } from 'path';
+import terminalLink from 'terminal-link';
+
 import type { ArgumentRecord } from './schemata/argumentRecordSchema.js';
 import {
 	modifyFileSystemUponCommand,
@@ -17,7 +20,6 @@ import type { FlowSettings } from './schemata/flowSettingsSchema.js';
 import type { TelemetryBlueprint } from './telemetryService.js';
 import { buildSourcedCodemodOptions } from './buildCodemodOptions.js';
 import { RunSettings } from './runSettings.js';
-import { join } from 'path';
 
 export class Runner {
 	private __caseHashDigest: Buffer;
@@ -57,6 +59,16 @@ export class Runner {
 
 	public async run() {
 		try {
+			if (this._dryRun) {
+				this._printer.printConsoleMessage(
+					'log',
+					terminalLink(
+						'Click to view results of this run in VSCode extension',
+						`vscode://intuita.intuita-vscode-extension/case/${this.__caseHashDigest}`,
+					),
+				);
+			}
+
 			if (this._codemodSettings.kind === 'runSourced') {
 				const codemodOptions = await buildSourcedCodemodOptions(
 					this._fs,
@@ -165,6 +177,16 @@ export class Runner {
 					executionId: this.__caseHashDigest.toString('base64url'),
 					fileCount: this.__modifiedFileCount,
 				});
+			}
+
+			if (this._dryRun) {
+				this._printer.printConsoleMessage(
+					'log',
+					terminalLink(
+						'Run has finished! Click to open VSCode extension and view the results',
+						`vscode://intuita.intuita-vscode-extension/case/${this.__caseHashDigest}`,
+					),
+				);
 			}
 		} catch (error) {
 			if (!(error instanceof Error)) {
