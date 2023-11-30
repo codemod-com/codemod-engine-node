@@ -16,6 +16,7 @@ import type { CodemodSettings } from './schemata/codemodSettingsSchema.js';
 import type { FlowSettings } from './schemata/flowSettingsSchema.js';
 import type { RunSettings } from './schemata/runSettingsSchema.js';
 import type { TelemetryBlueprint } from './telemetryService.js';
+import { buildSourcedCodemodOptions } from './buildCodemodOptions.js';
 
 type Stats = {
 	id: string;
@@ -34,7 +35,7 @@ export class Runner {
 		protected readonly _telemetry: TelemetryBlueprint,
 		protected readonly _codemodDownloader: CodemodDownloaderBlueprint,
 		protected readonly _loadRepositoryConfiguration: () => Promise<RepositoryConfiguration>,
-		protected readonly _codemodSettings: CodemodSettings | null,
+		protected readonly _codemodSettings: CodemodSettings,
 		protected readonly _flowSettings: FlowSettings,
 		protected readonly _runSettings: RunSettings,
 		protected readonly _argumentRecord: ArgumentRecord,
@@ -49,22 +50,21 @@ export class Runner {
 				id: buildRunStatsId(),
 			};
 
-			if (this._codemodSettings?.kind === 'runSourced') {
-				const codemod = {
-					source: 'fileSystem' as const,
-					engine: this._codemodSettings.codemodEngine,
-					indexPath: this._codemodSettings.sourcePath,
-				};
+			if (this._codemodSettings.kind === 'runSourced') {
+				const codemodOptions = await buildSourcedCodemodOptions(
+					this._fs,
+					this._codemodSettings,
+				);
 
 				const safeArgumentRecord = buildSafeArgumentRecord(
-					codemod,
+					codemodOptions,
 					this._argumentRecord,
 				);
 
 				await runCodemod(
 					this._fs,
 					this._printer,
-					codemod,
+					codemodOptions,
 					this._flowSettings,
 					this._runSettings,
 					(command) => this._handleCommand(command),
@@ -83,7 +83,7 @@ export class Runner {
 				return;
 			}
 
-			if (this._codemodSettings?.kind === 'runOnPreCommit') {
+			if (this._codemodSettings.kind === 'runOnPreCommit') {
 				const { preCommitCodemods } =
 					await this._loadRepositoryConfiguration();
 
