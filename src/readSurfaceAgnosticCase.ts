@@ -403,6 +403,8 @@ const read = (readStream: ReadStream, state: State): StateRecipe | null => {
 export const readSurfaceAgnosticCase = (readStream: ReadStream) => {
 	const eventEmitter = new EventEmitter();
 
+	let reading = true;
+
 	let state: State = {
 		position: POSITION.BEFORE_OUTER_PREAMBLE,
 		outerCase: null,
@@ -412,7 +414,11 @@ export const readSurfaceAgnosticCase = (readStream: ReadStream) => {
 
 	const readableCallback = () => {
 		try {
-			while (readStream.readableLength !== 0 && readStream.readable) {
+			while (
+				readStream.readableLength !== 0 &&
+				readStream.readable &&
+				reading
+			) {
 				const stateRecipe = read(readStream, state);
 
 				if (stateRecipe === null) {
@@ -454,6 +460,12 @@ export const readSurfaceAgnosticCase = (readStream: ReadStream) => {
 	};
 
 	readStream.once('readable', readableCallback);
+
+	eventEmitter.once('close', () => {
+		reading = false;
+
+		eventEmitter.emit('end');
+	});
 
 	return eventEmitter;
 };

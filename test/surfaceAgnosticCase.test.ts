@@ -20,7 +20,7 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { rm } from 'node:fs/promises';
+import { rm, writeFile } from 'node:fs/promises';
 import { readSurfaceAgnosticCase } from '../src/readSurfaceAgnosticCase.js';
 import assert, { deepStrictEqual } from 'node:assert';
 
@@ -162,5 +162,39 @@ describe('surfaceAgnosticCase', () => {
 		deepStrictEqual(caseWithJobs.value.kase, kase);
 		deepStrictEqual(caseWithJobs.value.jobs[0], rewriteJob);
 		deepStrictEqual(caseWithJobs.value.jobs[1], createJob);
+	});
+
+	it('should react to closing after 1s', async () => {
+		await doWithinTemporaryDirectory(
+			'surfaceAgnosticCase',
+			async (temporaryDirectory: string) => {
+				const path = join(temporaryDirectory, 'a.data');
+
+				await writeFile(path, '');
+
+				const readStream = createReadStream(path, { start: 0 });
+
+				await new Promise<void>((resolve) => {
+					readStream.once('open', () => {
+						resolve();
+					});
+				});
+
+				const eventEmitter = readSurfaceAgnosticCase(readStream);
+
+				return new Promise<void>((resolve, reject) => {
+					eventEmitter.once('error', (error: unknown) => {
+						reject(error);
+					});
+					eventEmitter.once('end', () => {
+						resolve();
+					});
+
+					setTimeout(() => {
+						eventEmitter.emit('close');
+					}, 1000);
+				});
+			},
+		);
 	});
 });
