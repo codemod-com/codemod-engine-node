@@ -48,6 +48,7 @@
 		"prettier": "^2.8.7",
 		"rehype-parse": "^8.0.4",
 		"tar": "^6.1.15",
+		"terminal-link": "^3.0.0",
 		"ts-morph": "18.0.0",
 		"unified": "^10.1.2",
 		"unist-util-filter": "^5.0.1",
