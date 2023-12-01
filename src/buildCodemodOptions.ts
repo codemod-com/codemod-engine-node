@@ -21,7 +21,7 @@ const extractMainScriptRelativePath = async (
 			main: S.string,
 		});
 
-		const { main } = S.parseSync(schema)(data);
+		const { main } = S.parseSync(schema)(JSON.parse(data.toString()));
 
 		return main;
 	} catch {
@@ -42,7 +42,7 @@ const extractEngine = async (
 			engine: javaScriptCodemodEngineSchema,
 		});
 
-		const { engine } = S.parseSync(schema)(data);
+		const { engine } = S.parseSync(schema)(JSON.parse(data.toString()));
 
 		return engine;
 	} catch {

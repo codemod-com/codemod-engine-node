@@ -64,23 +64,20 @@ export class Runner {
 	public async run() {
 		const EXTENSION_LINK_START = terminalLink(
 			'Click to view the live results of this run in the Intuita VSCode Extension!',
-			`vscode://intuita.intuita-vscode-extension/case/${this.__caseHashDigest}`,
+			`vscode://intuita.intuita-vscode-extension/cases/${this.__caseHashDigest.toString(
+				'base64url',
+			)}`,
 		);
 
 		const EXTENSION_LINK_END = terminalLink(
 			'The run has finished! Click to open the Intuita VSCode Extension and view the results.',
-			`vscode://intuita.intuita-vscode-extension/case/${this.__caseHashDigest}`,
+			`vscode://intuita.intuita-vscode-extension/cases/${this.__caseHashDigest.toString(
+				'base64url',
+			)}`,
 		);
 
 		try {
 			if (this._codemodSettings.kind === 'runSourced') {
-				if (this._dryRun) {
-					this._printer.printConsoleMessage(
-						'log',
-						EXTENSION_LINK_START,
-					);
-				}
-
 				const codemodOptions = await buildSourcedCodemodOptions(
 					this._fs,
 					this._codemodSettings,
@@ -91,17 +88,46 @@ export class Runner {
 					this._argumentRecord,
 				);
 
+				const codemodHashDigest = createHash('ripemd160')
+					.update(this._codemodSettings.sourcePath)
+					.digest();
+
+				const surfaceAgnosticCaseService =
+					new SurfaceAgnosticCaseService(
+						this._fs,
+						this.__runSettings,
+						this._flowSettings,
+						this._argumentRecord,
+						this.__caseHashDigest,
+						codemodHashDigest,
+					);
+
+				await surfaceAgnosticCaseService.emitPreamble();
+
+				if (this._dryRun) {
+					this._printer.printConsoleMessage(
+						'log',
+						EXTENSION_LINK_START,
+					);
+				}
+
 				await runCodemod(
 					this._fs,
 					this._printer,
 					codemodOptions,
 					this._flowSettings,
 					this.__runSettings,
-					(command) => this._handleCommand(command),
+					async (command) => {
+						await this._handleCommand(command);
+
+						surfaceAgnosticCaseService.emitJob(command);
+					},
 					(message) => this._printer.printMessage(message),
 					safeArgumentRecord,
 					this._currentWorkingDirectory,
 				);
+
+				surfaceAgnosticCaseService.emitPostamble();
 
 				this._telemetry.sendEvent({
 					kind: 'codemodExecuted',
