@@ -7,7 +7,6 @@ import {
 } from './workerThreadMessages.js';
 import { FormattedFileCommand } from './fileCommands.js';
 import { SafeArgumentRecord } from './safeArgumentRecord.js';
-import { CodemodEngine } from './codemod.js';
 
 const WORKER_THREAD_TIME_LIMIT = 10000;
 
@@ -25,10 +24,7 @@ export class WorkerThreadManager {
 	public constructor(
 		private readonly __workerCount: number,
 		private readonly __codemodPath: string,
-		private readonly __codemodEngine: Extract<
-			CodemodEngine,
-			'ts-morph' | 'jscodeshift'
-		>,
+		private readonly __codemodEngine: 'ts-morph' | 'jscodeshift',
 		private readonly __codemodSource: string,
 		private readonly __formatWithPrettier: boolean,
 		private readonly __getData: (path: string) => Promise<string>,
