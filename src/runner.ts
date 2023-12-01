@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 import terminalLink from 'terminal-link';
 
 import type { ArgumentRecord } from './schemata/argumentRecordSchema.js';
@@ -179,6 +179,10 @@ export class Runner {
 					this._flowSettings.useCache,
 				);
 
+				const codemodHashDigest = createHash('ripemd160')
+					.update(codemod.name)
+					.digest();
+
 				const safeArgumentRecord = buildSafeArgumentRecord(
 					codemod,
 					this._argumentRecord,
@@ -191,6 +195,7 @@ export class Runner {
 						this._flowSettings,
 						this._argumentRecord,
 						this.__caseHashDigest,
+						codemodHashDigest,
 					);
 
 				await surfaceAgnosticCaseService.emitPreamble();

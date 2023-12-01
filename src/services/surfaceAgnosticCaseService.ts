@@ -2,7 +2,6 @@ import { IFs } from 'memfs';
 import { EventEmitter } from 'stream';
 import { writeSurfaceAgnosticCase } from '../writeSurfaceAgnosticCase.js';
 import { join } from 'path';
-import { randomBytes } from 'node:crypto';
 import { RunSettings } from '../runSettings.js';
 import { SurfaceAgnosticCase } from '../schemata/surfaceAgnosticCaseSchema.js';
 import { FlowSettings } from '../schemata/flowSettingsSchema.js';
@@ -19,6 +18,7 @@ export class SurfaceAgnosticCaseService {
 		private readonly _flowSettings: FlowSettings,
 		private readonly _argumentRecord: ArgumentRecord,
 		private readonly _caseHashDigest: Buffer,
+		private readonly _codemodHashDigest: Buffer,
 	) {}
 
 	public async emitPreamble(): Promise<void> {
@@ -38,7 +38,7 @@ export class SurfaceAgnosticCaseService {
 
 		const surfaceAgnosticCase: SurfaceAgnosticCase = {
 			caseHashDigest: this._caseHashDigest.toString('base64url'),
-			codemodHashDigest: randomBytes(20).toString('base64url'),
+			codemodHashDigest: this._codemodHashDigest.toString('base64url'),
 			createdAt: BigInt(Date.now()),
 			absoluteTargetPath: this._flowSettings.targetPath,
 			argumentRecord: this._argumentRecord,
