@@ -187,14 +187,17 @@ export const executeMainThread = async () => {
 		'.intuita',
 	);
 
+	const lastArgument = argv._[argv._.length - 1];
+	const nameOrPath = typeof lastArgument === 'string' ? lastArgument : null;
+
+	if (nameOrPath && fs.existsSync(nameOrPath)) {
+		argv.source = nameOrPath;
+	}
+
 	const codemodSettings = parseCodemodSettings(argv);
 	const flowSettings = parseFlowSettings(argv);
 	const runSettings = S.parseSync(runArgvSettingsSchema)(argv);
 	const argumentRecord = buildArgumentRecord(argv);
-
-	const lastArgument = argv._[argv._.length - 1];
-
-	const name = typeof lastArgument === 'string' ? lastArgument : null;
 
 	const codemodDownloader = new CodemodDownloader(
 		printer,
@@ -214,7 +217,7 @@ export const executeMainThread = async () => {
 		flowSettings,
 		runSettings.dryRun,
 		argumentRecord,
-		name,
+		nameOrPath,
 		process.cwd(),
 		homedir(),
 	);
