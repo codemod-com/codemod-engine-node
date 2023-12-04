@@ -39,26 +39,27 @@ export const parseCodemodSettings = (input: unknown): CodemodSettings => {
 		};
 	}
 
-	const codemodName = codemodSettings._.at(-1);
-	if (codemodName) {
-		return {
-			kind: 'runNamed',
-			name: codemodName,
-		};
-	}
-
 	const sourcePath =
 		'source' in codemodSettings
 			? codemodSettings.source
 			: codemodSettings.sourcePath;
 
-	if (!sourcePath) {
-		throw new Error('sourcePath is not present');
+	if (sourcePath) {
+		return {
+			kind: 'runSourced',
+			sourcePath,
+			codemodEngine: codemodSettings.codemodEngine ?? null,
+		};
+	}
+
+	const codemodName = codemodSettings._.at(-1);
+
+	if (!codemodName) {
+		throw new Error('Codemod to run was not specified!');
 	}
 
 	return {
-		kind: 'runSourced',
-		sourcePath,
-		codemodEngine: codemodSettings.codemodEngine ?? null,
+		kind: 'runNamed',
+		name: codemodName,
 	};
 };
