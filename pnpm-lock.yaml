@@ -23,6 +23,9 @@ dependencies:
   '@intuita-inc/filemod':
     specifier: 1.1.0
     version: 1.1.0
+  '@intuita-inc/utilities':
+    specifier: ^1.0.1
+    version: 1.0.1(effect@2.0.0-next.59)(fast-check@3.14.0)
   '@svgr/hast-util-to-babel-ast':
     specifier: ^7.0.0
     version: 7.0.0
@@ -1481,6 +1484,16 @@ packages:
       fast-check: 3.11.0
     dev: false
 
+  /@effect/schema@0.52.0(effect@2.0.0-next.59)(fast-check@3.14.0):
+    resolution: {integrity: sha512-x6SmSdoL6PeZVAaK895NoRkKF8D/w+XyO8i17cUsQYFJBHNyUTi9Y1H2wrO8TkxhTmC93ejburpM+35/OKCi2Q==}
+    peerDependencies:
+      effect: 2.0.0-next.59
+      fast-check: ^3.13.2
+    dependencies:
+      effect: 2.0.0-next.59
+      fast-check: 3.14.0
+    dev: false
+
   /@esbuild/android-arm64@0.17.14:
     resolution: {integrity: sha512-eLOpPO1RvtsP71afiFTvS7tVFShJBCT0txiv/xjFBo5a7R7Gjw7X0IgIaFoLKhqXYAXhahoXm7qAmRXhY4guJg==}
     engines: {node: '>=12'}
@@ -1735,6 +1748,15 @@ packages:
     resolution: {integrity: sha512-X3cahch1BBSHr08vFCvf6zDIxyfabYI3xrGs2Cmdzj45UzYNMwmLjohqkJNeyYLBmVcHDIzW9PDKyiOUfWAa+w==}
     dependencies:
       glob: 10.3.10
+    dev: false
+
+  /@intuita-inc/utilities@1.0.1(effect@2.0.0-next.59)(fast-check@3.14.0):
+    resolution: {integrity: sha512-qTIp9n5Jh00fst3l3T8qZ/Wd81j+I3NgjPp9IVMSZoe3JWb9YUujRJLh0BbGJysQ7Ve0vHcEF/s1K3yVMCvxlw==}
+    dependencies:
+      '@effect/schema': 0.52.0(effect@2.0.0-next.59)(fast-check@3.14.0)
+    transitivePeerDependencies:
+      - effect
+      - fast-check
     dev: false
 
   /@isaacs/cliui@8.0.2:
@@ -2753,6 +2775,10 @@ packages:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
     dev: false
 
+  /effect@2.0.0-next.59:
+    resolution: {integrity: sha512-EE87vFl0/zIN5lKDtFccU3YCnbPqjxg9rY72obNN65/GE4JOJsXciyX8XC4pIDr3lE6KeJ0le8IXf+A7d92ntQ==}
+    dev: false
+
   /electron-to-chromium@1.4.461:
     resolution: {integrity: sha512-1JkvV2sgEGTDXjdsaQCeSwYYuhLRphRpc+g6EHTFELJXEiznLt3/0pZ9JuAOQ5p2rI3YxKTbivtvajirIfhrEQ==}
     dev: false
@@ -2981,6 +3007,13 @@ packages:
 
   /fast-check@3.11.0:
     resolution: {integrity: sha512-H2tctb7AGfFQfz+DEr3UWhJ3s47LXsGp5g3jeJr5tHjnf4xUvpArIqiwcDmL2EXiv+auLHIpF5MqaIpIKvpxiA==}
+    engines: {node: '>=8.0.0'}
+    dependencies:
+      pure-rand: 6.0.2
+    dev: false
+
+  /fast-check@3.14.0:
+    resolution: {integrity: sha512-9Z0zqASzDNjXBox/ileV/fd+4P+V/f3o4shM6QawvcdLFh8yjPG4h5BrHUZ8yzY6amKGDTAmRMyb/JZqe+dCgw==}
     engines: {node: '>=8.0.0'}
     dependencies:
       pure-rand: 6.0.2

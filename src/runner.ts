@@ -120,14 +120,14 @@ export class Runner {
 					async (command) => {
 						await this._handleCommand(command);
 
-						surfaceAgnosticCaseService.emitJob(command);
+						await surfaceAgnosticCaseService.emitJob(command);
 					},
 					(message) => this._printer.printMessage(message),
 					safeArgumentRecord,
 					this._currentWorkingDirectory,
 				);
 
-				surfaceAgnosticCaseService.emitPostamble();
+				await surfaceAgnosticCaseService.emitPostamble();
 
 				this._telemetry.sendEvent({
 					kind: 'codemodExecuted',
@@ -235,14 +235,14 @@ export class Runner {
 					async (command) => {
 						await this._handleCommand(command);
 
-						surfaceAgnosticCaseService.emitJob(command);
+						await surfaceAgnosticCaseService.emitJob(command);
 					},
 					(message) => this._printer.printMessage(message),
 					safeArgumentRecord,
 					this._currentWorkingDirectory,
 				);
 
-				surfaceAgnosticCaseService.emitPostamble();
+				await surfaceAgnosticCaseService.emitPostamble();
 
 				this._telemetry.sendEvent({
 					kind: 'codemodExecuted',
