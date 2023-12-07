@@ -20,6 +20,7 @@ import { SafeArgumentRecord } from './safeArgumentRecord.js';
 import { FlowSettings } from './schemata/flowSettingsSchema.js';
 import { RunSettings } from './schemata/runSettingsSchema.js';
 import { WorkerThreadMessage } from './workerThreadMessages.js';
+import { readFile } from 'node:fs/promises';
 
 const TERMINATE_IDLE_THREADS_TIMEOUT = 30 * 1000;
 
@@ -337,12 +338,9 @@ export const runCodemod = async (
 		return;
 	}
 
-	const codemodSource = await fileSystem.promises.readFile(
-		codemod.indexPath,
-		{
-			encoding: 'utf8',
-		},
-	);
+	const codemodSource = await readFile(codemod.indexPath, {
+		encoding: 'utf8',
+	});
 
 	const transpiledSource = codemod.indexPath.endsWith('.ts')
 		? transpile(codemodSource.toString())
