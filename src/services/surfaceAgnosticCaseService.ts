@@ -1,16 +1,14 @@
 import { IFs } from 'memfs';
-import { EventEmitter } from 'stream';
-import { writeSurfaceAgnosticCase } from '../writeSurfaceAgnosticCase.js';
 import { join } from 'path';
 import { RunSettings } from '../runSettings.js';
-import { SurfaceAgnosticCase } from '../schemata/surfaceAgnosticCaseSchema.js';
 import { FlowSettings } from '../schemata/flowSettingsSchema.js';
 import { ArgumentRecord } from '../schemata/argumentRecordSchema.js';
 import { buildSurfaceAgnosticJob } from '../buildSurfaceAgnosticJob.js';
 import { FormattedFileCommand } from '../fileCommands.js';
+import { CaseWritingService } from '@intuita-inc/utilities';
 
 export class SurfaceAgnosticCaseService {
-	private __eventEmitter: EventEmitter | null = null;
+	protected _caseWritingService: CaseWritingService | null = null;
 
 	public constructor(
 		private readonly _fs: IFs,
@@ -30,37 +28,40 @@ export class SurfaceAgnosticCaseService {
 			recursive: true,
 		});
 
-		const writeStream = this._fs.createWriteStream(
+		const fileHandle = await this._fs.promises.open(
 			join(this._runSettings.outputDirectoryPath, 'case.data'),
+			'w',
 		);
 
-		this.__eventEmitter = writeSurfaceAgnosticCase(writeStream);
+		this._caseWritingService = new CaseWritingService(fileHandle);
 
-		const surfaceAgnosticCase: SurfaceAgnosticCase = {
+		await this._caseWritingService?.writeCase({
 			caseHashDigest: this._caseHashDigest.toString('base64url'),
 			codemodHashDigest: this._codemodHashDigest.toString('base64url'),
 			createdAt: BigInt(Date.now()),
 			absoluteTargetPath: this._flowSettings.targetPath,
 			argumentRecord: this._argumentRecord,
-		};
-
-		this.__eventEmitter.emit('preamble', surfaceAgnosticCase);
+		});
 	}
 
-	public emitJob(command: FormattedFileCommand): void {
-		if (!this._runSettings.dryRun) {
+	public async emitJob(command: FormattedFileCommand): Promise<void> {
+		if (!this._runSettings.dryRun || this._caseWritingService === null) {
 			return;
 		}
 
-		const job = buildSurfaceAgnosticJob(
-			this._runSettings.outputDirectoryPath,
-			command,
+		await this._caseWritingService.writeJob(
+			buildSurfaceAgnosticJob(
+				this._runSettings.outputDirectoryPath,
+				command,
+			),
 		);
-
-		this.__eventEmitter?.emit('job', job);
 	}
 
-	public emitPostamble(): void {
-		this.__eventEmitter?.emit('postamble');
+	public async emitPostamble(): Promise<void> {
+		if (!this._runSettings.dryRun || this._caseWritingService === null) {
+			return;
+		}
+
+		await this._caseWritingService.finish();
 	}
 }

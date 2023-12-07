@@ -1,13 +1,10 @@
 import { randomBytes } from 'crypto';
 import {
-	FormattedFileCommand,
+	type FormattedFileCommand,
 	buildNewDataPathForCreateFileCommand,
 	buildNewDataPathForUpdateFileCommand,
 } from './fileCommands.js';
-import {
-	JOB_KIND,
-	SurfaceAgnosticJob,
-} from './schemata/surfaceAgnosticJobSchema.js';
+import { JOB_KIND, type SurfaceAgnosticJob } from '@intuita-inc/utilities';
 
 export const buildSurfaceAgnosticJob = (
 	outputDirectoryPath: string,
@@ -16,7 +13,7 @@ export const buildSurfaceAgnosticJob = (
 	const jobHashDigest = randomBytes(20).toString('base64url');
 
 	if (command.kind === 'createFile') {
-		const newUri = buildNewDataPathForCreateFileCommand(
+		const dataUri = buildNewDataPathForCreateFileCommand(
 			outputDirectoryPath,
 			command,
 		);
@@ -24,8 +21,8 @@ export const buildSurfaceAgnosticJob = (
 		return {
 			kind: JOB_KIND.CREATE_FILE,
 			jobHashDigest,
-			oldUri: '',
-			newUri,
+			pathUri: command.newPath,
+			dataUri,
 		};
 	}
 
@@ -33,8 +30,8 @@ export const buildSurfaceAgnosticJob = (
 		return {
 			kind: JOB_KIND.COPY_FILE,
 			jobHashDigest,
-			oldUri: command.oldPath,
-			newUri: command.newPath,
+			sourcePathUri: command.oldPath,
+			targetPathUri: command.newPath,
 		};
 	}
 
@@ -42,8 +39,7 @@ export const buildSurfaceAgnosticJob = (
 		return {
 			kind: JOB_KIND.DELETE_FILE,
 			jobHashDigest,
-			oldUri: command.oldPath,
-			newUri: '',
+			pathUri: command.oldPath,
 		};
 	}
 
@@ -51,20 +47,24 @@ export const buildSurfaceAgnosticJob = (
 		return {
 			kind: JOB_KIND.MOVE_FILE,
 			jobHashDigest,
-			oldUri: command.oldPath,
-			newUri: command.newPath,
+			oldPathUri: command.oldPath,
+			newPathUri: command.newPath,
 		};
 	}
 
-	const newUri = buildNewDataPathForUpdateFileCommand(
-		outputDirectoryPath,
-		command,
-	);
+	if (command.kind === 'updateFile') {
+		const newDataUri = buildNewDataPathForUpdateFileCommand(
+			outputDirectoryPath,
+			command,
+		);
 
-	return {
-		kind: JOB_KIND.REWRITE_FILE,
-		jobHashDigest,
-		oldUri: command.oldPath,
-		newUri,
-	};
+		return {
+			kind: JOB_KIND.UPDATE_FILE,
+			jobHashDigest,
+			pathUri: command.oldPath,
+			newDataUri,
+		};
+	}
+
+	throw new Error('Unsupported command kind');
 };
