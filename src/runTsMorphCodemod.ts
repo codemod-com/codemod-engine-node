@@ -67,7 +67,7 @@ const transform = (
 		},
 	});
 
-	const value = vm.runInContext(codeToExecute, context);
+	const value = vm.runInContext(codeToExecute, context, { timeout: 30000 });
 
 	return S.parseSync(S.union(S.string, S.undefined, S.null))(value);
 };
