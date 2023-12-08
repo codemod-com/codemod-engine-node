@@ -29,7 +29,7 @@
 		"@babel/core": "^7.20.2",
 		"@babel/parser": "^7.22.10",
 		"@babel/preset-env": "^7.20.2",
-		"@babel/traverse": "7.20.5",
+		"@babel/traverse": "7.23.2",
 		"@effect/schema": "0.27.0",
 		"@intuita-inc/filemod": "1.1.0",
 		"@intuita-inc/utilities": "1.0.2",
