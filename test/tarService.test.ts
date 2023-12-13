@@ -1,4 +1,5 @@
 import { Volume, createFsFromVolume } from 'memfs';
+import { describe, it } from 'vitest';
 import { TarService } from '../src/services/tarService.js';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';

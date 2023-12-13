@@ -1,6 +1,0 @@
-loader:
-    - 'ts-node/esm'
-full-trace: true
-bail: true
-spec: './test/**/*.test.ts'
-timeout: 30000

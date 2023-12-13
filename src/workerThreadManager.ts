@@ -43,7 +43,7 @@ export class WorkerThreadManager {
 			this.__idleWorkerIds.push(i);
 			this.__workerTimestamps.push(Date.now());
 
-			const filename = process.env.TEST ? './src/index.ts' : __filename;
+			const filename = process.env.TEST ? './dist/index.cjs' : __filename;
 
 			const worker = new Worker(filename);
 

@@ -1,4 +1,5 @@
 import { deepStrictEqual } from 'node:assert';
+import { describe, it } from 'vitest';
 import { transpile } from '../src/getTransformer.js';
 import { runJscodeshiftCodemod } from '../src/runJscodeshiftCodemod.js';
 import type { ConsoleKind } from '../src/schemata/consoleKindSchema.js';
