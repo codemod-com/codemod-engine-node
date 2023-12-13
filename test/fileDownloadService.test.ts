@@ -1,4 +1,5 @@
 import { Volume, createFsFromVolume } from 'memfs';
+import { describe, it } from "vitest";
 import { FileDownloadService } from '../src/fileDownloadService.js';
 import { deepEqual } from 'assert';
 import { PrinterBlueprint } from '../src/printer.js';
