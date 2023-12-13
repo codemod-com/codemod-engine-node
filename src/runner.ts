@@ -39,6 +39,7 @@ export class Runner {
 		protected readonly _argumentRecord: ArgumentRecord,
 		protected readonly _name: string | null,
 		protected readonly _currentWorkingDirectory: string,
+		protected readonly _getCodemodSource: (path: string) => Promise<string>,
 		homeDirectoryPath: string,
 	) {
 		this.__caseHashDigest = randomBytes(20);
@@ -125,6 +126,7 @@ export class Runner {
 					(message) => this._printer.printMessage(message),
 					safeArgumentRecord,
 					this._currentWorkingDirectory,
+					this._getCodemodSource,
 				);
 
 				await surfaceAgnosticCaseService.emitPostamble();
@@ -172,6 +174,7 @@ export class Runner {
 							(message) => this._printer.printMessage(message),
 							safeArgumentRecord,
 							this._currentWorkingDirectory,
+							this._getCodemodSource,
 						);
 
 						this._telemetry.sendEvent({
@@ -240,6 +243,7 @@ export class Runner {
 					(message) => this._printer.printMessage(message),
 					safeArgumentRecord,
 					this._currentWorkingDirectory,
+					this._getCodemodSource,
 				);
 
 				await surfaceAgnosticCaseService.emitPostamble();

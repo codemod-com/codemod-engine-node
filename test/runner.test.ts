@@ -22,7 +22,7 @@ export default function transform(file, api, options) {
 }
 `;
 
-describe('Runner', function (this) {
+describe('Runner', function () {
 	it('should transform staged files using the pre-commit codemods', async () => {
 		const volume = Volume.fromJSON({
 			'/code/a.ts': 'unchanged',
@@ -105,6 +105,16 @@ describe('Runner', function (this) {
 		const currentWorkingDirectory = '/';
 		const homedir = '/home/abc';
 
+		const getCodemodSource = async (path: string) => {
+			const data = await ifs.promises.readFile(path);
+
+			if (typeof data === 'string') {
+				return data;
+			}
+
+			return data.toString('utf8');
+		};
+
 		const runner = new Runner(
 			ifs,
 			printer,
@@ -119,6 +129,7 @@ describe('Runner', function (this) {
 			{},
 			null,
 			currentWorkingDirectory,
+			getCodemodSource,
 			homedir,
 		);
 
