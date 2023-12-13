@@ -1,5 +1,5 @@
 import { deepStrictEqual } from 'node:assert';
-import { describe, it } from "vitest";
+import { describe, it } from 'vitest';
 import vm from 'node:vm';
 import { ConsoleKind } from '../src/schemata/consoleKindSchema.js';
 import { buildVmConsole } from '../src/buildVmConsole.js';
