@@ -29,6 +29,7 @@ import {
 	NoTelemetryService,
 } from './telemetryService.js';
 import { APP_INSIGHTS_INSTRUMENTATION_STRING } from './constants.js';
+import { readFile } from 'node:fs/promises';
 
 // the build script contains the version
 declare const __INTUITA_CLI_VERSION__: string;
@@ -214,6 +215,9 @@ export const executeMainThread = async () => {
 		tarService,
 	);
 
+	const getCodemodSource = (path: string) =>
+		readFile(path, { encoding: 'utf8' });
+
 	const runner = new Runner(
 		fs as unknown as IFs,
 		printer,
@@ -226,6 +230,7 @@ export const executeMainThread = async () => {
 		argumentRecord,
 		nameOrPath,
 		process.cwd(),
+		getCodemodSource,
 		homedir(),
 	);
 

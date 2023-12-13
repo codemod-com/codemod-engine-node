@@ -20,7 +20,6 @@ import { SafeArgumentRecord } from './safeArgumentRecord.js';
 import { FlowSettings } from './schemata/flowSettingsSchema.js';
 import { WorkerThreadMessage } from './workerThreadMessages.js';
 import { RunSettings } from './runSettings.js';
-import { readFile } from 'node:fs/promises';
 
 const TERMINATE_IDLE_THREADS_TIMEOUT = 30 * 1000;
 
@@ -156,6 +155,7 @@ export const runCodemod = async (
 	) => void,
 	safeArgumentRecord: SafeArgumentRecord,
 	currentWorkingDirectory: string,
+	getCodemodSource: (path: string) => Promise<string>,
 ): Promise<void> => {
 	const name = 'name' in codemod ? codemod.name : codemod.indexPath;
 
@@ -191,6 +191,7 @@ export const runCodemod = async (
 					},
 					safeArgumentRecord,
 					currentWorkingDirectory,
+					getCodemodSource,
 				);
 
 				for (const command of commands) {
@@ -266,6 +267,7 @@ export const runCodemod = async (
 				},
 				safeArgumentRecord,
 				currentWorkingDirectory,
+				getCodemodSource,
 			);
 
 			for (const command of commands) {
@@ -338,9 +340,7 @@ export const runCodemod = async (
 		return;
 	}
 
-	const codemodSource = await readFile(codemod.indexPath, {
-		encoding: 'utf8',
-	});
+	const codemodSource = await getCodemodSource(codemod.indexPath);
 
 	const transpiledSource = codemod.indexPath.endsWith('.ts')
 		? transpile(codemodSource.toString())
