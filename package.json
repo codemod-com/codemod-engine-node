@@ -84,8 +84,8 @@
 		"lint:eslint": "eslint src --fix --ext ts",
 		"lint:prettier": "prettier --write .",
 		"package": "pkg --compress GZip .",
-		"test": "vitest run",
-		"coverage": "vitest run --coverage"
+		"test": "TEST=1 vitest run",
+		"coverage": "TEST=1 vitest run --coverage"
 	},
 	"pkg": {
 		"outputPath": "./package/"
