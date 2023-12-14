@@ -107,14 +107,14 @@ export const executeMainThread = async () => {
 	);
 
 	let telemetryService;
-	let appInsights;
+	let exit = () => {};
 
 	if (!argv.telemetryDisable) {
 		// hack to prevent appInsights from trying to read applicationinsights.json
 		// this env should be set before appinsights is imported
 		// https://github.com/microsoft/ApplicationInsights-node.js/blob/0217324c477a96b5dd659510bbccad27934084a3/Library/JsonConfig.ts#L122
 		process.env['APPLICATIONINSIGHTS_CONFIGURATION_CONTENT'] = '{}';
-		appInsights = await import('applicationinsights');
+		const appInsights = await import('applicationinsights');
 
 		// .start() is skipped intentionally, to prevent any non-custom events from tracking
 		appInsights.setup(APP_INSIGHTS_INSTRUMENTATION_STRING);
@@ -122,6 +122,11 @@ export const executeMainThread = async () => {
 		telemetryService = new AppInsightsTelemetryService(
 			appInsights.defaultClient,
 		);
+
+		exit = () => {
+			appInsights.dispose();
+			process.exit(0);
+		};
 	} else {
 		telemetryService = new NoTelemetryService();
 	}
@@ -139,6 +144,8 @@ export const executeMainThread = async () => {
 				message: error.message,
 			});
 		}
+
+		exit();
 
 		return;
 	}
@@ -167,6 +174,8 @@ export const executeMainThread = async () => {
 			});
 		}
 
+		exit();
+
 		return;
 	}
 
@@ -186,6 +195,8 @@ export const executeMainThread = async () => {
 				message: error.message,
 			});
 		}
+
+		exit();
 
 		return;
 	}
@@ -236,8 +247,5 @@ export const executeMainThread = async () => {
 
 	await runner.run();
 
-	if (appInsights) {
-		appInsights.dispose();
-		process.exit(0);
-	}
+	exit();
 };
