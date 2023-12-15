@@ -3,7 +3,6 @@ import {
 	DEFAULT_DRY_RUN,
 	DEFAULT_EXCLUDE_PATTERNS,
 	DEFAULT_INCLUDE_PATTERNS,
-	DEFAULT_INPUT_DIRECTORY_PATH,
 	DEFAULT_THREAD_COUNT,
 	DEFAULT_USE_CACHE,
 	DEFAULT_USE_JSON,
@@ -46,13 +45,11 @@ export const buildOptions = <T extends {}>(y: Argv<T>) => {
 				.option('target', {
 					type: 'string',
 					description: 'Input directory path',
-					default: DEFAULT_INPUT_DIRECTORY_PATH,
 				})
 				.option('targetPath', {
 					type: 'string',
 					description:
 						'(DEPRECATED by "target") Input directory path',
-					default: DEFAULT_INPUT_DIRECTORY_PATH,
 				})
 				.option('source', {
 					type: 'string',

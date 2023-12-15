@@ -28,7 +28,10 @@ import {
 	AppInsightsTelemetryService,
 	NoTelemetryService,
 } from './telemetryService.js';
-import { APP_INSIGHTS_INSTRUMENTATION_STRING } from './constants.js';
+import {
+	APP_INSIGHTS_INSTRUMENTATION_STRING,
+	DEFAULT_INPUT_DIRECTORY_PATH,
+} from './constants.js';
 import { readFile } from 'node:fs/promises';
 
 // the build script contains the version
@@ -172,7 +175,8 @@ export const executeMainThread = async () => {
 
 	if (String(argv._) === 'learn') {
 		const printer = new Printer(argv.useJson);
-		const targetPath = argv.target ?? argv.targetPath ?? null;
+		const targetPath =
+			argv.targetPath ?? argv.target ?? DEFAULT_INPUT_DIRECTORY_PATH;
 
 		try {
 			await handleLearnCliCommand(printer, targetPath);
