@@ -46,7 +46,7 @@ export type Dependencies = Readonly<{
 export const runRepomod = async (
 	fileSystem: IFs,
 	filemod: Filemod<Dependencies, Record<string, unknown>>,
-	inputPath: string,
+	targetPath: string,
 	formatWithPrettier: boolean,
 	safeArgumentRecord: SafeArgumentRecord,
 	onPrinterMessage: (message: OperationMessage) => void,
@@ -125,7 +125,7 @@ export const runRepomod = async (
 	const externalFileCommands = await executeFilemod(
 		api,
 		filemod,
-		inputPath,
+		targetPath,
 		{
 			...safeArgumentRecord[0],
 		},
@@ -143,7 +143,7 @@ export const runRepomod = async (
 						oldPath: externalFileCommand.path,
 						oldData: '', // TODO get the old data from the filemod
 						newData: externalFileCommand.data,
-						formatWithPrettier,
+						formatWithPrettier, // TODO have a list of extensions that prettier supports
 					};
 				} catch (error) {
 					return {

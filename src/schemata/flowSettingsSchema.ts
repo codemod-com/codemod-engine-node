@@ -18,9 +18,7 @@ export const flowSettingsSchema = S.struct({
 		() => DEFAULT_EXCLUDE_PATTERNS,
 	),
 	target: S.optional(S.string),
-	targetPath: S.optional(S.string).withDefault(
-		() => DEFAULT_INPUT_DIRECTORY_PATH,
-	),
+	targetPath: S.optional(S.string),
 	files: S.optional(S.array(S.string)),
 	fileLimit: S.optional(
 		S.number.pipe(S.int()).pipe(S.positive()),
@@ -31,13 +29,19 @@ export const flowSettingsSchema = S.struct({
 	threadCount: S.optional(S.number).withDefault(() => DEFAULT_THREAD_COUNT),
 });
 
-export type FlowSettings = Omit<S.To<typeof flowSettingsSchema>, 'target'>;
+export type FlowSettings = Omit<
+	S.To<typeof flowSettingsSchema>,
+	'target' | 'targetPath'
+> & { targetPath: string };
 
 export const parseFlowSettings = (input: unknown): FlowSettings => {
 	const flowSettings = S.parseSync(flowSettingsSchema)(input);
 
 	return {
 		...flowSettings,
-		targetPath: flowSettings.target ?? flowSettings.targetPath,
+		targetPath:
+			flowSettings.targetPath ??
+			flowSettings.target ??
+			DEFAULT_INPUT_DIRECTORY_PATH,
 	};
 };
