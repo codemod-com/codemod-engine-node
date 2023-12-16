@@ -265,7 +265,11 @@ export const runCodemod = async (
 			}
 		}
 
-		const newPaths = await glob(['{**/*.*,**/.*}'], {
+		const patterns = flowSettings.files ?? flowSettings.include ?? [];
+
+		console.error('patterns', patterns);
+
+		const newPaths = await glob(patterns.slice(), {
 			absolute: true,
 			cwd: flowSettings.targetPath,
 			// @ts-expect-error type inconsistency
@@ -318,6 +322,8 @@ export const runCodemod = async (
 		}
 
 		const commands = await buildFormattedFileCommands(fileCommands);
+
+		console.error(commands);
 
 		for (const command of commands) {
 			await onCommand(command);

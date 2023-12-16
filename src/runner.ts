@@ -218,6 +218,8 @@ export class Runner {
 					async (command) => {
 						await this._handleCommand(command);
 
+						console.error(1);
+
 						await surfaceAgnosticCaseService.emitJob(command);
 					},
 					(message) => this._printer.printMessage(message),
