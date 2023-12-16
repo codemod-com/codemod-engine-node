@@ -19,7 +19,7 @@ export class SurfaceAgnosticCaseService {
 	) {}
 
 	public async emitPreamble(): Promise<void> {
-		if (!this._runSettings.dryRun) {
+		if (!this._runSettings.dryRun || !this._runSettings.streamingEnabled) {
 			return;
 		}
 
@@ -35,7 +35,8 @@ export class SurfaceAgnosticCaseService {
 		this._caseWritingService = new CaseWritingService(fileHandle);
 
 		await this._caseWritingService?.writeCase({
-			caseHashDigest: this._runSettings.caseHashDigest.toString('base64url'),
+			caseHashDigest:
+				this._runSettings.caseHashDigest.toString('base64url'),
 			codemodHashDigest: this._codemodHashDigest.toString('base64url'),
 			createdAt: BigInt(Date.now()),
 			absoluteTargetPath: this._flowSettings.targetPath,
@@ -44,7 +45,11 @@ export class SurfaceAgnosticCaseService {
 	}
 
 	public async emitJob(command: FormattedFileCommand): Promise<void> {
-		if (!this._runSettings.dryRun || this._caseWritingService === null) {
+		if (
+			!this._runSettings.dryRun ||
+			!this._runSettings.streamingEnabled ||
+			this._caseWritingService === null
+		) {
 			return;
 		}
 
@@ -57,7 +62,11 @@ export class SurfaceAgnosticCaseService {
 	}
 
 	public async emitPostamble(): Promise<void> {
-		if (!this._runSettings.dryRun || this._caseWritingService === null) {
+		if (
+			!this._runSettings.dryRun ||
+			!this._runSettings.streamingEnabled ||
+			this._caseWritingService === null
+		) {
 			return;
 		}
 
