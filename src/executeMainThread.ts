@@ -1,7 +1,6 @@
 import * as readline from 'node:readline';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import * as S from '@effect/schema/Schema';
 import { handleListNamesCommand } from './handleListCliCommand.js';
 import { CodemodDownloader } from './downloadCodemod.js';
 import { Printer } from './printer.js';
@@ -19,7 +18,7 @@ import { IFs } from 'memfs';
 import { loadRepositoryConfiguration } from './repositoryConfiguration.js';
 import { parseCodemodSettings } from './schemata/codemodSettingsSchema.js';
 import { parseFlowSettings } from './schemata/flowSettingsSchema.js';
-import { runArgvSettingsSchema } from './schemata/runArgvSettingsSchema.js';
+import { parseRunSettings } from './schemata/runArgvSettingsSchema.js';
 import { buildArgumentRecord } from './buildArgumentRecord.js';
 import { FileDownloadService } from './fileDownloadService.js';
 import Axios from 'axios';
@@ -208,7 +207,7 @@ export const executeMainThread = async () => {
 
 	const codemodSettings = parseCodemodSettings(argv);
 	const flowSettings = parseFlowSettings(argv);
-	const runSettings = S.parseSync(runArgvSettingsSchema)(argv);
+	const runSettings = parseRunSettings(homedir(), argv);
 	const argumentRecord = buildArgumentRecord(argv);
 
 	const codemodDownloader = new CodemodDownloader(
@@ -230,12 +229,11 @@ export const executeMainThread = async () => {
 		loadRepositoryConfiguration,
 		codemodSettings,
 		flowSettings,
-		runSettings.dryRun,
+		runSettings,
 		argumentRecord,
 		nameOrPath,
 		process.cwd(),
 		getCodemodSource,
-		homedir(),
 	);
 
 	await runner.run();

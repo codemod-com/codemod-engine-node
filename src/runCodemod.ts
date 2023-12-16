@@ -261,7 +261,7 @@ export const runCodemod = async (
 			}
 		}
 
-		const newPaths = await glob(['{**/*.*,**/.*}'], {
+		const newPaths = await glob(['**'], {
 			absolute: true,
 			cwd: flowSettings.targetPath,
 			// @ts-expect-error type inconsistency
