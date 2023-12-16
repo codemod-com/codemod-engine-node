@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from 'crypto';
+import { createHash } from 'crypto';
 import terminalLink from 'terminal-link';
 
 import type { ArgumentRecord } from './schemata/argumentRecordSchema.js';
@@ -18,14 +18,11 @@ import type { CodemodSettings } from './schemata/codemodSettingsSchema.js';
 import type { FlowSettings } from './schemata/flowSettingsSchema.js';
 import type { TelemetryBlueprint } from './telemetryService.js';
 import { buildSourcedCodemodOptions } from './buildCodemodOptions.js';
-import { RunSettings } from './runSettings.js';
-import { join } from 'path';
 import { SurfaceAgnosticCaseService } from './services/surfaceAgnosticCaseService.js';
+import { RunSettings } from './schemata/runArgvSettingsSchema.js';
 
 export class Runner {
-	private __caseHashDigest: Buffer;
 	private __modifiedFileCount: number;
-	private __runSettings: RunSettings;
 
 	public constructor(
 		protected readonly _fs: IFs,
@@ -35,44 +32,26 @@ export class Runner {
 		protected readonly _loadRepositoryConfiguration: () => Promise<RepositoryConfiguration>,
 		protected readonly _codemodSettings: CodemodSettings,
 		protected readonly _flowSettings: FlowSettings,
-		protected readonly _dryRun: boolean,
+		protected readonly _runSettings: RunSettings,
 		protected readonly _argumentRecord: ArgumentRecord,
 		protected readonly _name: string | null,
 		protected readonly _currentWorkingDirectory: string,
 		protected readonly _getCodemodSource: (path: string) => Promise<string>,
-		homeDirectoryPath: string,
 	) {
-		this.__caseHashDigest = randomBytes(20);
 		this.__modifiedFileCount = 0;
-
-		const outputDirectoryPath = join(
-			homeDirectoryPath,
-			'.intuita',
-			'cases',
-			this.__caseHashDigest.toString('base64url'),
-		);
-
-		this.__runSettings = _dryRun
-			? {
-					dryRun: true,
-					outputDirectoryPath,
-			  }
-			: {
-					dryRun: false,
-			  };
 	}
 
 	public async run() {
 		const EXTENSION_LINK_START = terminalLink(
 			'Click to view the live results of this run in the Intuita VSCode Extension!',
-			`vscode://intuita.intuita-vscode-extension/cases/${this.__caseHashDigest.toString(
+			`vscode://intuita.intuita-vscode-extension/cases/${this._runSettings.caseHashDigest.toString(
 				'base64url',
 			)}`,
 		);
 
 		const EXTENSION_LINK_END = terminalLink(
 			'The run has finished! Click to open the Intuita VSCode Extension and view the results.',
-			`vscode://intuita.intuita-vscode-extension/cases/${this.__caseHashDigest.toString(
+			`vscode://intuita.intuita-vscode-extension/cases/${this._runSettings.caseHashDigest.toString(
 				'base64url',
 			)}`,
 		);
@@ -96,16 +75,15 @@ export class Runner {
 				const surfaceAgnosticCaseService =
 					new SurfaceAgnosticCaseService(
 						this._fs,
-						this.__runSettings,
+						this._runSettings,
 						this._flowSettings,
 						this._argumentRecord,
-						this.__caseHashDigest,
 						codemodHashDigest,
 					);
 
 				await surfaceAgnosticCaseService.emitPreamble();
 
-				if (this._dryRun) {
+				if (this._runSettings.dryRun) {
 					this._printer.printConsoleMessage(
 						'log',
 						EXTENSION_LINK_START,
@@ -117,7 +95,7 @@ export class Runner {
 					this._printer,
 					codemodOptions,
 					this._flowSettings,
-					this.__runSettings,
+					this._runSettings,
 					async (command) => {
 						await this._handleCommand(command);
 
@@ -134,11 +112,12 @@ export class Runner {
 				this._telemetry.sendEvent({
 					kind: 'codemodExecuted',
 					codemodName: 'Codemod from FS',
-					executionId: this.__caseHashDigest.toString('base64url'),
+					executionId:
+						this._runSettings.caseHashDigest.toString('base64url'),
 					fileCount: this.__modifiedFileCount,
 				});
 
-				if (this._dryRun) {
+				if (this._runSettings.dryRun) {
 					this._printer.printConsoleMessage(
 						'log',
 						EXTENSION_LINK_END,
@@ -169,7 +148,7 @@ export class Runner {
 							this._printer,
 							codemod,
 							this._flowSettings,
-							this.__runSettings,
+							this._runSettings,
 							(command) => this._handleCommand(command),
 							(message) => this._printer.printMessage(message),
 							safeArgumentRecord,
@@ -181,7 +160,9 @@ export class Runner {
 							kind: 'codemodExecuted',
 							codemodName: codemod.name,
 							executionId:
-								this.__caseHashDigest.toString('base64url'),
+								this._runSettings.caseHashDigest.toString(
+									'base64url',
+								),
 							fileCount: this.__modifiedFileCount,
 						});
 					}
@@ -196,7 +177,7 @@ export class Runner {
 					`Executing the "${this._name}" codemod against "${this._flowSettings.targetPath}"`,
 				);
 
-				if (this._dryRun) {
+				if (this._runSettings.dryRun) {
 					this._printer.printConsoleMessage(
 						'log',
 						EXTENSION_LINK_START,
@@ -220,10 +201,9 @@ export class Runner {
 				const surfaceAgnosticCaseService =
 					new SurfaceAgnosticCaseService(
 						this._fs,
-						this.__runSettings,
+						this._runSettings,
 						this._flowSettings,
 						this._argumentRecord,
-						this.__caseHashDigest,
 						codemodHashDigest,
 					);
 
@@ -234,7 +214,7 @@ export class Runner {
 					this._printer,
 					codemod,
 					this._flowSettings,
-					this.__runSettings,
+					this._runSettings,
 					async (command) => {
 						await this._handleCommand(command);
 
@@ -251,11 +231,12 @@ export class Runner {
 				this._telemetry.sendEvent({
 					kind: 'codemodExecuted',
 					codemodName: codemod.name,
-					executionId: this.__caseHashDigest.toString('base64url'),
+					executionId:
+						this._runSettings.caseHashDigest.toString('base64url'),
 					fileCount: this.__modifiedFileCount,
 				});
 
-				if (this._dryRun) {
+				if (this._runSettings.dryRun) {
 					this._printer.printConsoleMessage(
 						'log',
 						EXTENSION_LINK_END,
@@ -281,18 +262,14 @@ export class Runner {
 	protected async _handleCommand(
 		command: FormattedFileCommand,
 	): Promise<void> {
-		await modifyFileSystemUponCommand(
-			this._fs,
-			this.__runSettings,
-			command,
-		);
+		await modifyFileSystemUponCommand(this._fs, this._runSettings, command);
 
-		if (!this.__runSettings.dryRun) {
+		if (!this._runSettings.dryRun) {
 			++this.__modifiedFileCount;
 		}
 
 		const printerMessage = buildPrinterMessageUponCommand(
-			this.__runSettings,
+			this._runSettings,
 			command,
 		);
 

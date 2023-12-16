@@ -7,6 +7,8 @@ import { RepositoryConfiguration } from '../src/repositoryConfiguration.js';
 import { equal } from 'node:assert';
 import { CodemodSettings } from '../src/schemata/codemodSettingsSchema.js';
 import { FlowSettings } from '../src/schemata/flowSettingsSchema.js';
+import { RunSettings } from '../src/schemata/runArgvSettingsSchema.js';
+import { randomBytes } from 'node:crypto';
 
 const CODEMOD_D_INDEX_TS = `
 export default function transform(file, api, options) {
@@ -104,7 +106,6 @@ describe('Runner', function () {
 		};
 
 		const currentWorkingDirectory = '/';
-		const homedir = '/home/abc';
 
 		const getCodemodSource = async (path: string) => {
 			const data = await ifs.promises.readFile(path);
@@ -114,6 +115,11 @@ describe('Runner', function () {
 			}
 
 			return data.toString('utf8');
+		};
+
+		const runSettings: RunSettings = {
+			dryRun: false,
+			caseHashDigest: randomBytes(20),
 		};
 
 		const runner = new Runner(
@@ -126,12 +132,11 @@ describe('Runner', function () {
 			loadRepositoryConfiguration,
 			codemodSettings,
 			flowSettings,
-			false,
+			runSettings,
 			{},
 			null,
 			currentWorkingDirectory,
 			getCodemodSource,
-			homedir,
 		);
 
 		await runner.run();

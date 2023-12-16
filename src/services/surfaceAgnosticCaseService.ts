@@ -1,11 +1,11 @@
 import { IFs } from 'memfs';
 import { join } from 'path';
-import { RunSettings } from '../runSettings.js';
 import { FlowSettings } from '../schemata/flowSettingsSchema.js';
 import { ArgumentRecord } from '../schemata/argumentRecordSchema.js';
 import { buildSurfaceAgnosticJob } from '../buildSurfaceAgnosticJob.js';
 import { FormattedFileCommand } from '../fileCommands.js';
 import { CaseWritingService } from '@intuita-inc/utilities';
+import { RunSettings } from '../schemata/runArgvSettingsSchema.js';
 
 export class SurfaceAgnosticCaseService {
 	protected _caseWritingService: CaseWritingService | null = null;
@@ -15,12 +15,11 @@ export class SurfaceAgnosticCaseService {
 		private readonly _runSettings: RunSettings,
 		private readonly _flowSettings: FlowSettings,
 		private readonly _argumentRecord: ArgumentRecord,
-		private readonly _caseHashDigest: Buffer,
 		private readonly _codemodHashDigest: Buffer,
 	) {}
 
 	public async emitPreamble(): Promise<void> {
-		if (!this._runSettings.dryRun) {
+		if (!this._runSettings.dryRun || !this._runSettings.streamingEnabled) {
 			return;
 		}
 
@@ -36,7 +35,8 @@ export class SurfaceAgnosticCaseService {
 		this._caseWritingService = new CaseWritingService(fileHandle);
 
 		await this._caseWritingService?.writeCase({
-			caseHashDigest: this._caseHashDigest.toString('base64url'),
+			caseHashDigest:
+				this._runSettings.caseHashDigest.toString('base64url'),
 			codemodHashDigest: this._codemodHashDigest.toString('base64url'),
 			createdAt: BigInt(Date.now()),
 			absoluteTargetPath: this._flowSettings.targetPath,
@@ -45,7 +45,11 @@ export class SurfaceAgnosticCaseService {
 	}
 
 	public async emitJob(command: FormattedFileCommand): Promise<void> {
-		if (!this._runSettings.dryRun || this._caseWritingService === null) {
+		if (
+			!this._runSettings.dryRun ||
+			!this._runSettings.streamingEnabled ||
+			this._caseWritingService === null
+		) {
 			return;
 		}
 
@@ -58,7 +62,11 @@ export class SurfaceAgnosticCaseService {
 	}
 
 	public async emitPostamble(): Promise<void> {
-		if (!this._runSettings.dryRun || this._caseWritingService === null) {
+		if (
+			!this._runSettings.dryRun ||
+			!this._runSettings.streamingEnabled ||
+			this._caseWritingService === null
+		) {
 			return;
 		}
 

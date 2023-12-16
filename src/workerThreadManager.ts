@@ -71,6 +71,8 @@ export class WorkerThreadManager {
 					const filename =
 						typeof global.__filename === 'string'
 							? global.__filename
+							: typeof __filename === 'string'
+							? __filename
 							: './src/index.ts';
 
 					const worker = new Worker(filename);

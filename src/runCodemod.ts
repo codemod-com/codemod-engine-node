@@ -15,11 +15,10 @@ import { createHash } from 'node:crypto';
 import { WorkerThreadManager } from './workerThreadManager.js';
 import { getTransformer, transpile } from './getTransformer.js';
 import { OperationMessage } from './messages.js';
-import { minimatch } from 'minimatch';
 import { SafeArgumentRecord } from './safeArgumentRecord.js';
 import { FlowSettings } from './schemata/flowSettingsSchema.js';
 import { WorkerThreadMessage } from './workerThreadMessages.js';
-import { RunSettings } from './runSettings.js';
+import { RunSettings } from './schemata/runArgvSettingsSchema.js';
 
 const TERMINATE_IDLE_THREADS_TIMEOUT = 30 * 1000;
 
@@ -77,8 +76,6 @@ const buildPaths = async (
 async function* buildPathGenerator(
 	fileSystem: IFs,
 	flowSettings: FlowSettings,
-	codemod: Codemod,
-	filemod: Filemod<Dependencies, Record<string, unknown>> | null,
 ): AsyncGenerator<string, void, unknown> {
 	const patterns = flowSettings.files ?? flowSettings.include ?? [];
 	const ignore =
@@ -114,28 +111,7 @@ async function* buildPathGenerator(
 
 		const path = typeof value === 'string' ? value : value.fullpath();
 
-		if (
-			(codemod.engine === 'repomod-engine' ||
-				codemod.engine === 'filemod') &&
-			filemod !== null
-		) {
-			// what about this one?
-			const includePatterns = filemod.includePatterns?.slice() ?? [];
-			const excludePatterns = filemod.excludePatterns?.slice() ?? [];
-
-			if (
-				includePatterns.some((pattern) =>
-					minimatch(path, pattern, {}),
-				) &&
-				excludePatterns.every(
-					(pattern) => !minimatch(path, pattern, {}),
-				)
-			) {
-				yield path;
-			}
-		} else {
-			yield path;
-		}
+		yield path;
 
 		++fileCount;
 	}
@@ -229,6 +205,8 @@ export const runCodemod = async (
 			fileMap.set(path, dataHashDigest);
 		}
 
+		const deletedPaths: string[] = [];
+
 		for (let i = 0; i < codemod.codemods.length; ++i) {
 			const subCodemod = codemod.codemods[i];
 
@@ -241,6 +219,7 @@ export const runCodemod = async (
 				flowSettings,
 				{
 					dryRun: false,
+					caseHashDigest: runSettings.caseHashDigest,
 				},
 				async (command) => {
 					commands.push(command);
@@ -271,15 +250,24 @@ export const runCodemod = async (
 			);
 
 			for (const command of commands) {
+				if (command.kind === 'deleteFile') {
+					deletedPaths.push(command.oldPath);
+				}
+
 				await modifyFileSystemUponCommand(
 					mfs,
-					{ dryRun: false },
+					{
+						dryRun: false,
+						caseHashDigest: runSettings.caseHashDigest,
+					},
 					command,
 				);
 			}
 		}
 
-		const newPaths = await glob(['**/*.*'], {
+		const patterns = flowSettings.files ?? flowSettings.include ?? [];
+
+		const newPaths = await glob(patterns.slice(), {
 			absolute: true,
 			cwd: flowSettings.targetPath,
 			// @ts-expect-error type inconsistency
@@ -324,7 +312,7 @@ export const runCodemod = async (
 			fileMap.delete(newPath);
 		}
 
-		for (const oldPath of fileMap.keys()) {
+		for (const oldPath of deletedPaths) {
 			fileCommands.push({
 				kind: 'deleteFile',
 				oldPath,
@@ -382,12 +370,7 @@ export const runCodemod = async (
 	}
 
 	// jscodeshift or ts-morph
-	const pathGenerator = buildPathGenerator(
-		fileSystem,
-		flowSettings,
-		codemod,
-		null,
-	);
+	const pathGenerator = buildPathGenerator(fileSystem, flowSettings);
 
 	const { engine } = codemod;
 
