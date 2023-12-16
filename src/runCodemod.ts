@@ -18,7 +18,7 @@ import { OperationMessage } from './messages.js';
 import { SafeArgumentRecord } from './safeArgumentRecord.js';
 import { FlowSettings } from './schemata/flowSettingsSchema.js';
 import { WorkerThreadMessage } from './workerThreadMessages.js';
-import { RunSettings } from './runSettings.js';
+import { RunSettings } from './schemata/runArgvSettingsSchema.js';
 
 const TERMINATE_IDLE_THREADS_TIMEOUT = 30 * 1000;
 
@@ -219,6 +219,7 @@ export const runCodemod = async (
 				flowSettings,
 				{
 					dryRun: false,
+					caseHashDigest: runSettings.caseHashDigest,
 				},
 				async (command) => {
 					commands.push(command);
@@ -255,13 +256,16 @@ export const runCodemod = async (
 
 				await modifyFileSystemUponCommand(
 					mfs,
-					{ dryRun: false },
+					{
+						dryRun: false,
+						caseHashDigest: runSettings.caseHashDigest,
+					},
 					command,
 				);
 			}
 		}
 
-		const newPaths = await glob(['**'], {
+		const newPaths = await glob(['{**/*.*,**/.*}'], {
 			absolute: true,
 			cwd: flowSettings.targetPath,
 			// @ts-expect-error type inconsistency
