@@ -80,7 +80,7 @@
 	},
 	"packageManager": "pnpm@8.6.7",
 	"scripts": {
-		"build": "esbuild ./src/index.ts  --define:__INTUITA_CLI_VERSION__=\\\"0.5.2\\\" --bundle --platform=node --target=node16 --minify --format=cjs --legal-comments=inline --outfile=./dist/index.cjs",
+		"build": "esbuild ./src/index.ts  --define:__INTUITA_CLI_VERSION__=\\\"0.5.3\\\" --bundle --platform=node --target=node16 --minify --format=cjs --legal-comments=inline --outfile=./dist/index.cjs",
 		"lint:eslint": "eslint src --fix --ext ts",
 		"lint:prettier": "prettier --write .",
 		"package": "pkg --compress GZip .",
