@@ -53,8 +53,6 @@ export class SurfaceAgnosticCaseService {
 			return;
 		}
 
-		console.log('emittingJob', command);
-
 		await this._caseWritingService.writeJob(
 			buildSurfaceAgnosticJob(
 				this._runSettings.outputDirectoryPath,

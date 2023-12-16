@@ -267,8 +267,6 @@ export const runCodemod = async (
 
 		const patterns = flowSettings.files ?? flowSettings.include ?? [];
 
-		console.error('patterns', patterns);
-
 		const newPaths = await glob(patterns.slice(), {
 			absolute: true,
 			cwd: flowSettings.targetPath,
@@ -322,8 +320,6 @@ export const runCodemod = async (
 		}
 
 		const commands = await buildFormattedFileCommands(fileCommands);
-
-		console.error(commands);
 
 		for (const command of commands) {
 			await onCommand(command);
