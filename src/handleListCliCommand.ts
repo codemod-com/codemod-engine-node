@@ -1,30 +1,42 @@
+import { isNeitherNullNorUndefined } from '@intuita-inc/utilities';
+import * as fs from 'fs';
+import { glob } from 'glob';
+import { mkdir, readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { mkdir } from 'node:fs/promises';
-import * as S from '@effect/schema/Schema';
-import type { FileDownloadService } from './fileDownloadService.js';
+import * as v from 'valibot';
 import type { PrinterBlueprint } from './printer.js';
 
-export const handleListNamesCommand = async (
-	fileDownloadService: FileDownloadService,
-	printer: PrinterBlueprint,
-) => {
+export const handleListNamesCommand = async (printer: PrinterBlueprint) => {
 	const intuitaDirectoryPath = join(homedir(), '.intuita');
 
 	await mkdir(intuitaDirectoryPath, { recursive: true });
 
-	const path = join(intuitaDirectoryPath, 'names.json');
+	const configFiles = await glob('**/config.json', {
+		absolute: true,
+		cwd: intuitaDirectoryPath,
+		fs,
+		nodir: true,
+	});
 
-	const buffer = await fileDownloadService.download(
-		'https://intuita-public.s3.us-west-1.amazonaws.com/codemod-registry/names.json',
-		path,
+	const codemodNames = await Promise.allSettled(
+		configFiles.map(async (cfg) => {
+			const configJson = await readFile(cfg, 'utf8');
+
+			const parsedConfig = v.safeParse(
+				v.object({ name: v.string() }),
+				JSON.parse(configJson),
+			);
+			return parsedConfig.success ? parsedConfig.output.name : null;
+		}),
 	);
 
-	const data = buffer.toString('utf8');
+	const onlyValid = codemodNames
+		.map((x) => (x.status === 'fulfilled' ? x.value : null))
+		.filter(isNeitherNullNorUndefined)
+		.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 
-	const parsedJson = JSON.parse(data);
-
-	const names = S.parseSync(S.array(S.string))(parsedJson);
+	const names = v.parse(v.array(v.string()), onlyValid);
 
 	printer.printOperationMessage({ kind: 'names', names });
 };
