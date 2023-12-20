@@ -32,6 +32,7 @@ import {
 	DEFAULT_INPUT_DIRECTORY_PATH,
 } from './constants.js';
 import { readFile } from 'node:fs/promises';
+import { handleLoginCliCommand } from './handleLoginCliCommand.js';
 
 // the build script contains the version
 declare const __INTUITA_CLI_VERSION__: string;
@@ -73,12 +74,17 @@ export const executeMainThread = async () => {
 		)
 		.command(
 			'learn',
-			'exports the current `git diff` in a file to before/after panels in codemod studio',
+			'exports the current `git diff` in a file to before/after panels in the Codemod Studio',
 			(y) =>
 				buildUseJsonOption(y).option('targetPath', {
 					type: 'string',
 					description: 'Input file path',
 				}),
+		)
+		.command(
+			'login',
+			'logs in through authentication in the Codemod Studio',
+			(y) => buildUseJsonOption(y),
 		)
 		.help()
 		.version(__INTUITA_CLI_VERSION__);
@@ -200,6 +206,25 @@ export const executeMainThread = async () => {
 		}
 
 		exit();
+
+		return;
+	}
+
+	if (String(argv._) === 'login') {
+		const printer = new Printer(argv.useJson);
+
+		try {
+			await handleLoginCliCommand(printer);
+		} catch (error) {
+			if (!(error instanceof Error)) {
+				return;
+			}
+
+			printer.printOperationMessage({
+				kind: 'error',
+				message: error.message,
+			});
+		}
 
 		return;
 	}
