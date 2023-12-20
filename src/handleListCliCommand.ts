@@ -1,10 +1,14 @@
-import * as S from '@effect/schema/Schema';
+import * as v from 'valibot';
 import * as fs from 'fs';
 import { glob } from 'glob';
 import { mkdir, readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import type { PrinterBlueprint } from './printer.js';
+
+const isNeitherNullNorUndefined = <T>(
+	t: NonNullable<T> | null | undefined,
+): t is NonNullable<T> => t !== null && t !== undefined;
 
 export const handleListNamesCommand = async (printer: PrinterBlueprint) => {
 	const intuitaDirectoryPath = join(homedir(), '.intuita');
@@ -22,17 +26,20 @@ export const handleListNamesCommand = async (printer: PrinterBlueprint) => {
 		configFiles.map(async (cfg) => {
 			const configJson = await readFile(cfg, 'utf8');
 
-			const parsedConfig = JSON.parse(configJson);
-			return parsedConfig.name;
+			const parsedConfig = v.safeParse(
+				v.object({ name: v.string() }),
+				JSON.parse(configJson),
+			);
+			return parsedConfig.success ? parsedConfig.output.name : null;
 		}),
 	);
 
 	const onlyValid = codemodNames
-		.map((x) => x.status === 'fulfilled' && x.value)
-		.filter(Boolean)
+		.map((x) => (x.status === 'fulfilled' ? x.value : null))
+		.filter(isNeitherNullNorUndefined)
 		.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 
-	const names = S.parseSync(S.array(S.string))(onlyValid);
+	const names = v.parse(v.array(v.string()), onlyValid);
 
 	printer.printOperationMessage({ kind: 'names', names });
 };
