@@ -72,6 +72,14 @@ export const executeMainThread = async () => {
 			'syncs all the codemods from the registry',
 			(y) => buildUseJsonOption(y),
 		)
+		.command('sync [name]', 'synchronize a codemod', (y) =>
+			buildUseJsonOption(
+				y.positional('name', {
+					type: 'string',
+					description: 'The name of the codemod',
+				}),
+			),
+		)
 		.command(
 			'learn',
 			'exports the current `git diff` in a file to before/after panels in the Codemod Studio',
@@ -171,6 +179,33 @@ export const executeMainThread = async () => {
 
 		try {
 			await codemodDownloader.syncRegistry();
+		} catch (error) {
+			if (!(error instanceof Error)) {
+				return;
+			}
+
+			printer.printOperationMessage({
+				kind: 'error',
+				message: error.message,
+			});
+		}
+
+		exit();
+
+		return;
+	}
+
+	if (argv._.at(0) === 'sync' && argv.name !== undefined) {
+		const codemodDownloader = new CodemodDownloader(
+			printer,
+			join(homedir(), '.intuita'),
+			false,
+			fileDownloadService,
+			tarService,
+		);
+
+		try {
+			await codemodDownloader.download(argv.name);
 		} catch (error) {
 			if (!(error instanceof Error)) {
 				return;
