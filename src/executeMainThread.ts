@@ -74,7 +74,7 @@ export const executeMainThread = async () => {
 		)
 		.command(
 			'learn',
-			'exports the current `git diff` in a file to before/after panels in Codemod Studio',
+			'exports the current `git diff` in a file to before/after panels in the Codemod Studio',
 			(y) =>
 				buildUseJsonOption(y).option('targetPath', {
 					type: 'string',
@@ -83,7 +83,7 @@ export const executeMainThread = async () => {
 		)
 		.command(
 			'login',
-			'logs in through authentication in Codemod Studio',
+			'logs in through authentication in the Codemod Studio',
 			(y) => buildUseJsonOption(y),
 		)
 		.help()

@@ -302,14 +302,15 @@ export const handleLearnCliCommand = async (
 
 	printer.printConsoleMessage(
 		'info',
-		'Learning went successful! Opening Codemod Studio...',
+		'Learning went successful! Opening the Codemod Studio...',
 	);
 
 	const success = openURL(url);
 	if (!success) {
 		printer.printOperationMessage({
 			kind: 'error',
-			message: 'Unexpected error occurred while opening Codemod Studio.',
+			message:
+				'Unexpected error occurred while opening the Codemod Studio.',
 		});
 		return;
 	}

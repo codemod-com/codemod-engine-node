@@ -5,7 +5,7 @@ const ACCESS_TOKEN_REQUESTED_BY_CLI_KEY = 'accessTokenRequestedByCLI';
 
 export const handleLoginCliCommand = async (printer: PrinterBlueprint) => {
 	const EXTENSION_LINK = terminalLink(
-		'Click to sign in to Intuita via Codemod Studio!',
+		'Click to sign in to Intuita via the Codemod Studio!',
 		`https://codemod.studio/${ACCESS_TOKEN_REQUESTED_BY_CLI_KEY}`,
 	);
 
