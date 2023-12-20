@@ -149,7 +149,7 @@ export const executeMainThread = async () => {
 
 	if (String(argv._) === 'list') {
 		try {
-			await handleListNamesCommand(fileDownloadService, printer);
+			await handleListNamesCommand(printer);
 		} catch (error) {
 			if (!(error instanceof Error)) {
 				return;
