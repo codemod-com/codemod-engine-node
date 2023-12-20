@@ -1,13 +1,22 @@
-import terminalLink from 'terminal-link';
 import type { PrinterBlueprint } from './printer.js';
+import { openURL } from './utils.js';
 
 const ACCESS_TOKEN_REQUESTED_BY_CLI_KEY = 'accessTokenRequestedByCLI';
 
 export const handleLoginCliCommand = async (printer: PrinterBlueprint) => {
-	const EXTENSION_LINK = terminalLink(
-		'Click to sign in to Intuita via the Codemod Studio!',
+	printer.printConsoleMessage(
+		'info',
+		'Opening the Codemod Studio... Please Sign in with Github.',
+	);
+	const success = openURL(
 		`https://codemod.studio/${ACCESS_TOKEN_REQUESTED_BY_CLI_KEY}`,
 	);
-
-	printer.printConsoleMessage('log', EXTENSION_LINK);
+	if (!success) {
+		printer.printOperationMessage({
+			kind: 'error',
+			message:
+				'Unexpected error occurred while opening the Codemod Studio.',
+		});
+		return;
+	}
 };
