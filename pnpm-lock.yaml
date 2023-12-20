@@ -24,8 +24,8 @@ dependencies:
     specifier: 1.1.0
     version: 1.1.0
   '@intuita-inc/utilities':
-    specifier: 1.0.2
-    version: 1.0.2(effect@2.0.0-next.59)(fast-check@3.14.0)
+    specifier: 1.1.0
+    version: 1.1.0(effect@2.0.0-next.59)(fast-check@3.14.0)
   '@svgr/hast-util-to-babel-ast':
     specifier: ^7.0.0
     version: 7.0.0
@@ -2008,8 +2008,8 @@ packages:
       glob: 10.3.10
     dev: false
 
-  /@intuita-inc/utilities@1.0.2(effect@2.0.0-next.59)(fast-check@3.14.0):
-    resolution: {integrity: sha512-qhJ6W2Ia4/ivLyPrR1qXJVszG8FRzlV8G54ozSHRpSCmAwrYsJCNZ4zA8TxVXZD9Fk3dJLP+bi0CCEvnLC+7hw==}
+  /@intuita-inc/utilities@1.1.0(effect@2.0.0-next.59)(fast-check@3.14.0):
+    resolution: {integrity: sha512-2/H2/v22Wuxb8SYB8QUB8AsdZoAr4Y0pAa0Rs+aym2DWOEysJB4aHsgF1YH2JqYiz59rQeIVAiYnELIqv/XZKg==}
     dependencies:
       '@effect/schema': 0.52.0(effect@2.0.0-next.59)(fast-check@3.14.0)
     transitivePeerDependencies:

@@ -1,14 +1,11 @@
-import * as v from 'valibot';
+import { isNeitherNullNorUndefined } from '@intuita-inc/utilities';
 import * as fs from 'fs';
 import { glob } from 'glob';
 import { mkdir, readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import * as v from 'valibot';
 import type { PrinterBlueprint } from './printer.js';
-
-const isNeitherNullNorUndefined = <T>(
-	t: NonNullable<T> | null | undefined,
-): t is NonNullable<T> => t !== null && t !== undefined;
 
 export const handleListNamesCommand = async (printer: PrinterBlueprint) => {
 	const intuitaDirectoryPath = join(homedir(), '.intuita');
