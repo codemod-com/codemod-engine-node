@@ -46,7 +46,6 @@ export const handleLoginCliCommand = async (
 		buildConfigPath,
 		JSON.stringify({
 			accessToken: token,
-			username,
 		}),
 	);
 
