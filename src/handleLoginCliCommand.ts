@@ -29,8 +29,8 @@ export const handleLoginCliCommand = async (
 		return;
 	}
 
-	const valid = await validateAccessToken(token);
-	if (!valid) {
+	const username = await validateAccessToken(token);
+	if (!username) {
 		printer.printOperationMessage({
 			kind: 'error',
 			message:
@@ -46,6 +46,7 @@ export const handleLoginCliCommand = async (
 		buildConfigPath,
 		JSON.stringify({
 			accessToken: token,
+			username,
 		}),
 	);
 
