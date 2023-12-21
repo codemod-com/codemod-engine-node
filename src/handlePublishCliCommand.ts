@@ -30,11 +30,12 @@ export const handlePublishCliCommand = async (
 		);
 	}
 
-	const packageJsonPath = join(sourcePath, 'package.json'); // must exist
-
-	const packageJsonData = await fs.promises.readFile(packageJsonPath, {
-		encoding: 'utf-8',
-	});
+	const packageJsonData = await fs.promises.readFile(
+		join(sourcePath, 'package.json'),
+		{
+			encoding: 'utf-8',
+		},
+	);
 
 	const pkg = parse(packageJsonSchema, JSON.parse(packageJsonData));
 
@@ -47,11 +48,12 @@ export const handlePublishCliCommand = async (
 		);
 	}
 
-	const indexCjsPath = join(sourcePath, pkg.main);
-
-	const indexCjsData = await fs.promises.readFile(indexCjsPath, {
-		encoding: 'utf-8',
-	});
+	const indexCjsData = await fs.promises.readFile(
+		join(sourcePath, pkg.main),
+		{
+			encoding: 'utf-8',
+		},
+	);
 
 	const configJsonData = JSON.stringify(
 		{
