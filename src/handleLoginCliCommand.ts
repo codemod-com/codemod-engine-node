@@ -1,37 +1,11 @@
-import Axios from 'axios';
 import type { PrinterBlueprint } from './printer.js';
 import { openURL } from './utils.js';
 import { writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { validateAccessToken } from './apis.js';
 
 const ACCESS_TOKEN_REQUESTED_BY_CLI_KEY = 'accessTokenRequestedByCLI';
-const X_INTUITA_ACCESS_TOKEN = 'X-Intuita-Access-Token'.toLocaleLowerCase();
-
-export const validateAccessToken = async (
-	accessToken: string,
-): Promise<boolean> => {
-	try {
-		const response = await Axios.post(
-			'https://telemetry.intuita.io/validateAccessToken',
-			{ requestFrom: 'VSCE' },
-			{
-				headers: {
-					[X_INTUITA_ACCESS_TOKEN]: accessToken,
-				},
-				timeout: 5000,
-			},
-		);
-
-		return response.status === 200;
-	} catch (error) {
-		if (!Axios.isAxiosError(error)) {
-			console.error(error);
-		}
-
-		return false;
-	}
-};
 
 export const handleLoginCliCommand = async (
 	printer: PrinterBlueprint,
