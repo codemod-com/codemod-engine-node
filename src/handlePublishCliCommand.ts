@@ -100,12 +100,10 @@ export const handlePublishCliCommand = async (
 			'error',
 			`Could not download the "${pkg.name}" package at this time`,
 		);
+
+		printer.printConsoleMessage(
+			'info',
+			'Use the command "intuita sync ${pkg.name}" to make the package available for usage in the CLI or the VSCode Extension',
+		);
 	}
-
-	printer.printConsoleMessage(
-		'info',
-		'Use the command "intuita sync ${pkg.name}" to synchronize the package to your computer',
-	);
-
-	// TODO show a command to sync it
 };
