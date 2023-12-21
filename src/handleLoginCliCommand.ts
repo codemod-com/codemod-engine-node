@@ -17,7 +17,7 @@ export const handleLoginCliCommand = async (
 			'Opening the Codemod Studio... Please Sign in with Github!',
 		);
 		const success = openURL(
-			`https://codemod.studio/${ACCESS_TOKEN_REQUESTED_BY_CLI_KEY}`,
+			`https://codemod.studio/?command=${ACCESS_TOKEN_REQUESTED_BY_CLI_KEY}`,
 		);
 		if (!success) {
 			printer.printOperationMessage({

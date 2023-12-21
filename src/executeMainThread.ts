@@ -266,6 +266,8 @@ export const executeMainThread = async () => {
 			});
 		}
 
+		exit();
+
 		return;
 	}
 
