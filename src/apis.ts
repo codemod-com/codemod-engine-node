@@ -8,7 +8,7 @@ export const validateAccessToken = async (
 	try {
 		const response = await Axios.post(
 			'https://telemetry.intuita.io/validateAccessToken',
-			{ requestFrom: 'VSCE' },
+			{},
 			{
 				headers: {
 					[X_INTUITA_ACCESS_TOKEN]: accessToken,
