@@ -33,6 +33,7 @@ import {
 } from './constants.js';
 import { readFile } from 'node:fs/promises';
 import { handleLoginCliCommand } from './handleLoginCliCommand.js';
+import { handlePublishCliCommand } from './handlePublishCliCommand.js';
 
 // the build script contains the version
 declare const __INTUITA_CLI_VERSION__: string;
@@ -97,6 +98,9 @@ export const executeMainThread = async () => {
 					type: 'string',
 					description: 'token required to sign in to the Intuita CLI',
 				}),
+		)
+		.command('publish', 'publish the codemod to Intuita Registry', (y) =>
+			buildUseJsonOption(y),
 		)
 		.help()
 		.version(__INTUITA_CLI_VERSION__);
@@ -255,6 +259,39 @@ export const executeMainThread = async () => {
 
 		try {
 			await handleLoginCliCommand(printer, token);
+		} catch (error) {
+			if (!(error instanceof Error)) {
+				return;
+			}
+
+			printer.printOperationMessage({
+				kind: 'error',
+				message: error.message,
+			});
+		}
+
+		exit();
+
+		return;
+	}
+
+	if (String(argv._) === 'publish') {
+		const printer = new Printer(argv.useJson);
+
+		const codemodDownloader = new CodemodDownloader(
+			printer,
+			join(homedir(), '.intuita'),
+			false,
+			fileDownloadService,
+			tarService,
+		);
+
+		try {
+			await handlePublishCliCommand(
+				codemodDownloader,
+				printer,
+				argv.sourcePath ?? argv.source ?? process.cwd(),
+			);
 		} catch (error) {
 			if (!(error instanceof Error)) {
 				return;
