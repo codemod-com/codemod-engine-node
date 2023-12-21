@@ -232,8 +232,7 @@ export const executeMainThread = async () => {
 
 	if (String(argv._) === 'learn') {
 		const printer = new Printer(argv.useJson);
-		const targetPath =
-			argv.targetPath ?? argv.target ?? DEFAULT_INPUT_DIRECTORY_PATH;
+		const targetPath = argv.target ?? argv.targetPath ?? null;
 
 		try {
 			await handleLearnCliCommand(printer, targetPath);
