@@ -32,7 +32,6 @@ export const handlePublishCliCommand = async (
 
 	const packageJsonPath = join(sourcePath, 'package.json'); // must exist
 	const readmePath = join(sourcePath, 'README.md'); // may exist
-	const configJsonPath = join(sourcePath, 'config.json'); // may exist
 
 	const packageJsonData = await fs.promises.readFile(packageJsonPath, {
 		encoding: 'utf-8',
@@ -55,43 +54,22 @@ export const handlePublishCliCommand = async (
 		encoding: 'utf-8',
 	});
 
-	if (!fs.existsSync(configJsonPath)) {
-		// Create a temporary config object in memory
-		const temporaryConfig = {
+	const configJsonData = JSON.stringify(
+		{
 			schemaVersion: '1.0.0',
-			name: packageName,
+			name: pkg.name,
 			engine: 'jscodeshift',
-			// Add other properties as needed
-		};
+		},
+		null,
+		2,
+	);
 
-		// Convert the config object to a JSON string
-		const temporaryConfigJSON = JSON.stringify(temporaryConfig, null, 2);
-
-		// Write the JSON string to a temporary config.json file
-		fs.writeFileSync(configJsonPath, temporaryConfigJSON);
-	}
-
-	[
-		{ path: indexCjsPath, filename: 'index.cjs' },
-		{ path: readmePath, filename: 'description.md' },
-		{ path: configJsonPath, filename: 'config.json' },
-	].forEach(({ filename, path }) => {
-		fs.readFile(path, (err, data) => {
-			if (err) {
-				console.error('Error reading file:', err);
-				return;
-			}
-			if (!fs.existsSync(path)) {
-				return;
-			}
-
-			formData.append(filename, data as unknown as Blob);
-		});
-	});
+	
 
 	const formData = new FormData();
 	formData.append('package.json', packageJsonData);
 	formData.append('index.cjs', indexCjsData);
+	formData.append('config.json', configJsonData);
 
 	await Axios.post('https://telemetry.intuita.io/publish', formData, {
 		timeout: 5000,
