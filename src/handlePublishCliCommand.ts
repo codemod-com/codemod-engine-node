@@ -31,7 +31,6 @@ export const handlePublishCliCommand = async (
 	}
 
 	const packageJsonPath = join(sourcePath, 'package.json'); // must exist
-	const readmePath = join(sourcePath, 'README.md'); // may exist
 
 	const packageJsonData = await fs.promises.readFile(packageJsonPath, {
 		encoding: 'utf-8',
@@ -64,15 +63,30 @@ export const handlePublishCliCommand = async (
 		2,
 	);
 
-	
+	let descriptionMdData: string | null = null;
+
+	try {
+		descriptionMdData = await fs.promises.readFile(
+			join(sourcePath, 'README.md'),
+			{
+				encoding: 'utf-8',
+			},
+		);
+	} catch {
+		//
+	}
 
 	const formData = new FormData();
 	formData.append('package.json', packageJsonData);
 	formData.append('index.cjs', indexCjsData);
 	formData.append('config.json', configJsonData);
 
+	if (descriptionMdData) {
+		formData.append('description.md', descriptionMdData);
+	}
+
 	await Axios.post('https://telemetry.intuita.io/publish', formData, {
-		timeout: 5000,
+		timeout: 10000,
 	});
 
 	// TODO show a command to sync it
