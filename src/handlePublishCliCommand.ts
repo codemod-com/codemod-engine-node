@@ -18,39 +18,23 @@ const accessTokenJsonSchema = S.struct({
 
 export const handlePublishCliCommand = async (
 	printer: PrinterBlueprint,
-	source: string,
+	sourcePath: string,
 ) => {
-	// Check if `.intuita/accessToken.json` exists and validate the token
-	let accessToken, username;
-	const accessTokenJsonPath = join(
-		join(homedir(), '.intuita'),
-		'accessToken.json',
-	);
+	const tokenTxtPath = join(homedir(), '.intuita', 'token.txt');
 
-	const accessTokenJsonData = fs.promises.readFile(accessTokenJsonPath, {
+	const token = await fs.promises.readFile(tokenTxtPath, {
 		encoding: 'utf-8',
 	});
-	try {
-		({ accessToken, username } = S.parseSync(accessTokenJsonSchema)(
-			JSON.parse(accessTokenJsonData.toString()),
-		));
-		if (!(await validateAccessToken(accessToken))) {
-			printer.printOperationMessage({
-				kind: 'error',
-				message:
-					'The token is incorrect. Please run `intuita login` again and sign in again in the Codemod Studio.',
-			});
-		}
-	} catch (err) {
-		printer.printOperationMessage({
-			kind: 'error',
-			message:
-				'You need to authenticate with the Intuita CLI first. Run `intuita login`!',
-		});
+
+	const { username } = await validateAccessToken(token);
+
+	if (username === null) {
+		throw new Error(
+			'The username of the current user is not known. Aborting the operation.',
+		);
 	}
 
 	// Define file paths
-	const sourcePath = source ?? '';
 	const packageJsonPath = join(sourcePath, 'package.json');
 	const readmePath = join(sourcePath, 'README.md');
 	const configJsonPath = join(sourcePath, 'config.json');
