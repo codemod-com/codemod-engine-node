@@ -30,7 +30,7 @@ export const handleLoginCliCommand = async (
 	}
 
 	const username = await validateAccessToken(token);
-	if (!username) {
+	if (username === null) {
 		printer.printOperationMessage({
 			kind: 'error',
 			message:

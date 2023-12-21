@@ -4,7 +4,7 @@ const X_INTUITA_ACCESS_TOKEN = 'X-Intuita-Access-Token'.toLocaleLowerCase();
 
 export const validateAccessToken = async (
 	accessToken: string,
-): Promise<boolean> => {
+): Promise<string | null> => {
 	try {
 		const response = await Axios.post(
 			'https://telemetry.intuita.io/validateAccessToken',
@@ -17,12 +17,12 @@ export const validateAccessToken = async (
 			},
 		);
 
-		return response.status === 200;
+		return response.status === 200 ? response.data : null;
 	} catch (error) {
 		if (!Axios.isAxiosError(error)) {
 			console.error(error);
 		}
 
-		return false;
+		return null;
 	}
 };
