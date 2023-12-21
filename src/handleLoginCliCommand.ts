@@ -29,25 +29,17 @@ export const handleLoginCliCommand = async (
 		return;
 	}
 
-	const username = await validateAccessToken(token);
+	const { username } = await validateAccessToken(token);
+
 	if (username === null) {
-		printer.printOperationMessage({
-			kind: 'error',
-			message:
-				'The token is incorrect. Please run `intuita login` again and sign in again in the Codemod Studio.',
-		});
+		throw new Error(
+			'The username of the current user is not known. Aborting the operation.',
+		);
 	}
 
-	const globalStoragePath = join(homedir(), '.intuita');
+	const tokenTxtPath = join(homedir(), '.intuita', 'token.txt');
 
-	const buildConfigPath = join(globalStoragePath, 'accessToken.json');
-
-	await writeFile(
-		buildConfigPath,
-		JSON.stringify({
-			accessToken: token,
-		}),
-	);
+	await writeFile(tokenTxtPath, token);
 
 	printer.printConsoleMessage(
 		'info',
