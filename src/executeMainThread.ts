@@ -92,7 +92,11 @@ export const executeMainThread = async () => {
 		.command(
 			'login',
 			'logs in through authentication in the Codemod Studio',
-			(y) => buildUseJsonOption(y),
+			(y) =>
+				buildUseJsonOption(y).option('token', {
+					type: 'string',
+					description: 'token required to sign in to the Intuita CLI',
+				}),
 		)
 		.help()
 		.version(__INTUITA_CLI_VERSION__);
@@ -247,9 +251,10 @@ export const executeMainThread = async () => {
 
 	if (String(argv._) === 'login') {
 		const printer = new Printer(argv.useJson);
+		const token = argv.token ?? null;
 
 		try {
-			await handleLoginCliCommand(printer);
+			await handleLoginCliCommand(printer, token);
 		} catch (error) {
 			if (!(error instanceof Error)) {
 				return;
