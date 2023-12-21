@@ -40,22 +40,20 @@ export const handlePublishCliCommand = async (
 
 	const pkg = parse(packageJsonSchema, JSON.parse(packageJsonData));
 
-	if (!pkg.name.startsWith(`@${username}/`)) {
-		throw new Error('The package name must start with your username');
+	if (
+		!pkg.name.startsWith(`@${username}/`) ||
+		!/[a-zA-Z0-9_/-]+/.test(pkg.name)
+	) {
+		throw new Error(
+			'The package name must start with your username and contain allowed characters',
+		);
 	}
 
-	const cjsPath = join(sourcePath, pkg.main);
+	const indexCjsPath = join(sourcePath, pkg.main);
 
-	// check if /dist/index.cjs exists
-	if (!fs.existsSync(cjsPath)) {
-		printer.printOperationMessage({
-			kind: 'error',
-			message: 'Please run `pnpm build` to build the codemod file first.',
-		});
-		return;
-	}
-
-	const packageName = `@${username}/${name}`;
+	const indexCjsData = await fs.promises.readFile(indexCjsPath, {
+		encoding: 'utf-8',
+	});
 
 	if (!fs.existsSync(configJsonPath)) {
 		// Create a temporary config object in memory
@@ -74,7 +72,7 @@ export const handlePublishCliCommand = async (
 	}
 
 	[
-		{ path: cjsPath, filename: 'index.cjs' },
+		{ path: indexCjsPath, filename: 'index.cjs' },
 		{ path: readmePath, filename: 'description.md' },
 		{ path: configJsonPath, filename: 'config.json' },
 	].forEach(({ filename, path }) => {
@@ -93,6 +91,7 @@ export const handlePublishCliCommand = async (
 
 	const formData = new FormData();
 	formData.append('package.json', packageJsonData);
+	formData.append('index.cjs', indexCjsData);
 
 	await Axios.post('https://telemetry.intuita.io/publish', formData, {
 		timeout: 5000,
