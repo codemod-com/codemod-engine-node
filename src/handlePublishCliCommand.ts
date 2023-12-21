@@ -1,4 +1,3 @@
-import * as S from '@effect/schema/Schema';
 import * as fs from 'fs';
 import type { PrinterBlueprint } from './printer.js';
 import { homedir } from 'node:os';
@@ -6,9 +5,11 @@ import { join } from 'node:path';
 import { validateAccessToken } from './apis.js';
 import Axios from 'axios';
 
-const packageJsonSchema = S.struct({
-	main: S.string,
-	name: S.string,
+import { object, string, parse } from 'valibot';
+
+const packageJsonSchema = object({
+	main: string(),
+	name: string(),
 });
 
 export const handlePublishCliCommand = async (
@@ -32,16 +33,18 @@ export const handlePublishCliCommand = async (
 	const packageJsonPath = join(sourcePath, 'package.json'); // must exist
 	const readmePath = join(sourcePath, 'README.md'); // may exist
 	const configJsonPath = join(sourcePath, 'config.json'); // may exist
-	
 
 	const packageJsonData = await fs.promises.readFile(packageJsonPath, {
 		encoding: 'utf-8',
 	});
 
-	const pkg = S.parseSync(packageJsonSchema)(JSON.parse(packageJsonData));
+	const pkg = parse(packageJsonSchema, JSON.parse(packageJsonData));
+
+	if (!pkg.name.startsWith(`@${username}/`)) {
+		throw new Error('The package name must start with your username');
+	}
 
 	const cjsPath = join(sourcePath, pkg.main);
-
 
 	// check if /dist/index.cjs exists
 	if (!fs.existsSync(cjsPath)) {
@@ -52,7 +55,6 @@ export const handlePublishCliCommand = async (
 		return;
 	}
 
-	const formData = new FormData();
 	const packageName = `@${username}/${name}`;
 
 	if (!fs.existsSync(configJsonPath)) {
@@ -86,23 +88,15 @@ export const handlePublishCliCommand = async (
 			}
 
 			formData.append(filename, data as unknown as Blob);
-
-			Axios.post(
-				'https://telemetry.intuita.io/publishCodemod', // note to greg: modify the endpoint here
-				formData,
-				{
-					timeout: 5000,
-				},
-			)
-				.then((response) => {
-					console.log('Response:', response.data);
-				})
-				.catch((error) => {
-					console.error(
-						'Error:',
-						error.response ? error.response.data : error.message,
-					);
-				});
 		});
 	});
+
+	const formData = new FormData();
+	formData.append('package.json', packageJsonData);
+
+	await Axios.post('https://telemetry.intuita.io/publish', formData, {
+		timeout: 5000,
+	});
+
+	// TODO show a command to sync it
 };
