@@ -11,11 +11,6 @@ const packageJsonSchema = S.struct({
 	name: S.string,
 });
 
-const accessTokenJsonSchema = S.struct({
-	accessToken: S.string,
-	username: S.string,
-});
-
 export const handlePublishCliCommand = async (
 	printer: PrinterBlueprint,
 	sourcePath: string,
@@ -34,44 +29,19 @@ export const handlePublishCliCommand = async (
 		);
 	}
 
-	// Define file paths
-	const packageJsonPath = join(sourcePath, 'package.json');
-	const readmePath = join(sourcePath, 'README.md');
-	const configJsonPath = join(sourcePath, 'config.json');
-	const cjsPath = join(sourcePath, 'dist', 'index.cjs');
+	const packageJsonPath = join(sourcePath, 'package.json'); // must exist
+	const readmePath = join(sourcePath, 'README.md'); // may exist
+	const configJsonPath = join(sourcePath, 'config.json'); // may exist
+	
 
-	// check if package.json exists
-	if (!fs.existsSync(packageJsonPath)) {
-		printer.printOperationMessage({
-			kind: 'error',
-			message: 'package.json cannot be found.',
-		});
-		return;
-	}
-
-	const packageJsonData = fs.promises.readFile(packageJsonPath, {
+	const packageJsonData = await fs.promises.readFile(packageJsonPath, {
 		encoding: 'utf-8',
 	});
 
-	let main, name;
-	try {
-		// check if `main` and `name` entries exist
-		({ main, name } = S.parseSync(packageJsonSchema)(
-			JSON.parse(packageJsonData.toString()),
-		));
-		if (!main.endsWith('dist/index.cjs')) {
-			printer.printOperationMessage({
-				kind: 'error',
-				message:
-					'`main` entry in `package.json` must be `./dist/index.cjs`',
-			});
-		}
-	} catch (err) {
-		printer.printOperationMessage({
-			kind: 'error',
-			message: 'package.json is missing `main` or `name` entry.',
-		});
-	}
+	const pkg = S.parseSync(packageJsonSchema)(JSON.parse(packageJsonData));
+
+	const cjsPath = join(sourcePath, pkg.main);
+
 
 	// check if /dist/index.cjs exists
 	if (!fs.existsSync(cjsPath)) {
