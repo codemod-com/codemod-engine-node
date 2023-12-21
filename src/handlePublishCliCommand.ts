@@ -87,7 +87,21 @@ export const handlePublishCliCommand = async (
 		formData.append('description.md', descriptionMdData);
 	}
 
-	await publish(token, formData);
+	try {
+		await publish(token, formData);
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+
+		printer.printConsoleMessage(
+			'error',
+			`Could not publish the "${pkg.name}" package: ${message}`,
+		);
+	}
+
+	printer.printConsoleMessage(
+		'info',
+		`Published the "${pkg.name}" package successfully`,
+	);
 
 	try {
 		await codemodDownloader.download(pkg.name);
