@@ -18,7 +18,7 @@ const accessTokenJsonSchema = S.struct({
 
 export const handlePublishCliCommand = async (
 	printer: PrinterBlueprint,
-	source: string | null,
+	source: string,
 ) => {
 	// Check if `.intuita/accessToken.json` exists and validate the token
 	let accessToken, username;

@@ -281,7 +281,7 @@ export const executeMainThread = async () => {
 		try {
 			await handlePublishCliCommand(
 				printer,
-				argv.source ?? argv.sourcePath ?? null,
+				argv.sourcePath ?? argv.source ?? process.cwd(),
 			);
 		} catch (error) {
 			if (!(error instanceof Error)) {
