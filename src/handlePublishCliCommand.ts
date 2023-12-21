@@ -6,6 +6,7 @@ import { validateAccessToken } from './apis.js';
 import Axios from 'axios';
 
 import { object, string, parse } from 'valibot';
+import { CodemodDownloader } from './downloadCodemod.js';
 
 const packageJsonSchema = object({
 	main: string(),
@@ -13,6 +14,7 @@ const packageJsonSchema = object({
 });
 
 export const handlePublishCliCommand = async (
+	codemodDownloader: CodemodDownloader,
 	printer: PrinterBlueprint,
 	sourcePath: string,
 ) => {
@@ -90,6 +92,20 @@ export const handlePublishCliCommand = async (
 	await Axios.post('https://telemetry.intuita.io/publish', formData, {
 		timeout: 10000,
 	});
+
+	try {
+		await codemodDownloader.download(pkg.name);
+	} catch (error) {
+		printer.printConsoleMessage(
+			'error',
+			`Could not download the "${pkg.name}" package at this time`,
+		);
+	}
+
+	printer.printConsoleMessage(
+		'info',
+		'Use the command "intuita sync ${pkg.name}" to synchronize the package to your computer',
+	);
 
 	// TODO show a command to sync it
 };
