@@ -1,6 +1,6 @@
 {
 	"name": "intuita",
-	"version": "0.5.3",
+	"version": "0.6.0",
 	"description": "A codemod engine for Node.js libraries (jscodeshift, ts-morph, etc.)",
 	"type": "module",
 	"exports": null,
@@ -82,7 +82,7 @@
 	},
 	"packageManager": "pnpm@8.6.7",
 	"scripts": {
-		"build": "esbuild ./src/index.ts  --define:__INTUITA_CLI_VERSION__=\\\"0.5.3\\\" --bundle --platform=node --target=node16 --minify --format=cjs --legal-comments=inline --outfile=./dist/index.cjs",
+		"build": "esbuild ./src/index.ts  --define:__INTUITA_CLI_VERSION__=\\\"0.6.0\\\" --bundle --platform=node --target=node16 --minify --format=cjs --legal-comments=inline --outfile=./dist/index.cjs",
 		"lint:eslint": "eslint src --fix --ext ts",
 		"lint:prettier": "prettier --write .",
 		"package": "pkg --compress GZip .",
