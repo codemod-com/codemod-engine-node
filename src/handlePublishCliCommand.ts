@@ -2,11 +2,10 @@ import * as fs from 'fs';
 import type { PrinterBlueprint } from './printer.js';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { validateAccessToken } from './apis.js';
-import Axios from 'axios';
-
 import { object, string, parse } from 'valibot';
+import { publish, validateAccessToken } from './apis.js';
 import { CodemodDownloader } from './downloadCodemod.js';
+import FormData from 'form-data';
 
 const packageJsonSchema = object({
 	main: string(),
@@ -81,17 +80,14 @@ export const handlePublishCliCommand = async (
 	}
 
 	const formData = new FormData();
-	formData.append('package.json', packageJsonData);
-	formData.append('index.cjs', indexCjsData);
-	formData.append('config.json', configJsonData);
+	formData.append('index.cjs', Buffer.from(indexCjsData));
+	formData.append('config.json', Buffer.from(configJsonData));
 
 	if (descriptionMdData) {
 		formData.append('description.md', descriptionMdData);
 	}
 
-	await Axios.post('https://telemetry.intuita.io/publish', formData, {
-		timeout: 10000,
-	});
+	await publish(token, formData);
 
 	try {
 		await codemodDownloader.download(pkg.name);

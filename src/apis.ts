@@ -1,5 +1,6 @@
 import Axios from 'axios';
 import { type Input, parse, object, string, nullable } from 'valibot';
+import type FormData from 'form-data';
 
 const X_INTUITA_ACCESS_TOKEN = 'X-Intuita-Access-Token'.toLocaleLowerCase();
 
@@ -24,4 +25,17 @@ export const validateAccessToken = async (
 	);
 
 	return parse(dataSchema, response.data);
+};
+
+export const publish = async (
+	accessToken: string,
+	formData: FormData,
+): Promise<void> => {
+	await Axios.post('https://telemetry.intuita.io/publish', formData, {
+		headers: {
+			[X_INTUITA_ACCESS_TOKEN]: accessToken,
+			'Content-Type': 'multipart/form-data',
+		},
+		timeout: 10000,
+	});
 };
