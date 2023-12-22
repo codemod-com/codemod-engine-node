@@ -6,6 +6,8 @@ import { object, string, parse } from 'valibot';
 import { publish, validateAccessToken } from './apis.js';
 import { CodemodDownloader } from './downloadCodemod.js';
 import FormData from 'form-data';
+import { mkdir, writeFile } from 'fs/promises';
+import { createHash } from 'crypto';
 
 const packageJsonSchema = object({
 	main: string(),
@@ -17,7 +19,8 @@ export const handlePublishCliCommand = async (
 	printer: PrinterBlueprint,
 	sourcePath: string,
 ) => {
-	const tokenTxtPath = join(homedir(), '.intuita', 'token.txt');
+	const intuitaDirectoryPath = join(homedir(), '.intuita');
+	const tokenTxtPath = join(intuitaDirectoryPath, 'token.txt');
 
 	const token = await fs.promises.readFile(tokenTxtPath, {
 		encoding: 'utf-8',
@@ -103,12 +106,33 @@ export const handlePublishCliCommand = async (
 		`Published the "${pkg.name}" package successfully`,
 	);
 
+	await mkdir(intuitaDirectoryPath, { recursive: true });
+
+	const newCodemodPath = createHash('ripemd160')
+		.update(pkg.name)
+		.digest('base64url');
+	const syncDirectory = join(intuitaDirectoryPath, newCodemodPath);
+
 	try {
-		await codemodDownloader.download(pkg.name);
-	} catch (error) {
+		await writeFile(join(syncDirectory, 'config.json'), configJsonData);
+		await writeFile(join(syncDirectory, 'index.cjs'), indexCjsData);
+		if (descriptionMdData) {
+			await writeFile(
+				join(syncDirectory, 'index.cjs'),
+				descriptionMdData,
+			);
+		}
+
+		printer.printConsoleMessage(
+			'info',
+			`Sucessfully synced "${pkg.name}". Run it with "intuita ${pkg.name}"`,
+		);
+	} catch (err) {
 		printer.printConsoleMessage(
 			'error',
-			`Could not download the "${pkg.name}" package at this time`,
+			`Failed performing automatic sync for "${pkg.name}": ${
+				(err as Error).message
+			}`,
 		);
 
 		printer.printConsoleMessage(

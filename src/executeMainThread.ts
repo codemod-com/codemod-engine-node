@@ -27,10 +27,7 @@ import {
 	AppInsightsTelemetryService,
 	NoTelemetryService,
 } from './telemetryService.js';
-import {
-	APP_INSIGHTS_INSTRUMENTATION_STRING,
-	DEFAULT_INPUT_DIRECTORY_PATH,
-} from './constants.js';
+import { APP_INSIGHTS_INSTRUMENTATION_STRING } from './constants.js';
 import { readFile } from 'node:fs/promises';
 import { handleLoginCliCommand } from './handleLoginCliCommand.js';
 import { handlePublishCliCommand } from './handlePublishCliCommand.js';
