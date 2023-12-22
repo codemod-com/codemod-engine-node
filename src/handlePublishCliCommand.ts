@@ -104,19 +104,18 @@ export const handlePublishCliCommand = async (
 		`Published the "${pkg.name}" package successfully`,
 	);
 
-	await mkdir(intuitaDirectoryPath, { recursive: true });
-
 	const newCodemodPath = createHash('ripemd160')
 		.update(pkg.name)
 		.digest('base64url');
 	const syncDirectory = join(intuitaDirectoryPath, newCodemodPath);
+	await mkdir(syncDirectory, { recursive: true });
 
 	try {
 		await writeFile(join(syncDirectory, 'config.json'), configJsonData);
 		await writeFile(join(syncDirectory, 'index.cjs'), indexCjsData);
 		if (descriptionMdData) {
 			await writeFile(
-				join(syncDirectory, 'index.cjs'),
+				join(syncDirectory, 'description.md'),
 				descriptionMdData,
 			);
 		}
