@@ -27,10 +27,7 @@ import {
 	AppInsightsTelemetryService,
 	NoTelemetryService,
 } from './telemetryService.js';
-import {
-	APP_INSIGHTS_INSTRUMENTATION_STRING,
-	DEFAULT_INPUT_DIRECTORY_PATH,
-} from './constants.js';
+import { APP_INSIGHTS_INSTRUMENTATION_STRING } from './constants.js';
 import { readFile } from 'node:fs/promises';
 import { handleLoginCliCommand } from './handleLoginCliCommand.js';
 import { handlePublishCliCommand } from './handlePublishCliCommand.js';
@@ -277,17 +274,8 @@ export const executeMainThread = async () => {
 	if (String(argv._) === 'publish') {
 		const printer = new Printer(argv.useJson);
 
-		const codemodDownloader = new CodemodDownloader(
-			printer,
-			join(homedir(), '.intuita'),
-			false,
-			fileDownloadService,
-			tarService,
-		);
-
 		try {
 			await handlePublishCliCommand(
-				codemodDownloader,
 				printer,
 				argv.sourcePath ?? argv.source ?? process.cwd(),
 			);
