@@ -19,9 +19,7 @@ const getToken = (): Promise<string> => {
 	const tokenTxtPath = join(intuitaDirectoryPath, 'token.txt');
 
 	try {
-		return fs.promises.readFile(tokenTxtPath, {
-			encoding: 'utf-8',
-		});
+		return fs.promises.readFile(tokenTxtPath, 'utf-8');
 	} catch (error) {
 		throw new Error(
 			`Log in first using the 'intuita login' command to publish codemods.`,

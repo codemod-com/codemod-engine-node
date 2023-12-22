@@ -39,7 +39,7 @@ export const handleLoginCliCommand = async (
 
 	const tokenTxtPath = join(homedir(), '.intuita', 'token.txt');
 
-	await writeFile(tokenTxtPath, token);
+	await writeFile(tokenTxtPath, token, 'utf-8');
 
 	printer.printConsoleMessage(
 		'info',

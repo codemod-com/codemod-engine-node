@@ -39,3 +39,10 @@ export const publish = async (
 		timeout: 10000,
 	});
 };
+
+export const revokeCLIToken = async (token: string): Promise<void> => {
+	await Axios.delete(`https://telemetry.intuita.io/revokeToken/`, {
+		headers: { [X_INTUITA_ACCESS_TOKEN]: token },
+		timeout: 10000,
+	});
+};
