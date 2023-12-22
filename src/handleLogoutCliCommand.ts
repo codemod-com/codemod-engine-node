@@ -7,7 +7,8 @@ import type { PrinterBlueprint } from './printer.js';
 export const handleLogoutCliCommand = async (printer: PrinterBlueprint) => {
 	const tokenTxtPath = join(homedir(), '.intuita', 'token.txt');
 
-	let token: string | null = null;
+	let token: string;
+
 	try {
 		token = await readFile(tokenTxtPath, 'utf-8');
 	} catch (err) {
@@ -15,17 +16,13 @@ export const handleLogoutCliCommand = async (printer: PrinterBlueprint) => {
 		return;
 	}
 
-	if (token !== null) {
-		try {
-			await revokeCLIToken(token.trim());
-		} catch (err) {
-			// Don't inform user if something went wrong, just delete the token file.
-		}
-
-		await unlink(tokenTxtPath);
-		printer.printConsoleMessage(
-			'info',
-			'You have successfully logged out.',
-		);
+	try {
+		await revokeCLIToken(token.trim());
+	} catch (err) {
+		// Don't inform user if something went wrong, just delete the token file.
 	}
+
+	await unlink(tokenTxtPath);
+
+	printer.printConsoleMessage('info', 'You have successfully logged out.');
 };
