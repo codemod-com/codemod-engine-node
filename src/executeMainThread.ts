@@ -31,6 +31,7 @@ import { APP_INSIGHTS_INSTRUMENTATION_STRING } from './constants.js';
 import { readFile } from 'node:fs/promises';
 import { handleLoginCliCommand } from './handleLoginCliCommand.js';
 import { handlePublishCliCommand } from './handlePublishCliCommand.js';
+import { handleLogoutCliCommand } from './handleLogoutCliCommand.js';
 
 // the build script contains the version
 declare const __INTUITA_CLI_VERSION__: string;
@@ -96,6 +97,7 @@ export const executeMainThread = async () => {
 					description: 'token required to sign in to the Intuita CLI',
 				}),
 		)
+		.command('logout', 'logs out', (y) => buildUseJsonOption(y))
 		.command('publish', 'publish the codemod to Intuita Registry', (y) =>
 			buildUseJsonOption(y),
 		)
@@ -255,6 +257,27 @@ export const executeMainThread = async () => {
 
 		try {
 			await handleLoginCliCommand(printer, token);
+		} catch (error) {
+			if (!(error instanceof Error)) {
+				return;
+			}
+
+			printer.printOperationMessage({
+				kind: 'error',
+				message: error.message,
+			});
+		}
+
+		exit();
+
+		return;
+	}
+
+	if (String(argv._) === 'logout') {
+		const printer = new Printer(argv.useJson);
+
+		try {
+			await handleLogoutCliCommand(printer);
 		} catch (error) {
 			if (!(error instanceof Error)) {
 				return;
