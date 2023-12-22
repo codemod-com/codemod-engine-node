@@ -4,7 +4,6 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { object, string, parse } from 'valibot';
 import { publish, validateAccessToken } from './apis.js';
-import { CodemodDownloader } from './downloadCodemod.js';
 import FormData from 'form-data';
 import { mkdir, writeFile } from 'fs/promises';
 import { createHash } from 'crypto';
@@ -15,7 +14,6 @@ const packageJsonSchema = object({
 });
 
 export const handlePublishCliCommand = async (
-	codemodDownloader: CodemodDownloader,
 	printer: PrinterBlueprint,
 	sourcePath: string,
 ) => {

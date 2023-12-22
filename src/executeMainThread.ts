@@ -274,17 +274,8 @@ export const executeMainThread = async () => {
 	if (String(argv._) === 'publish') {
 		const printer = new Printer(argv.useJson);
 
-		const codemodDownloader = new CodemodDownloader(
-			printer,
-			join(homedir(), '.intuita'),
-			false,
-			fileDownloadService,
-			tarService,
-		);
-
 		try {
 			await handlePublishCliCommand(
-				codemodDownloader,
 				printer,
 				argv.sourcePath ?? argv.source ?? process.cwd(),
 			);
