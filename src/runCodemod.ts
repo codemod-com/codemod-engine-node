@@ -379,10 +379,6 @@ export const runCodemod = async (
 
 		const workerThreadManager = new WorkerThreadManager(
 			flowSettings.threadCount,
-			codemod.indexPath,
-			engine,
-			transpiledSource,
-			flowSettings.usePrettier,
 			async (path) => {
 				const data = await fileSystem.promises.readFile(path, {
 					encoding: 'utf8',
@@ -411,6 +407,10 @@ export const runCodemod = async (
 			},
 			onCommand,
 			pathGenerator,
+			codemod.indexPath,
+			engine,
+			transpiledSource,
+			flowSettings.usePrettier,
 			safeArgumentRecord,
 		);
 	});

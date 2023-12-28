@@ -3,23 +3,20 @@ import { argumentRecordSchema } from './schemata/argumentRecordSchema.js';
 
 const mainThreadMessageSchema = S.union(
 	S.struct({
+		kind: S.literal('initialization'),
+		codemodPath: S.string,
+		codemodSource: S.string,
+		codemodEngine: S.union(S.literal('jscodeshift'), S.literal('ts-morph')),
+		formatWithPrettier: S.boolean,
+		safeArgumentRecord: S.tuple(argumentRecordSchema),
+	}),
+	S.struct({
 		kind: S.literal('exit'),
 	}),
 	S.struct({
 		kind: S.literal('runCodemod'),
-		codemodPath: S.string,
-		codemodSource: S.string,
-		codemodEngine: S.union(
-			S.literal('jscodeshift'),
-			S.literal('repomod-engine'),
-			S.literal('filemod'),
-			S.literal('ts-morph'),
-		),
 		path: S.string,
 		data: S.string,
-		formatWithPrettier: S.boolean,
-		// TODO check that
-		safeArgumentRecord: S.tuple(argumentRecordSchema),
 	}),
 );
 

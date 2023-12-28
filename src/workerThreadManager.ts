@@ -23,10 +23,6 @@ export class WorkerThreadManager {
 
 	public constructor(
 		private readonly __workerCount: number,
-		private readonly __codemodPath: string,
-		private readonly __codemodEngine: 'ts-morph' | 'jscodeshift',
-		private readonly __codemodSource: string,
-		private readonly __formatWithPrettier: boolean,
 		private readonly __getData: (path: string) => Promise<string>,
 		private readonly __onPrinterMessage: (
 			message:
@@ -37,7 +33,11 @@ export class WorkerThreadManager {
 			command: FormattedFileCommand,
 		) => Promise<void>,
 		private readonly __pathGenerator: AsyncGenerator<string, void, void>,
-		private readonly __safeArgumentRecord: SafeArgumentRecord,
+		codemodPath: string,
+		codemodEngine: 'ts-morph' | 'jscodeshift',
+		codemodSource: string,
+		formatWithPrettier: boolean,
+		safeArgumentRecord: SafeArgumentRecord,
 	) {
 		for (let i = 0; i < __workerCount; ++i) {
 			this.__idleWorkerIds.push(i);
@@ -48,6 +48,15 @@ export class WorkerThreadManager {
 			const worker = new Worker(filename);
 
 			worker.on('message', this.__buildOnWorkerMessage(i));
+
+			worker.postMessage({
+				kind: 'initialization',
+				codemodPath,
+				codemodEngine,
+				codemodSource,
+				formatWithPrettier,
+				safeArgumentRecord,
+			} satisfies MainThreadMessage);
 
 			this.__workers.push(worker);
 		}
@@ -68,12 +77,9 @@ export class WorkerThreadManager {
 					// hanging promise on purpose
 					this.__workers[i].terminate();
 
-					const filename =
-						typeof global.__filename === 'string'
-							? global.__filename
-							: typeof __filename === 'string'
-							? __filename
-							: './src/index.ts';
+					const filename = process.env.TEST
+						? './dist/index.cjs'
+						: __filename;
 
 					const worker = new Worker(filename);
 					worker.on('message', this.__buildOnWorkerMessage(i));
@@ -154,11 +160,6 @@ export class WorkerThreadManager {
 			kind: 'runCodemod',
 			path: filePath,
 			data,
-			codemodPath: this.__codemodPath,
-			codemodSource: this.__codemodSource,
-			codemodEngine: this.__codemodEngine,
-			formatWithPrettier: this.__formatWithPrettier,
-			safeArgumentRecord: this.__safeArgumentRecord,
 		} satisfies MainThreadMessage);
 
 		this.__workerTimestamps[id] = Date.now();
