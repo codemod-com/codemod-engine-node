@@ -52,8 +52,6 @@ const messageHandler = async (m: unknown) => {
 					message.data,
 				);
 
-				console.log('newData', newData);
-
 				if (newData === null) {
 					fileCommands = [];
 				} else {
