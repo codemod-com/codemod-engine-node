@@ -111,7 +111,7 @@ export const getQuickJsContext = async (
 	context.setProp(
 		context.global,
 		'__INTUITA_ARGUMENTS__',
-		context.newString(JSON.stringify(safeArgumentRecord)),
+		context.newString(JSON.stringify(safeArgumentRecord[0])),
 	);
 
 	const execute = (path: string, data: string): Promise<string | null> => {
