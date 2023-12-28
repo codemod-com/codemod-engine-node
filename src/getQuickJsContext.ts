@@ -44,7 +44,7 @@ const result = transform(file, api);
 __intuita_callback__(result);
 `;
 
-const getQuickJsContext = async (codemodSource: string) => {
+export const getQuickJsContext = async (codemodSource: string) => {
 	const qjs = await getQuickJS();
 
 	const runtime = qjs.newRuntime();
@@ -86,6 +86,7 @@ const getQuickJsContext = async (codemodSource: string) => {
 	context.setProp(context.global, '__intuita_callback__', callbackHandle);
 
 	const execute = (path: string, data: string) => {
+		// TODO ensure no one else runs it
 		context.setProp(
 			context.global,
 			'__INTUITA__PATH__',
@@ -99,6 +100,7 @@ const getQuickJsContext = async (codemodSource: string) => {
 		);
 
 		return new Promise((resolve, reject) => {
+			// TODO timeout
 			eventEmitter.once('callback', (data) => {
 				resolve(data);
 			});

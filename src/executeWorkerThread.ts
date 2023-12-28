@@ -8,6 +8,7 @@ import { runJscodeshiftCodemod } from './runJscodeshiftCodemod.js';
 import { runTsMorphCodemod } from './runTsMorphCodemod.js';
 import { buildFormattedFileCommands } from './fileCommands.js';
 import { ConsoleKind } from './schemata/consoleKindSchema.js';
+import { getQuickJsContext } from './getQuickJsContext.js';
 
 class PathAwareError extends Error {
 	constructor(public readonly path: string, message?: string | undefined) {
@@ -27,8 +28,7 @@ let initializationMessage:
 	| (MainThreadMessage & { kind: 'initialization' })
 	| null = null;
 
-const map = new Map<string, string>();
-const fileCommands: string[] = [];
+let context: Awaited<ReturnType<typeof getQuickJsContext>> | null = null;
 
 const messageHandler = async (m: unknown) => {
 	try {
@@ -37,11 +37,10 @@ const messageHandler = async (m: unknown) => {
 		if (message.kind === 'initialization') {
 			initializationMessage = message;
 
-			const context = await getQuickJsContext(
+			context = await getQuickJsContext(
 				initializationMessage.codemodSource,
-				(path) => map.get(path) ?? '',
-				(path, data) => {},
 			);
+
 			return;
 		}
 
@@ -50,29 +49,32 @@ const messageHandler = async (m: unknown) => {
 			return;
 		}
 
-		if (initializationMessage === null) {
+		if (initializationMessage === null || context === null) {
 			throw new Error();
 		}
 
 		try {
-			const fileCommands =
-				initializationMessage.codemodEngine === 'jscodeshift'
-					? runJscodeshiftCodemod(
-							initializationMessage.codemodSource,
-							message.path,
-							message.data,
-							initializationMessage.formatWithPrettier,
-							initializationMessage.safeArgumentRecord,
-							consoleCallback,
-					  )
-					: runTsMorphCodemod(
-							initializationMessage.codemodSource,
-							message.path,
-							message.data,
-							initializationMessage.formatWithPrettier,
-							initializationMessage.safeArgumentRecord,
-							consoleCallback,
-					  );
+			let fileCommands;
+
+			if (initializationMessage.codemodEngine === 'jscodeshift') {
+				fileCommands = runJscodeshiftCodemod(
+					initializationMessage.codemodSource,
+					message.path,
+					message.data,
+					initializationMessage.formatWithPrettier,
+					initializationMessage.safeArgumentRecord,
+					consoleCallback,
+				);
+			} else {
+				fileCommands = runTsMorphCodemod(
+					initializationMessage.codemodSource,
+					message.path,
+					message.data,
+					initializationMessage.formatWithPrettier,
+					initializationMessage.safeArgumentRecord,
+					consoleCallback,
+				);
+			}
 
 			const commands = await buildFormattedFileCommands(fileCommands);
 
