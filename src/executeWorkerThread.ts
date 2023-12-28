@@ -73,6 +73,10 @@ const getQuickJsContext = async (
 	const callbackHandle = context.newFunction(
 		'__intuita_callback__',
 		(pathHandle, sourceHandle) => {
+			if (context.typeof(sourceHandle) !== 'string') {
+				return;
+			}
+
 			const path = context.getString(pathHandle);
 			const source = context.getString(sourceHandle);
 
@@ -104,12 +108,21 @@ let initializationMessage:
 	| (MainThreadMessage & { kind: 'initialization' })
 	| null = null;
 
+const map = new Map<string, string>();
+const fileCommands: string[] = [];
+
 const messageHandler = async (m: unknown) => {
 	try {
 		const message = decodeMainThreadMessage(m);
 
 		if (message.kind === 'initialization') {
 			initializationMessage = message;
+
+			const context = await getQuickJsContext(
+				initializationMessage.codemodSource,
+				(path) => map.get(path) ?? '',
+				(path, data) => {},
+			);
 			return;
 		}
 
