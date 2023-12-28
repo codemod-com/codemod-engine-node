@@ -1,8 +1,8 @@
-import { parentPort } from 'node:worker_threads';
+import { parentPort, workerData } from 'node:worker_threads';
 import { type WorkerThreadMessage } from './workerThreadMessages.js';
 import {
-	type MainThreadMessage,
 	decodeMainThreadMessage,
+	decodeWorkerDataSchema,
 } from './mainThreadMessages.js';
 import { runTsMorphCodemod } from './runTsMorphCodemod.js';
 import { FileCommand, buildFormattedFileCommands } from './fileCommands.js';
@@ -23,9 +23,7 @@ const consoleCallback = (consoleKind: ConsoleKind, message: string): void => {
 	} satisfies WorkerThreadMessage);
 };
 
-let initializationMessage:
-	| (MainThreadMessage & { kind: 'initialization' })
-	| null = null;
+const parsedWorkerData = decodeWorkerDataSchema(workerData);
 
 let context: Awaited<ReturnType<typeof getQuickJsContext>> | null = null;
 
@@ -33,31 +31,18 @@ const messageHandler = async (m: unknown) => {
 	try {
 		const message = decodeMainThreadMessage(m);
 
-		if (message.kind === 'initialization') {
-			console.log('HERE');
-			initializationMessage = message;
-
-			console.log('HERE2333');
-
-			return;
-		}
-
 		if (message.kind === 'exit') {
 			parentPort?.off('message', messageHandler);
 			return;
 		}
 
-		if (initializationMessage === null) {
-			throw new Error('No initialization message');
-		}
-
 		try {
 			let fileCommands: ReadonlyArray<FileCommand>;
 
-			if (initializationMessage.codemodEngine === 'jscodeshift') {
+			if (parsedWorkerData.codemodEngine === 'jscodeshift') {
 				if (context === null) {
 					context = await getQuickJsContext(
-						initializationMessage.codemodSource,
+						parsedWorkerData.codemodSource,
 					);
 				}
 
@@ -78,17 +63,17 @@ const messageHandler = async (m: unknown) => {
 							oldData: message.data,
 							newData,
 							formatWithPrettier:
-								initializationMessage.formatWithPrettier,
+								parsedWorkerData.formatWithPrettier,
 						},
 					];
 				}
 			} else {
 				fileCommands = runTsMorphCodemod(
-					initializationMessage.codemodSource,
+					parsedWorkerData.codemodSource,
 					message.path,
 					message.data,
-					initializationMessage.formatWithPrettier,
-					initializationMessage.safeArgumentRecord,
+					parsedWorkerData.formatWithPrettier,
+					parsedWorkerData.safeArgumentRecord,
 					consoleCallback,
 				);
 			}
@@ -119,10 +104,4 @@ const messageHandler = async (m: unknown) => {
 
 export const executeWorkerThread = () => {
 	parentPort?.on('message', messageHandler);
-
-	parentPort?.postMessage({
-		kind: 'messageHandlerRegistered',
-	} satisfies WorkerThreadMessage);
-
-	console.error('HERE');
 };

@@ -1,5 +1,5 @@
 import { Worker } from 'node:worker_threads';
-import { MainThreadMessage } from './mainThreadMessages.js';
+import { MainThreadMessage, WorkerData } from './mainThreadMessages.js';
 import { OperationMessage } from './messages.js';
 import {
 	WorkerThreadMessage,
@@ -39,14 +39,13 @@ export class WorkerThreadManager {
 		formatWithPrettier: boolean,
 		safeArgumentRecord: SafeArgumentRecord,
 	) {
-		const initializationMessage = {
-			kind: 'initialization',
+		const workerData: WorkerData = {
 			codemodPath,
 			codemodEngine,
 			codemodSource,
 			formatWithPrettier,
 			safeArgumentRecord,
-		} satisfies MainThreadMessage;
+		};
 
 		for (let i = 0; i < __workerCount; ++i) {
 			this.__idleWorkerIds.push(i);
@@ -55,12 +54,9 @@ export class WorkerThreadManager {
 			const filename = process.env.TEST ? './dist/index.cjs' : __filename;
 			console.log('TEST', process.env.TEST, filename);
 
-			const worker = new Worker(filename);
+			const worker = new Worker(filename, { workerData });
 
-			worker.on(
-				'message',
-				this.__buildOnWorkerMessage(worker, i, initializationMessage),
-			);
+			worker.on('message', this.__buildOnWorkerMessage(i));
 
 			this.__workers.push(worker);
 		}
@@ -81,21 +77,12 @@ export class WorkerThreadManager {
 					// hanging promise on purpose
 					this.__workers[i].terminate();
 
-					console.log('TEST', process.env.TEST);
-
 					const filename = process.env.TEST
 						? './dist/index.cjs'
 						: __filename;
 
-					const worker = new Worker(filename);
-					worker.on(
-						'message',
-						this.__buildOnWorkerMessage(
-							worker,
-							i,
-							initializationMessage,
-						),
-					);
+					const worker = new Worker(filename, { workerData });
+					worker.on('message', this.__buildOnWorkerMessage(i));
 
 					this.__workers[i] = worker;
 
@@ -192,20 +179,9 @@ export class WorkerThreadManager {
 		});
 	}
 
-	private __buildOnWorkerMessage(
-		worker: Worker,
-		i: number,
-		initializationMessage: MainThreadMessage,
-	) {
+	private __buildOnWorkerMessage(i: number) {
 		return async (m: unknown): Promise<void> => {
 			const workerThreadMessage = decodeWorkerThreadMessage(m);
-
-			if (workerThreadMessage.kind === 'messageHandlerRegistered') {
-				console.log('HERE111');
-				worker.postMessage(
-					initializationMessage satisfies MainThreadMessage,
-				);
-			}
 
 			if (workerThreadMessage.kind === 'console') {
 				this.__onPrinterMessage(workerThreadMessage);
