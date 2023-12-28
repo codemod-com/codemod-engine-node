@@ -1,5 +1,6 @@
 import { getQuickJS } from 'quickjs-emscripten';
 import jscodeshift from '../dist/jscodeshift.txt';
+import EventEmitter from 'node:events';
 
 const requireFunction = (module: unknown) => {
 	if (typeof module !== 'string') {
@@ -27,11 +28,23 @@ const requireFunction = (module: unknown) => {
 	throw new Error('Requested ' + module);
 };
 
-const getQuickJsContext = async (
-	codemodSource: string,
-	getData: (path: string) => string,
-	callback: (path: string, data: string) => void,
-) => {
+const CODE = `
+import { buildApi } from '__intuita__jscodeshift__';
+import transform from '__intuita_codemod__';
+    
+const file = {
+    path: __INTUITA__PATH__,
+    source: __INTUITA__DATA__,
+}
+
+const api = buildApi('tsx');
+
+const result = transform(file, api);
+
+__intuita_callback__(result);
+`;
+
+const getQuickJsContext = async (codemodSource: string) => {
 	const qjs = await getQuickJS();
 
 	const runtime = qjs.newRuntime();
@@ -54,27 +67,22 @@ const getQuickJsContext = async (
 
 	const context = runtime.newContext();
 
-	const getDataFunction = context.newFunction('getData', (pathHandle) => {
-		const path = context.getString(pathHandle);
-		const data = getData(path);
-		return context.newString(data);
-	});
+	const eventEmitter = new EventEmitter();
 
 	const callbackHandle = context.newFunction(
 		'__intuita_callback__',
-		(pathHandle, sourceHandle) => {
-			if (context.typeof(sourceHandle) !== 'string') {
+		(dataHandle) => {
+			if (context.typeof(dataHandle) !== 'string') {
+				eventEmitter.emit('callback', null);
 				return;
 			}
 
-			const path = context.getString(pathHandle);
-			const source = context.getString(sourceHandle);
+			const data = context.getString(dataHandle);
 
-			callback(path, source);
+			eventEmitter.emit('callback', data);
 		},
 	);
 
-	context.setProp(context.global, '__intuita_get_data__', getDataFunction);
 	context.setProp(context.global, '__intuita_callback__', callbackHandle);
 
 	const execute = (path: string, data: string) => {
@@ -84,23 +92,25 @@ const getQuickJsContext = async (
 			context.newString(path),
 		);
 
-		const result = context.evalCode(`
-            import { buildApi } from '__intuita__jscodeshift__';
-            import transform from '__intuita_codemod__';
-        
-            const source = __intuita_get_data__(__INTUITA__PATH__);
-        
-            const file = {
-                path: __INTUITA__PATH__,
-                source,
-            }
-        
-            const api = buildApi('tsx');
-        
-            const result = transform(file, api);
-        
-            __intuita_callback__(__INTUITA__PATH__, result);
-        `);
+		context.setProp(
+			context.global,
+			'__INTUITA__DATA__',
+			context.newString(data),
+		);
+
+		return new Promise((resolve, reject) => {
+			eventEmitter.once('callback', (data) => {
+				resolve(data);
+			});
+
+			try {
+				const result = context.evalCode(CODE);
+
+				context.unwrapResult(result).dispose();
+			} catch (error) {
+				reject(error);
+			}
+		});
 	};
 
 	return {
