@@ -39,6 +39,15 @@ export class WorkerThreadManager {
 		formatWithPrettier: boolean,
 		safeArgumentRecord: SafeArgumentRecord,
 	) {
+		const initializationMessage = {
+			kind: 'initialization',
+			codemodPath,
+			codemodEngine,
+			codemodSource,
+			formatWithPrettier,
+			safeArgumentRecord,
+		} satisfies MainThreadMessage;
+
 		for (let i = 0; i < __workerCount; ++i) {
 			this.__idleWorkerIds.push(i);
 			this.__workerTimestamps.push(Date.now());
@@ -48,16 +57,10 @@ export class WorkerThreadManager {
 
 			const worker = new Worker(filename);
 
-			worker.on('message', this.__buildOnWorkerMessage(i));
-
-			worker.postMessage({
-				kind: 'initialization',
-				codemodPath,
-				codemodEngine,
-				codemodSource,
-				formatWithPrettier,
-				safeArgumentRecord,
-			} satisfies MainThreadMessage);
+			worker.on(
+				'message',
+				this.__buildOnWorkerMessage(worker, i, initializationMessage),
+			);
 
 			this.__workers.push(worker);
 		}
@@ -85,7 +88,14 @@ export class WorkerThreadManager {
 						: __filename;
 
 					const worker = new Worker(filename);
-					worker.on('message', this.__buildOnWorkerMessage(i));
+					worker.on(
+						'message',
+						this.__buildOnWorkerMessage(
+							worker,
+							i,
+							initializationMessage,
+						),
+					);
 
 					this.__workers[i] = worker;
 
@@ -182,9 +192,20 @@ export class WorkerThreadManager {
 		});
 	}
 
-	private __buildOnWorkerMessage(i: number) {
+	private __buildOnWorkerMessage(
+		worker: Worker,
+		i: number,
+		initializationMessage: MainThreadMessage,
+	) {
 		return async (m: unknown): Promise<void> => {
 			const workerThreadMessage = decodeWorkerThreadMessage(m);
+
+			if (workerThreadMessage.kind === 'messageHandlerRegistered') {
+				console.log('HERE111');
+				worker.postMessage(
+					initializationMessage satisfies MainThreadMessage,
+				);
+			}
 
 			if (workerThreadMessage.kind === 'console') {
 				this.__onPrinterMessage(workerThreadMessage);

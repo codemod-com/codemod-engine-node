@@ -3,6 +3,9 @@ import { consoleKindSchema } from './schemata/consoleKindSchema.js';
 
 const workerThreadMessageSchema = S.union(
 	S.struct({
+		kind: S.literal('messageHandlerRegistered'),
+	}),
+	S.struct({
 		kind: S.literal('commands'),
 		commands: S.unknown,
 	}),

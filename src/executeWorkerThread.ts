@@ -34,11 +34,14 @@ const messageHandler = async (m: unknown) => {
 		const message = decodeMainThreadMessage(m);
 
 		if (message.kind === 'initialization') {
+			console.log('HERE');
 			initializationMessage = message;
 
 			context = await getQuickJsContext(
 				initializationMessage.codemodSource,
 			);
+
+			console.log('HERE2333');
 
 			return;
 		}
@@ -49,7 +52,11 @@ const messageHandler = async (m: unknown) => {
 		}
 
 		if (initializationMessage === null || context === null) {
-			throw new Error();
+			throw new Error(
+				'no context or initialization message' +
+					Boolean(initializationMessage) +
+					Boolean(context),
+			);
 		}
 
 		try {
@@ -100,7 +107,7 @@ const messageHandler = async (m: unknown) => {
 			);
 		}
 	} catch (error) {
-		console.log(error);
+		console.error(error);
 		parentPort?.postMessage({
 			kind: 'error',
 			message: error instanceof Error ? error.message : String(error),
@@ -111,4 +118,10 @@ const messageHandler = async (m: unknown) => {
 
 export const executeWorkerThread = () => {
 	parentPort?.on('message', messageHandler);
+
+	parentPort?.postMessage({
+		kind: 'messageHandlerRegistered',
+	} satisfies WorkerThreadMessage);
+
+	console.error('HERE');
 };
