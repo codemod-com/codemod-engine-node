@@ -1,6 +1,7 @@
 import { getQuickJS } from 'quickjs-emscripten';
 import jscodeshift from '../dist/jscodeshift.txt';
 import EventEmitter from 'node:events';
+import { SafeArgumentRecord } from './safeArgumentRecord.js';
 
 const requireFunction = (module: unknown) => {
 	if (typeof module !== 'string') {
@@ -39,12 +40,17 @@ const file = {
 
 const api = buildApi('tsx');
 
-const result = __intuita_transform__(file, api);
+const options = JSON.parse(__INTUITA_ARGUMENTS__);
+
+const result = __intuita_transform__(file, api, options);
 
 __intuita_callback__(result);
 `;
 
-export const getQuickJsContext = async (codemodSource: string) => {
+export const getQuickJsContext = async (
+	codemodSource: string,
+	safeArgumentRecord: SafeArgumentRecord,
+) => {
 	const qjs = await getQuickJS();
 
 	const runtime = qjs.newRuntime();
@@ -102,6 +108,11 @@ export const getQuickJsContext = async (codemodSource: string) => {
 	);
 
 	context.setProp(context.global, '__intuita_callback__', callbackHandle);
+	context.setProp(
+		context.global,
+		'__INTUITA_ARGUMENTS__',
+		context.newString(JSON.stringify(safeArgumentRecord)),
+	);
 
 	const execute = (path: string, data: string): Promise<string | null> => {
 		// TODO ensure no one else runs it

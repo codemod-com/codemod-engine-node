@@ -43,6 +43,7 @@ const messageHandler = async (m: unknown) => {
 				if (context === null) {
 					context = await getQuickJsContext(
 						parsedWorkerData.codemodSource,
+						parsedWorkerData.safeArgumentRecord,
 					);
 				}
 
