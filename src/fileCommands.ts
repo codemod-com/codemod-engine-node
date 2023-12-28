@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { join, extname, dirname } from 'node:path';
-import { Options } from 'prettier';
+import { type Options } from 'prettier';
 import { IFs } from 'memfs';
 import { filterNeitherNullNorUndefined } from './filterNeitherNullNorUndefined.js';
 import { OperationMessage } from './messages.js';
