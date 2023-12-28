@@ -37,10 +37,6 @@ const messageHandler = async (m: unknown) => {
 			console.log('HERE');
 			initializationMessage = message;
 
-			context = await getQuickJsContext(
-				initializationMessage.codemodSource,
-			);
-
 			console.log('HERE2333');
 
 			return;
@@ -51,7 +47,7 @@ const messageHandler = async (m: unknown) => {
 			return;
 		}
 
-		if (initializationMessage === null || context === null) {
+		if (initializationMessage === null) {
 			throw new Error(
 				'no context or initialization message' +
 					Boolean(initializationMessage) +
@@ -64,6 +60,12 @@ const messageHandler = async (m: unknown) => {
 
 			if (initializationMessage.codemodEngine === 'jscodeshift') {
 				console.log('HERE');
+				if (context === null) {
+					context = await getQuickJsContext(
+						initializationMessage.codemodSource,
+					);
+				}
+
 				const newData = await context.execute(
 					message.path,
 					message.data,

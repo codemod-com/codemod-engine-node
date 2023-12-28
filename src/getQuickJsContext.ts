@@ -30,7 +30,7 @@ const requireFunction = (module: unknown) => {
 
 const CODE = `
 import { buildApi } from '__intuita__jscodeshift__';
-import transform from '__intuita_codemod__';
+import { __intuita_transform__ } from '__intuita_codemod__';
     
 const file = {
     path: __INTUITA__PATH__,
@@ -39,7 +39,7 @@ const file = {
 
 const api = buildApi('tsx');
 
-const result = transform(file, api);
+const result = __intuita_transform__(file, api);
 
 __intuita_callback__(result);
 `;
@@ -67,14 +67,14 @@ export const getQuickJsContext = async (codemodSource: string) => {
 
                 ${codemodSource}
 
-                const transform = typeof module.exports === 'function'
+                const __intuita_transform__ = typeof module.exports === 'function'
                     ? module.exports
                     : module.exports.esModule &&
                     typeof module.exports.default === 'function'
                     ? module.exports.default
                     : null;
 
-                export default transform;
+                export { __intuita_transform__ };
                 `;
 		}
 
