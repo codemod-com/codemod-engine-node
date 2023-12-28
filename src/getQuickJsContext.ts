@@ -65,14 +65,16 @@ export const getQuickJsContext = async (codemodSource: string) => {
                     exports,
                 };
 
-                module.exports = () => 'test11111111111';
+                ${codemodSource}
 
-                const __intuita_transform__ = typeof module.exports === 'function'
-                    ? module.exports
-                    : module.exports.esModule &&
-                    typeof module.exports.default === 'function'
-                    ? module.exports.default
-                    : null;
+                // const __intuita_transform__ = typeof module.exports === 'function'
+                //     ? module.exports
+                //     : module.exports.esModule &&
+                //     typeof module.exports.default === 'function'
+                //     ? module.exports.default
+                //     : null;
+
+                const __intuita_transform__ = exports.default;
 
                 export { __intuita_transform__ };
                 `;

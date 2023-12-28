@@ -39,6 +39,8 @@ export class WorkerThreadManager {
 		formatWithPrettier: boolean,
 		safeArgumentRecord: SafeArgumentRecord,
 	) {
+		console.log(codemodSource);
+
 		const workerData: WorkerData = {
 			codemodPath,
 			codemodEngine,
