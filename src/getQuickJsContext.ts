@@ -65,7 +65,7 @@ export const getQuickJsContext = async (codemodSource: string) => {
                     exports,
                 };
 
-                ${codemodSource}
+                module.exports = () => 'test11111111111';
 
                 const __intuita_transform__ = typeof module.exports === 'function'
                     ? module.exports

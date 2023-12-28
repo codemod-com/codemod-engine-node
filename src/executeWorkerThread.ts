@@ -48,18 +48,13 @@ const messageHandler = async (m: unknown) => {
 		}
 
 		if (initializationMessage === null) {
-			throw new Error(
-				'no context or initialization message' +
-					Boolean(initializationMessage) +
-					Boolean(context),
-			);
+			throw new Error('No initialization message');
 		}
 
 		try {
 			let fileCommands: ReadonlyArray<FileCommand>;
 
 			if (initializationMessage.codemodEngine === 'jscodeshift') {
-				console.log('HERE');
 				if (context === null) {
 					context = await getQuickJsContext(
 						initializationMessage.codemodSource,
@@ -70,6 +65,8 @@ const messageHandler = async (m: unknown) => {
 					message.path,
 					message.data,
 				);
+
+				console.log('newData', newData);
 
 				if (newData === null) {
 					fileCommands = [];
@@ -97,6 +94,8 @@ const messageHandler = async (m: unknown) => {
 			}
 
 			const commands = await buildFormattedFileCommands(fileCommands);
+
+			console.log('commands', commands);
 
 			parentPort?.postMessage({
 				kind: 'commands',
