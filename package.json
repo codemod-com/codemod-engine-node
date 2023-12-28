@@ -48,6 +48,7 @@
 		"micromark-extension-mdxjs": "^2.0.0",
 		"minimatch": "^9.0.3",
 		"prettier": "^2.8.7",
+		"quickjs-emscripten": "^0.25.1",
 		"rehype-parse": "^8.0.4",
 		"tar": "^6.1.15",
 		"terminal-link": "^3.0.0",

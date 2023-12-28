@@ -71,6 +71,9 @@ dependencies:
   prettier:
     specifier: ^2.8.7
     version: 2.8.7
+  quickjs-emscripten:
+    specifier: ^0.25.1
+    version: 0.25.1
   rehype-parse:
     specifier: ^8.0.4
     version: 8.0.4
@@ -2043,6 +2046,34 @@ packages:
     dependencies:
       '@sinclair/typebox': 0.27.8
     dev: true
+
+  /@jitl/quickjs-ffi-types@0.25.1:
+    resolution: {integrity: sha512-m3HqjAsG3DbCwqelRMQYyPU2uGF4f+CAmEn9VhhbK6YXmsUCf0mrULmr4wuYt75xx5NIDcBFvjLJ1303pwGoyg==}
+    dev: false
+
+  /@jitl/quickjs-wasmfile-debug-asyncify@0.25.1:
+    resolution: {integrity: sha512-0+p3C8MxRrF9/B1saRe/QSxdPGPSORuNRqOIL1eYyDNllB3E32+StUjtO+ut3YwhktQEgqaacc/pmHYr548cjg==}
+    dependencies:
+      '@jitl/quickjs-ffi-types': 0.25.1
+    dev: false
+
+  /@jitl/quickjs-wasmfile-debug-sync@0.25.1:
+    resolution: {integrity: sha512-Xi8m5V2rGikRAW08kX/9FQOHtfBIzLLuRVKFDSeJ30qqh8aY07wYvc2nqfhOOLnLYMzZkEv3iyIPN/HHJ6ADkw==}
+    dependencies:
+      '@jitl/quickjs-ffi-types': 0.25.1
+    dev: false
+
+  /@jitl/quickjs-wasmfile-release-asyncify@0.25.1:
+    resolution: {integrity: sha512-0jexwropCT11renRczAY/w+7ZMn+m3NEfXRjVeg6OMRk1volHG4zlhcxZQWhF5Ts0yphHpoTPM73JI9Q8/lohQ==}
+    dependencies:
+      '@jitl/quickjs-ffi-types': 0.25.1
+    dev: false
+
+  /@jitl/quickjs-wasmfile-release-sync@0.25.1:
+    resolution: {integrity: sha512-dYn7iZWR9Z1awCy8GQiX0dfnBpbiRFU5UUlLAyDk4xyku7URAKb3fhQOESY4h6s0kRRz367KaDHr25nRFHmOtA==}
+    dependencies:
+      '@jitl/quickjs-ffi-types': 0.25.1
+    dev: false
 
   /@jridgewell/gen-mapping@0.3.3:
     resolution: {integrity: sha512-HLhSWOLRi875zjjMG/r+Nv0oCW8umGb0BgEhyX3dDX3egwZtB8PqLnjz3yedt8R5StBrzcg4aBpnh8UA9D1BoQ==}
@@ -4971,6 +5002,23 @@ packages:
 
   /queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
+
+  /quickjs-emscripten-core@0.25.1:
+    resolution: {integrity: sha512-kUY9gPdxrLA4c9Erc69RgXL7ZZ20zti2MYK0YL/ADIzRK88oidZhuzO0ybf4VPis7WCO7cVsMfR/FYVviI2iaA==}
+    dependencies:
+      '@jitl/quickjs-ffi-types': 0.25.1
+    dev: false
+
+  /quickjs-emscripten@0.25.1:
+    resolution: {integrity: sha512-9HsI5KkrzWyKSTiAs+tZ+l48ETqqblG/L+Mm+4qIUwySns0lR1Ik5CFU06pDmUZbk5JooDgakd0bVfDLOQNJRg==}
+    engines: {node: '>=16.0.0'}
+    dependencies:
+      '@jitl/quickjs-wasmfile-debug-asyncify': 0.25.1
+      '@jitl/quickjs-wasmfile-debug-sync': 0.25.1
+      '@jitl/quickjs-wasmfile-release-asyncify': 0.25.1
+      '@jitl/quickjs-wasmfile-release-sync': 0.25.1
+      quickjs-emscripten-core: 0.25.1
+    dev: false
 
   /quill-delta@5.1.0:
     resolution: {integrity: sha512-X74oCeRI4/p0ucjb5Ma8adTXd9Scumz367kkMK5V/IatcX6A0vlgLgKbzXWy5nZmCGeNJm2oQX0d2Eqj+ZIlCA==}

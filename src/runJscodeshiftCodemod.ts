@@ -7,6 +7,8 @@ import { buildVmConsole } from './buildVmConsole.js';
 import { ConsoleKind } from './schemata/consoleKindSchema.js';
 import { CONSOLE_OVERRIDE } from './consoleOverride.js';
 
+import { getQuickJS } from 'quickjs-emscripten';
+
 export const buildApi = (parser: string): API => ({
 	j: jscodeshift.withParser(parser),
 	jscodeshift: jscodeshift.withParser(parser),
