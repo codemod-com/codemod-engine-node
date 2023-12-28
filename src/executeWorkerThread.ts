@@ -56,6 +56,7 @@ const messageHandler = async (m: unknown) => {
 			let fileCommands: ReadonlyArray<FileCommand>;
 
 			if (initializationMessage.codemodEngine === 'jscodeshift') {
+				console.log('HERE');
 				const newData = await context.execute(
 					message.path,
 					message.data,
@@ -99,6 +100,7 @@ const messageHandler = async (m: unknown) => {
 			);
 		}
 	} catch (error) {
+		console.log(error);
 		parentPort?.postMessage({
 			kind: 'error',
 			message: error instanceof Error ? error.message : String(error),

@@ -126,7 +126,9 @@ describe('Runner', function () {
 			ifs,
 			printer,
 			{
-				sendEvent: () => {},
+				sendEvent: (e) => {
+					console.log(e);
+				},
 			},
 			codemodDownloader,
 			loadRepositoryConfiguration,

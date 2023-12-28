@@ -59,7 +59,23 @@ export const getQuickJsContext = async (codemodSource: string) => {
 		}
 
 		if (moduleName === '__intuita_codemod__') {
-			return codemodSource;
+			return `
+                const exports = {};
+                const module = {
+                    exports,
+                };
+
+                ${codemodSource}
+
+                const transform = typeof module.exports === 'function'
+                    ? module.exports
+                    : module.exports.esModule &&
+                    typeof module.exports.default === 'function'
+                    ? module.exports.default
+                    : null;
+
+                export default transform;
+                `;
 		}
 
 		throw new Error('Requested ' + module);
@@ -110,6 +126,7 @@ export const getQuickJsContext = async (codemodSource: string) => {
 
 				context.unwrapResult(result).dispose();
 			} catch (error) {
+				console.error(error);
 				reject(error);
 			}
 		});

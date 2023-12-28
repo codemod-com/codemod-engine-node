@@ -44,6 +44,7 @@ export class WorkerThreadManager {
 			this.__workerTimestamps.push(Date.now());
 
 			const filename = process.env.TEST ? './dist/index.cjs' : __filename;
+			console.log('TEST', process.env.TEST, filename);
 
 			const worker = new Worker(filename);
 
@@ -76,6 +77,8 @@ export class WorkerThreadManager {
 				if (now > timestamp + WORKER_THREAD_TIME_LIMIT) {
 					// hanging promise on purpose
 					this.__workers[i].terminate();
+
+					console.log('TEST', process.env.TEST);
 
 					const filename = process.env.TEST
 						? './dist/index.cjs'
