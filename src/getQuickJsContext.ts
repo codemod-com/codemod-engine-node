@@ -85,7 +85,7 @@ export const getQuickJsContext = async (codemodSource: string) => {
 
 	context.setProp(context.global, '__intuita_callback__', callbackHandle);
 
-	const execute = (path: string, data: string) => {
+	const execute = (path: string, data: string): Promise<string | null> => {
 		// TODO ensure no one else runs it
 		context.setProp(
 			context.global,
@@ -99,7 +99,7 @@ export const getQuickJsContext = async (codemodSource: string) => {
 			context.newString(data),
 		);
 
-		return new Promise((resolve, reject) => {
+		return new Promise<string | null>((resolve, reject) => {
 			// TODO timeout
 			eventEmitter.once('callback', (data) => {
 				resolve(data);

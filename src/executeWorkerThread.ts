@@ -4,9 +4,8 @@ import {
 	type MainThreadMessage,
 	decodeMainThreadMessage,
 } from './mainThreadMessages.js';
-import { runJscodeshiftCodemod } from './runJscodeshiftCodemod.js';
 import { runTsMorphCodemod } from './runTsMorphCodemod.js';
-import { buildFormattedFileCommands } from './fileCommands.js';
+import { FileCommand, buildFormattedFileCommands } from './fileCommands.js';
 import { ConsoleKind } from './schemata/consoleKindSchema.js';
 import { getQuickJsContext } from './getQuickJsContext.js';
 
@@ -54,17 +53,28 @@ const messageHandler = async (m: unknown) => {
 		}
 
 		try {
-			let fileCommands;
+			let fileCommands: ReadonlyArray<FileCommand>;
 
 			if (initializationMessage.codemodEngine === 'jscodeshift') {
-				fileCommands = runJscodeshiftCodemod(
-					initializationMessage.codemodSource,
+				const newData = await context.execute(
 					message.path,
 					message.data,
-					initializationMessage.formatWithPrettier,
-					initializationMessage.safeArgumentRecord,
-					consoleCallback,
 				);
+
+				if (newData === null) {
+					fileCommands = [];
+				} else {
+					fileCommands = [
+						{
+							kind: 'updateFile',
+							oldPath: message.path,
+							oldData: message.data,
+							newData,
+							formatWithPrettier:
+								initializationMessage.formatWithPrettier,
+						},
+					];
+				}
 			} else {
 				fileCommands = runTsMorphCodemod(
 					initializationMessage.codemodSource,
