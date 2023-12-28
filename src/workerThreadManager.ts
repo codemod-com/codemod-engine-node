@@ -39,8 +39,6 @@ export class WorkerThreadManager {
 		formatWithPrettier: boolean,
 		safeArgumentRecord: SafeArgumentRecord,
 	) {
-		console.log(codemodSource);
-
 		const workerData: WorkerData = {
 			codemodPath,
 			codemodEngine,
@@ -54,7 +52,6 @@ export class WorkerThreadManager {
 			this.__workerTimestamps.push(Date.now());
 
 			const filename = process.env.TEST ? './dist/index.cjs' : __filename;
-			console.log('TEST', process.env.TEST, filename);
 
 			const worker = new Worker(filename, { workerData });
 

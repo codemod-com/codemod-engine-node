@@ -137,7 +137,6 @@ export const getQuickJsContext = async (
 
 				context.unwrapResult(result).dispose();
 			} catch (error) {
-				console.error(error);
 				reject(error);
 			}
 		});

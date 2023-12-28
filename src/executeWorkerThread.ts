@@ -79,8 +79,6 @@ const messageHandler = async (m: unknown) => {
 
 			const commands = await buildFormattedFileCommands(fileCommands);
 
-			console.log('commands', commands);
-
 			parentPort?.postMessage({
 				kind: 'commands',
 				commands,
@@ -92,7 +90,6 @@ const messageHandler = async (m: unknown) => {
 			);
 		}
 	} catch (error) {
-		console.error(error);
 		parentPort?.postMessage({
 			kind: 'error',
 			message: error instanceof Error ? error.message : String(error),
