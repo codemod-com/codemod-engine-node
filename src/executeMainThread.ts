@@ -53,6 +53,8 @@ export const executeMainThread = async () => {
 
 	process.stdin.unref();
 
+	console.log('X', slicedArgv);
+
 	const argvObject = yargs(slicedArgv)
 		.scriptName('intuita')
 		.command('*', 'runs a codemod or recipe', (y) => buildOptions(y))

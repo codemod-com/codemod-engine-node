@@ -92,7 +92,7 @@
 	},
 	"packageManager": "pnpm@8.6.7",
 	"scripts": {
-		"build": "esbuild ./src/index.ts  --define:__INTUITA_CLI_VERSION__=\\\"0.7.0\\\" --bundle --platform=node --target=node16 --format=cjs --legal-comments=inline --minify --outfile=./dist/index.cjs --external:quickjs-emscripten",
+		"build": "esbuild ./src/index.ts  --define:__INTUITA_CLI_VERSION__=\\\"0.7.0\\\" --bundle --platform=node --target=node16 --format=cjs --legal-comments=inline --outfile=./dist/index.cjs --external:quickjs-emscripten",
 		"build:jscodeshift:module": "esbuild ./src/buildJscodeshiftModule.ts --bundle --minify --minify-whitespace --minify-syntax --format=esm --platform=node --outfile=./dist/jscodeshift.txt",
 		"lint:eslint": "eslint src --fix --ext ts",
 		"lint:prettier": "prettier --write .",

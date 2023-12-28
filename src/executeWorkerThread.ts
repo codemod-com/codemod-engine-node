@@ -23,11 +23,11 @@ const consoleCallback = (consoleKind: ConsoleKind, message: string): void => {
 	} satisfies WorkerThreadMessage);
 };
 
-const parsedWorkerData = decodeWorkerDataSchema(workerData);
-
 let context: Awaited<ReturnType<typeof getQuickJsContext>> | null = null;
 
 const messageHandler = async (m: unknown) => {
+	const parsedWorkerData = decodeWorkerDataSchema(workerData);
+
 	try {
 		const message = decodeMainThreadMessage(m);
 
