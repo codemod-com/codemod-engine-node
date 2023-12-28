@@ -1,17 +1,14 @@
 import {
-	FileCommand,
 	FormattedFileCommand,
 	buildFormattedFileCommands,
 	modifyFileSystemUponCommand,
 } from './fileCommands.js';
 import { Dependencies, runRepomod } from './runRepomod.js';
 import { escape, glob, Glob } from 'glob';
-import { dirname } from 'node:path';
 import { Filemod } from '@intuita-inc/filemod';
 import { PrinterBlueprint } from './printer.js';
 import { Codemod } from './codemod.js';
 import { IFs, Volume, createFsFromVolume } from 'memfs';
-import { createHash } from 'node:crypto';
 import { WorkerThreadManager } from './workerThreadManager.js';
 import { getTransformer, transpile } from './getTransformer.js';
 import { OperationMessage } from './messages.js';
@@ -19,10 +16,12 @@ import { SafeArgumentRecord } from './safeArgumentRecord.js';
 import { FlowSettings } from './schemata/flowSettingsSchema.js';
 import { WorkerThreadMessage } from './workerThreadMessages.js';
 import { RunSettings } from './schemata/runArgvSettingsSchema.js';
+import { buildFileMap } from './buildFileMap.js';
+import { buildFileCommands } from './buildFileCommands.js';
 
 const TERMINATE_IDLE_THREADS_TIMEOUT = 30 * 1000;
 
-const buildPaths = async (
+export const buildPaths = async (
 	fileSystem: IFs,
 	flowSettings: FlowSettings,
 	codemod: Codemod,
@@ -182,28 +181,11 @@ export const runCodemod = async (
 			return;
 		}
 
-		// establish a in-memory file system
-		const volume = Volume.fromJSON({});
-		const mfs = createFsFromVolume(volume);
+		const mfs = createFsFromVolume(Volume.fromJSON({}));
 
 		const paths = await buildPaths(fileSystem, flowSettings, codemod, null);
 
-		const fileMap = new Map<string, string>();
-
-		for (const path of paths) {
-			const data = await fileSystem.promises.readFile(path, {
-				encoding: 'utf8',
-			});
-
-			await mfs.promises.mkdir(dirname(path), { recursive: true });
-			await mfs.promises.writeFile(path, data);
-
-			const dataHashDigest = createHash('ripemd160')
-				.update(data)
-				.digest('base64url');
-
-			fileMap.set(path, dataHashDigest);
-		}
+		const fileMap = await buildFileMap(fileSystem, mfs, paths);
 
 		const deletedPaths: string[] = [];
 
@@ -275,49 +257,12 @@ export const runCodemod = async (
 			nodir: true,
 		});
 
-		const fileCommands: FileCommand[] = [];
-
-		for (const newPath of newPaths) {
-			const newDataBuffer = await mfs.promises.readFile(newPath);
-			const newData = newDataBuffer.toString();
-
-			const oldDataFileHash = fileMap.get(newPath) ?? null;
-
-			if (oldDataFileHash === null) {
-				// the file has been created
-				fileCommands.push({
-					kind: 'createFile',
-					newPath,
-					newData,
-					formatWithPrettier: false,
-				});
-			} else {
-				const newDataFileHash = createHash('ripemd160')
-					.update(newData)
-					.digest('base64url');
-
-				if (newDataFileHash !== oldDataFileHash) {
-					fileCommands.push({
-						kind: 'updateFile',
-						oldPath: newPath,
-						newData,
-						oldData: '', // TODO no longer necessary
-						formatWithPrettier: false,
-					});
-				}
-
-				// no changes to the file
-			}
-
-			fileMap.delete(newPath);
-		}
-
-		for (const oldPath of deletedPaths) {
-			fileCommands.push({
-				kind: 'deleteFile',
-				oldPath,
-			});
-		}
+		const fileCommands = await buildFileCommands(
+			fileMap,
+			newPaths,
+			deletedPaths,
+			mfs,
+		);
 
 		const commands = await buildFormattedFileCommands(fileCommands);
 
