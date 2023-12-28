@@ -1,4 +1,4 @@
-import { getQuickJS } from 'quickjs-emscripten';
+import { newQuickJSWASMModule } from 'quickjs-emscripten';
 import jscodeshift from '../dist/jscodeshift.txt';
 import EventEmitter from 'node:events';
 import { SafeArgumentRecord } from './safeArgumentRecord.js';
@@ -51,7 +51,7 @@ export const getQuickJsContext = async (
 	codemodSource: string,
 	safeArgumentRecord: SafeArgumentRecord,
 ) => {
-	const qjs = await getQuickJS();
+	const qjs = await newQuickJSWASMModule();
 
 	const runtime = qjs.newRuntime();
 

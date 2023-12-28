@@ -18,8 +18,8 @@ export default {
 			// Required to be specified
 			include: '**/*.txt',
 		}),
-		commonjs(),
 		json(),
+		commonjs({ transformMixedEsModules: true }),
 		nodeResolve(),
 	],
 };

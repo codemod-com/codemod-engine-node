@@ -26,6 +26,12 @@ dependencies:
   '@intuita-inc/utilities':
     specifier: 1.1.0
     version: 1.1.0(effect@2.0.0-next.59)(fast-check@3.14.0)
+  '@jitl/quickjs-singlefile-cjs-release-asyncify':
+    specifier: ^0.25.1
+    version: 0.25.1
+  '@jitl/quickjs-wasmfile-release-sync':
+    specifier: ^0.25.1
+    version: 0.25.1
   '@svgr/hast-util-to-babel-ast':
     specifier: ^7.0.0
     version: 7.0.0
@@ -2070,6 +2076,12 @@ packages:
 
   /@jitl/quickjs-ffi-types@0.25.1:
     resolution: {integrity: sha512-m3HqjAsG3DbCwqelRMQYyPU2uGF4f+CAmEn9VhhbK6YXmsUCf0mrULmr4wuYt75xx5NIDcBFvjLJ1303pwGoyg==}
+    dev: false
+
+  /@jitl/quickjs-singlefile-cjs-release-asyncify@0.25.1:
+    resolution: {integrity: sha512-mfeVB2LGRqvx8453uPs3F5Z7QVzqW25G9IOP1RMBywmMs64RQXrRtiJa6xpoeokWIA+gmDdJ/yF5IDM8uanhfg==}
+    dependencies:
+      '@jitl/quickjs-ffi-types': 0.25.1
     dev: false
 
   /@jitl/quickjs-wasmfile-debug-asyncify@0.25.1:

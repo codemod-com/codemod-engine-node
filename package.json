@@ -33,6 +33,8 @@
 		"@effect/schema": "0.27.0",
 		"@intuita-inc/filemod": "1.1.0",
 		"@intuita-inc/utilities": "1.1.0",
+		"@jitl/quickjs-singlefile-cjs-release-asyncify": "^0.25.1",
+		"@jitl/quickjs-wasmfile-release-sync": "^0.25.1",
 		"@svgr/hast-util-to-babel-ast": "^7.0.0",
 		"applicationinsights": "^2.9.1",
 		"ast-types": "^0.14.2",
