@@ -1,14 +1,16 @@
 #!/usr/bin/env node
-import { isMainThread } from 'worker_threads';
-import { executeMainThread } from './executeMainThread.js';
-import { executeWorkerThread } from './executeWorkerThread.js';
+import { isMainThread } from 'node:worker_threads';
 
 if (isMainThread) {
-	executeMainThread().catch((error) => {
-		if (error instanceof Error) {
-			console.error(JSON.stringify({ message: error.message }));
-		}
-	});
+	import('./executeMainThread.js')
+		.then(({ executeMainThread }) => executeMainThread())
+		.catch((error) => {
+			if (error instanceof Error) {
+				console.error(JSON.stringify({ message: error.message }));
+			}
+		});
 } else {
-	executeWorkerThread();
+	import('./executeWorkerThread.js').then(({ executeWorkerThread }) =>
+		executeWorkerThread(),
+	);
 }
