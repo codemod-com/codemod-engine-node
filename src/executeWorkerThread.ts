@@ -1,9 +1,11 @@
 import { parentPort } from 'node:worker_threads';
-import { WorkerThreadMessage } from './workerThreadMessages.js';
-import { decodeMainThreadMessage } from './mainThreadMessages.js';
+import { type WorkerThreadMessage } from './workerThreadMessages.js';
+import {
+	type MainThreadMessage,
+	decodeMainThreadMessage,
+} from './mainThreadMessages.js';
 import { runJscodeshiftCodemod } from './runJscodeshiftCodemod.js';
 import { runTsMorphCodemod } from './runTsMorphCodemod.js';
-
 import { buildFormattedFileCommands } from './fileCommands.js';
 import { ConsoleKind } from './schemata/consoleKindSchema.js';
 
@@ -21,32 +23,45 @@ const consoleCallback = (consoleKind: ConsoleKind, message: string): void => {
 	} satisfies WorkerThreadMessage);
 };
 
+let initializationMessage:
+	| (MainThreadMessage & { kind: 'initialization' })
+	| null = null;
+
 const messageHandler = async (m: unknown) => {
 	try {
 		const message = decodeMainThreadMessage(m);
+
+		if (message.kind === 'initialization') {
+			initializationMessage = message;
+			return;
+		}
 
 		if (message.kind === 'exit') {
 			parentPort?.off('message', messageHandler);
 			return;
 		}
 
+		if (initializationMessage === null) {
+			throw new Error();
+		}
+
 		try {
 			const fileCommands =
-				message.codemodEngine === 'jscodeshift'
+				initializationMessage.codemodEngine === 'jscodeshift'
 					? runJscodeshiftCodemod(
-							message.codemodSource,
+							initializationMessage.codemodSource,
 							message.path,
 							message.data,
-							message.formatWithPrettier,
-							message.safeArgumentRecord,
+							initializationMessage.formatWithPrettier,
+							initializationMessage.safeArgumentRecord,
 							consoleCallback,
 					  )
 					: runTsMorphCodemod(
-							message.codemodSource,
+							initializationMessage.codemodSource,
 							message.path,
 							message.data,
-							message.formatWithPrettier,
-							message.safeArgumentRecord,
+							initializationMessage.formatWithPrettier,
+							initializationMessage.safeArgumentRecord,
 							consoleCallback,
 					  );
 
