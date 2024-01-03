@@ -1,7 +1,14 @@
-import { Filemod, executeFilemod, CallbackService } from '@intuita-inc/filemod';
+import {
+	Filemod,
+	executeFilemod,
+	CallbackService,
+	PathHashDigest,
+	UnifiedEntry,
+	GlobArguments,
+	PathAPI,
+} from '@intuita-inc/filemod';
 import { buildApi } from '@intuita-inc/filemod';
 import { UnifiedFileSystem } from '@intuita-inc/filemod';
-import { FileSystemManager } from '@intuita-inc/filemod';
 import jscodeshift from 'jscodeshift';
 import rehypeParse from 'rehype-parse';
 import { unified } from 'unified';
@@ -18,6 +25,8 @@ import { IFs } from 'memfs';
 import { SafeArgumentRecord } from './safeArgumentRecord.js';
 import { createHash } from 'node:crypto';
 import { OperationMessage } from './messages.js';
+import { FSOption, GlobOptionsWithFileTypesUnset, glob } from 'glob';
+import { basename, dirname, join } from 'node:path';
 
 const parseMdx = (data: string) =>
 	fromMarkdown(data, {
@@ -52,17 +61,92 @@ export const runRepomod = async (
 	onPrinterMessage: (message: OperationMessage) => void,
 	currentWorkingDirectory: string,
 ): Promise<readonly FileCommand[]> => {
-	const fileSystemManager = new FileSystemManager(
-		// @ts-expect-error type inconsistency
-		fileSystem.promises.readdir,
-		fileSystem.promises.readFile,
-		fileSystem.promises.stat,
-	);
+	const buildPathHashDigest = (path: string) =>
+		createHash('ripemd160')
+			.update(path)
+			.digest('base64url') as PathHashDigest;
+
+	const getUnifiedEntry = async (path: string): Promise<UnifiedEntry> => {
+		const stat = await fileSystem.promises.stat(path);
+
+		if (stat.isDirectory()) {
+			return {
+				kind: 'directory',
+				path,
+			};
+		}
+
+		if (stat.isFile()) {
+			return {
+				kind: 'file',
+				path,
+			};
+		}
+
+		throw new Error(`The entry ${path} is neither a directory nor a file`);
+	};
+
+	const globWrapper = (globArguments: GlobArguments) => {
+		return glob(globArguments.includePatterns.slice(), {
+			absolute: true,
+			cwd: globArguments.currentWorkingDirectory,
+			ignore: globArguments.excludePatterns.slice(),
+			fs: fileSystem as FSOption,
+		} satisfies GlobOptionsWithFileTypesUnset);
+	};
+
+	const readDirectory = async (
+		path: string,
+	): Promise<ReadonlyArray<UnifiedEntry>> => {
+		const entries = await fileSystem.promises.readdir(path, {
+			withFileTypes: true,
+		});
+
+		return entries.map((entry) => {
+			if (typeof entry === 'string' || !('isDirectory' in entry)) {
+				throw new Error('Entry can neither be a string or a Buffer');
+			}
+
+			if (entry.isDirectory()) {
+				return {
+					kind: 'directory' as const,
+					path: join(path, entry.name.toString()),
+				};
+			}
+
+			if (entry.isFile()) {
+				return {
+					kind: 'file' as const,
+					path: join(path, entry.name.toString()),
+				};
+			}
+
+			throw new Error('The entry is neither directory not file');
+		});
+	};
+
+	const readFile = async (path: string): Promise<string> => {
+		const data = await fileSystem.promises.readFile(path, {
+			encoding: 'utf8',
+		});
+
+		return data.toString();
+	};
+
 	const unifiedFileSystem = new UnifiedFileSystem(
-		// @ts-expect-error type inconsistency
-		fileSystem,
-		fileSystemManager,
+		buildPathHashDigest,
+		getUnifiedEntry,
+		globWrapper,
+		readDirectory,
+		readFile,
 	);
+
+	const pathAPI: PathAPI = {
+		getDirname: (path) => dirname(path),
+		getBasename: (path) => basename(path),
+		joinPaths: (...paths) => join(...paths),
+		currentWorkingDirectory,
+	};
 
 	const api = buildApi<Dependencies>(
 		unifiedFileSystem,
@@ -78,7 +162,7 @@ export const runRepomod = async (
 			filterMdxAst: filter,
 			unifiedFileSystem,
 		}),
-		currentWorkingDirectory,
+		pathAPI,
 	);
 
 	const processedPathHashDigests = new Set<string>();
