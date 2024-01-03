@@ -21,8 +21,8 @@ dependencies:
     specifier: 0.27.0
     version: 0.27.0
   '@intuita-inc/filemod':
-    specifier: 1.1.0
-    version: 1.1.0
+    specifier: 2.0.0
+    version: 2.0.0
   '@intuita-inc/utilities':
     specifier: 1.1.0
     version: 1.1.0(effect@2.0.0-next.59)(fast-check@3.14.0)
@@ -45,8 +45,8 @@ dependencies:
     specifier: ^4.0.0
     version: 4.0.0
   glob:
-    specifier: ^10.3.3
-    version: 10.3.3
+    specifier: 10.3.10
+    version: 10.3.10
   jscodeshift:
     specifier: ^0.14.0
     version: 0.14.0(@babel/preset-env@7.20.2)
@@ -2005,10 +2005,8 @@ packages:
     resolution: {integrity: sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==}
     dev: true
 
-  /@intuita-inc/filemod@1.1.0:
-    resolution: {integrity: sha512-X3cahch1BBSHr08vFCvf6zDIxyfabYI3xrGs2Cmdzj45UzYNMwmLjohqkJNeyYLBmVcHDIzW9PDKyiOUfWAa+w==}
-    dependencies:
-      glob: 10.3.10
+  /@intuita-inc/filemod@2.0.0:
+    resolution: {integrity: sha512-fGFJ5gfX2NQi2ugqEcxClCplj8jVPYO1YIvOJLNVv9vSb/mNvHkuT6HC//Q3knVe7I0KJ2LkxaUZDs//ElAelA==}
     dev: false
 
   /@intuita-inc/utilities@1.1.0(effect@2.0.0-next.59)(fast-check@3.14.0):
@@ -3596,7 +3594,7 @@ packages:
     engines: {node: '>=14'}
     dependencies:
       cross-spawn: 7.0.3
-      signal-exit: 4.0.2
+      signal-exit: 4.1.0
     dev: false
 
   /form-data@4.0.0:
@@ -3669,18 +3667,6 @@ packages:
     dependencies:
       foreground-child: 3.1.1
       jackspeak: 2.3.6
-      minimatch: 9.0.3
-      minipass: 6.0.2
-      path-scurry: 1.10.1
-    dev: false
-
-  /glob@10.3.3:
-    resolution: {integrity: sha512-92vPiMb/iqpmEgsOoIDvTjc50wf9CCCvMzsi6W0JLPeUKE8TWP1a73PgqSrqy7iAZxaSD1YdzU7QZR5LF51MJw==}
-    engines: {node: '>=16 || 14 >=14.17'}
-    hasBin: true
-    dependencies:
-      foreground-child: 3.1.1
-      jackspeak: 2.2.1
       minimatch: 9.0.3
       minipass: 6.0.2
       path-scurry: 1.10.1
@@ -3964,15 +3950,6 @@ packages:
       html-escaper: 2.0.2
       istanbul-lib-report: 3.0.1
     dev: true
-
-  /jackspeak@2.2.1:
-    resolution: {integrity: sha512-MXbxovZ/Pm42f6cDIDkl3xpwv1AGwObKwfmjs2nQePiy85tP3fatofl3FC1aBsOtP/6fq5SbtgHwWcMsLP+bDw==}
-    engines: {node: '>=14'}
-    dependencies:
-      '@isaacs/cliui': 8.0.2
-    optionalDependencies:
-      '@pkgjs/parseargs': 0.11.0
-    dev: false
 
   /jackspeak@2.3.6:
     resolution: {integrity: sha512-N3yCS/NegsOBokc8GAdM8UcmfsKiSS8cipheD/nivzr700H+nsMOxJjQnvwOcRYVuFkdH0wGUvW2WbXGmrZGbQ==}
@@ -5184,15 +5161,9 @@ packages:
     resolution: {integrity: sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==}
     dev: false
 
-  /signal-exit@4.0.2:
-    resolution: {integrity: sha512-MY2/qGx4enyjprQnFaZsHib3Yadh3IXyV2C321GY0pjGfVBu4un0uDJkwgdxqO+Rdx8JMT8IfJIRwbYVz3Ob3Q==}
-    engines: {node: '>=14'}
-    dev: false
-
   /signal-exit@4.1.0:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
-    dev: true
 
   /sinon@17.0.0:
     resolution: {integrity: sha512-p4lJiYKBoOEVUxxVIC9H1MM2znG1/c8gud++I2BauJA5hsz7hHsst35eurNWXTusBsIq66FzOQbZ/uMdpvbPIQ==}
