@@ -34,7 +34,7 @@ import { handlePublishCliCommand } from './handlePublishCliCommand.js';
 import { handleLogoutCliCommand } from './handleLogoutCliCommand.js';
 
 // the build script contains the version
-declare const __INTUITA_CLI_VERSION__: string;
+declare const __CODEMODCOM_CLI_VERSION__: string;
 
 export const executeMainThread = async () => {
 	const slicedArgv = hideBin(process.argv);
@@ -54,7 +54,7 @@ export const executeMainThread = async () => {
 	process.stdin.unref();
 
 	const argvObject = yargs(slicedArgv)
-		.scriptName('intuita')
+		.scriptName('codemod')
 		.command('*', 'runs a codemod or recipe', (y) => buildOptions(y))
 		.command(
 			'runOnPreCommit [files...]',
@@ -94,15 +94,15 @@ export const executeMainThread = async () => {
 			(y) =>
 				buildUseJsonOption(y).option('token', {
 					type: 'string',
-					description: 'token required to sign in to the Intuita CLI',
+					description: 'token required to sign in to the Codemod CLI',
 				}),
 		)
 		.command('logout', 'logs out', (y) => buildUseJsonOption(y))
-		.command('publish', 'publish the codemod to Intuita Registry', (y) =>
+		.command('publish', 'publish the codemod to Codemod Registry', (y) =>
 			buildUseJsonOption(y),
 		)
 		.help()
-		.version(__INTUITA_CLI_VERSION__);
+		.version(__CODEMODCOM_CLI_VERSION__);
 
 	if (slicedArgv.length === 0) {
 		argvObject.showHelp();
@@ -318,7 +318,7 @@ export const executeMainThread = async () => {
 		return;
 	}
 
-	const intuitaDirectoryPath = join(
+	const configurationDirectoryPath = join(
 		String(argv._) === 'runOnPreCommit' ? process.cwd() : homedir(),
 		'.intuita',
 	);
@@ -337,7 +337,7 @@ export const executeMainThread = async () => {
 
 	const codemodDownloader = new CodemodDownloader(
 		printer,
-		intuitaDirectoryPath,
+		configurationDirectoryPath,
 		argv.useCache,
 		fileDownloadService,
 		tarService,

@@ -33,7 +33,7 @@ describe('console', () => {
 				exports,
 			},
 			exports,
-			__INTUITA__console__: buildVmConsole(customCallback),
+			__CODEMODCOM__console__: buildVmConsole(customCallback),
 		});
 
 		await vm.runInContext(codeToExecute, context);

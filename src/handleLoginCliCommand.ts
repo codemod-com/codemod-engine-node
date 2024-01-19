@@ -43,6 +43,6 @@ export const handleLoginCliCommand = async (
 
 	printer.printConsoleMessage(
 		'info',
-		'You are successfully logged in with the Intuita CLI!',
+		'You are successfully logged in with the Codemod CLI!',
 	);
 };
