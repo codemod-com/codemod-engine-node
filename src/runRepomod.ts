@@ -25,7 +25,7 @@ import { IFs } from 'memfs';
 import { SafeArgumentRecord } from './safeArgumentRecord.js';
 import { createHash } from 'node:crypto';
 import { OperationMessage } from './messages.js';
-import { FSOption, GlobOptionsWithFileTypesUnset, glob } from 'glob';
+import { FileSystemAdapter, glob } from 'fast-glob';
 import { basename, dirname, join } from 'node:path';
 
 const parseMdx = (data: string) =>
@@ -91,8 +91,9 @@ export const runRepomod = async (
 			absolute: true,
 			cwd: globArguments.currentWorkingDirectory,
 			ignore: globArguments.excludePatterns.slice(),
-			fs: fileSystem as FSOption,
-		} satisfies GlobOptionsWithFileTypesUnset);
+			fs: fileSystem as Partial<FileSystemAdapter>,
+			dot: true,
+		});
 	};
 
 	const readDirectory = async (
