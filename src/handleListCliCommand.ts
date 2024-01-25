@@ -1,6 +1,6 @@
 import { isNeitherNullNorUndefined } from '@intuita-inc/utilities';
 import * as fs from 'fs';
-import { glob } from 'glob';
+import { glob } from 'fast-glob';
 import { mkdir, readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
@@ -16,7 +16,7 @@ export const handleListNamesCommand = async (printer: PrinterBlueprint) => {
 		absolute: true,
 		cwd: intuitaDirectoryPath,
 		fs,
-		nodir: true,
+		onlyFiles: true,
 	});
 
 	const codemodNames = await Promise.allSettled(
