@@ -59,7 +59,6 @@ export const buildPaths = async (
 
 		return filemodPaths
 			.filter((path) => flowPaths.includes(path))
-			.map((path) => escape(path))
 			.slice(0, flowSettings.fileLimit);
 	}
 
