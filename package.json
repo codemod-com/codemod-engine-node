@@ -1,12 +1,12 @@
 {
-	"name": "intuita",
-	"version": "0.7.3",
+	"name": "codemod",
+	"version": "0.8.0",
 	"description": "A codemod engine for Node.js libraries (jscodeshift, ts-morph, etc.)",
 	"type": "module",
 	"exports": null,
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/intuita-inc/codemod-engine-node"
+		"url": "https://github.com/codemod-com/codemod-engine-node"
 	},
 	"keywords": [
 		"codemod",
@@ -82,7 +82,7 @@
 	},
 	"packageManager": "pnpm@8.6.7",
 	"scripts": {
-		"build": "esbuild ./src/index.ts  --define:__INTUITA_CLI_VERSION__=\\\"0.7.3\\\" --bundle --platform=node --target=node16 --minify --format=cjs --legal-comments=inline --outfile=./dist/index.cjs",
+		"build": "esbuild ./src/index.ts  --define:__CODEMODCOM_CLI_VERSION__=\\\"0.8.0\\\" --bundle --platform=node --target=node16 --minify --format=cjs --legal-comments=inline --outfile=./dist/index.cjs",
 		"lint:eslint": "eslint src --fix --ext ts",
 		"lint:prettier": "prettier --write .",
 		"package": "pkg --compress GZip .",

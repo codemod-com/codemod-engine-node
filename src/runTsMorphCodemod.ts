@@ -43,9 +43,9 @@ const transform = (
 			},
 		});
 	
-		const sourceFile = project.createSourceFile(__INTUITA__oldPath, __INTUITA__oldData);
+		const sourceFile = project.createSourceFile(__CODEMODCOM__oldPath, __CODEMODCOM__oldData);
 
-		handleSourceFile(sourceFile, __INTUITA__argumentRecord);
+		handleSourceFile(sourceFile, __CODEMODCOM__argumentRecord);
 	`;
 
 	const exports = Object.freeze({});
@@ -55,10 +55,10 @@ const transform = (
 			exports,
 		}),
 		exports,
-		__INTUITA__oldPath: oldPath,
-		__INTUITA__oldData: oldData,
-		__INTUITA__argumentRecord: { ...safeArgumentRecord[0] },
-		__INTUITA__console__: buildVmConsole(consoleCallback),
+		__CODEMODCOM__oldPath: oldPath,
+		__CODEMODCOM__oldData: oldData,
+		__CODEMODCOM__argumentRecord: { ...safeArgumentRecord[0] },
+		__CODEMODCOM__console__: buildVmConsole(consoleCallback),
 		__CODEMOD_SOURCE__: codemodSource,
 		require: (name: string) => {
 			if (name === 'ts-morph') {

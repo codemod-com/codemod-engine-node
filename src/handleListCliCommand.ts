@@ -8,13 +8,13 @@ import * as v from 'valibot';
 import type { PrinterBlueprint } from './printer.js';
 
 export const handleListNamesCommand = async (printer: PrinterBlueprint) => {
-	const intuitaDirectoryPath = join(homedir(), '.intuita');
+	const configurationDirectoryPath = join(homedir(), '.intuita');
 
-	await mkdir(intuitaDirectoryPath, { recursive: true });
+	await mkdir(configurationDirectoryPath, { recursive: true });
 
 	const configFiles = await glob('**/config.json', {
 		absolute: true,
-		cwd: intuitaDirectoryPath,
+		cwd: configurationDirectoryPath,
 		fs,
 		onlyFiles: true,
 	});
