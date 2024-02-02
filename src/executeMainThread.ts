@@ -1,7 +1,7 @@
 import * as readline from 'node:readline';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { handleListNamesCommand } from './handleListCliCommand.js';
+import { handleListNamesAfterSyncing } from './handleListCliCommand.js';
 import { CodemodDownloader } from './downloadCodemod.js';
 import { Printer } from './printer.js';
 import { handleLearnCliCommand } from './handleLearnCliCommand.js';
@@ -110,7 +110,6 @@ export const executeMainThread = async () => {
 	}
 
 	const argv = await Promise.resolve(argvObject.argv);
-
 	const fetchBuffer = async (url: string) => {
 		const { data } = await Axios.get(url, {
 			responseType: 'arraybuffer',
@@ -158,7 +157,7 @@ export const executeMainThread = async () => {
 
 	if (String(argv._) === 'list') {
 		try {
-			await handleListNamesCommand(argv, printer, fileDownloadService, tarService, true);
+			await handleListNamesAfterSyncing(argv.useCache, printer, fileDownloadService, tarService, true);
 		} catch (error) {
 			if (!(error instanceof Error)) {
 				return;
@@ -176,7 +175,7 @@ export const executeMainThread = async () => {
 	}
 
 	if (String(argv._) === 'syncRegistry') {
-		await syncRegistryOperation(argv, printer, fileDownloadService, tarService)
+		await syncRegistryOperation(argv.useCache, printer, fileDownloadService, tarService)
 		exit();
 
 		return;
@@ -347,7 +346,7 @@ export const executeMainThread = async () => {
 };
 
 export async function syncRegistryOperation(
-	argv: any,
+	useCache: boolean,
 	printer: Printer,
 	fileDownloadService: FileDownloadService,
 	tarService: TarService,
@@ -355,7 +354,7 @@ export async function syncRegistryOperation(
 	const codemodDownloader = new CodemodDownloader(
 	  printer,
 	  join(homedir(), '.intuita'),
-	  argv.useCache,
+	  useCache,
 	  fileDownloadService,
 	  tarService,
 	);

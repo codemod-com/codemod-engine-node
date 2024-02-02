@@ -10,13 +10,7 @@ import { FileDownloadService } from './fileDownloadService.js';
 import { syncRegistryOperation } from './executeMainThread.js'
 import { TarService } from './services/tarService.js';
 
-export const handleListNamesCommand = async (
-	argv: any,
-	printer: Printer,
-	fileDownloadService: FileDownloadService,
-	tarService: TarService,
-	syncRegistry: boolean,
-) => {
+export const handleListNamesCommand = async (printer: Printer) => {
 	const configurationDirectoryPath = join(homedir(), '.intuita');
 
 	await mkdir(configurationDirectoryPath, { recursive: true });
@@ -47,13 +41,16 @@ export const handleListNamesCommand = async (
 
 	const names = v.parse(v.array(v.string()), onlyValid);
 
-	// Sync with registry if there are no codemods available
-	if (syncRegistry && Object.keys(names).length === 0) {
-		printer.printOperationMessage({ kind: 'status', message: "There were no codemod synced, hence syncing it with registry" });
-		await syncRegistryOperation(argv, printer, fileDownloadService, tarService)
-
-		await handleListNamesCommand(argv, printer, fileDownloadService, tarService, false)
-	}
-
 	printer.printOperationMessage({ kind: 'names', names });
 };
+
+export const handleListNamesAfterSyncing = async (
+	useCache: boolean,
+	printer: Printer,
+	fileDownloadService: FileDownloadService,
+	tarService: TarService,
+	syncRegistry: boolean,
+) => {
+	await syncRegistryOperation(useCache, printer, fileDownloadService, tarService)
+	await handleListNamesCommand(printer)
+}
