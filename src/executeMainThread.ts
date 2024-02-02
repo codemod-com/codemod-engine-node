@@ -132,6 +132,8 @@ export const executeMainThread = async () => {
 	let telemetryService;
 	let exit = () => {};
 
+	const tarService = new TarService(fs as unknown as IFs);
+
 	if (!argv.telemetryDisable) {
 		// hack to prevent appInsights from trying to read applicationinsights.json
 		// this env should be set before appinsights is imported
@@ -156,7 +158,7 @@ export const executeMainThread = async () => {
 
 	if (String(argv._) === 'list') {
 		try {
-			await handleListNamesCommand(printer);
+			await handleListNamesCommand(argv, printer, fileDownloadService, tarService, true);
 		} catch (error) {
 			if (!(error instanceof Error)) {
 				return;
@@ -173,30 +175,8 @@ export const executeMainThread = async () => {
 		return;
 	}
 
-	const tarService = new TarService(fs as unknown as IFs);
-
 	if (String(argv._) === 'syncRegistry') {
-		const codemodDownloader = new CodemodDownloader(
-			printer,
-			join(homedir(), '.intuita'),
-			argv.useCache,
-			fileDownloadService,
-			tarService,
-		);
-
-		try {
-			await codemodDownloader.syncRegistry();
-		} catch (error) {
-			if (!(error instanceof Error)) {
-				return;
-			}
-
-			printer.printOperationMessage({
-				kind: 'error',
-				message: error.message,
-			});
-		}
-
+		await syncRegistryOperation(argv, printer, fileDownloadService, tarService)
 		exit();
 
 		return;
@@ -365,3 +345,31 @@ export const executeMainThread = async () => {
 
 	exit();
 };
+
+export async function syncRegistryOperation(
+	argv: any,
+	printer: Printer,
+	fileDownloadService: FileDownloadService,
+	tarService: TarService,
+) {
+	const codemodDownloader = new CodemodDownloader(
+	  printer,
+	  join(homedir(), '.intuita'),
+	  argv.useCache,
+	  fileDownloadService,
+	  tarService,
+	);
+
+	try {
+	  await codemodDownloader.syncRegistry();
+	} catch (error) {
+	  if (!(error instanceof Error)) {
+		return;
+	  }
+
+	  printer.printOperationMessage({
+		kind: 'error',
+		message: error.message,
+	  });
+	}
+}

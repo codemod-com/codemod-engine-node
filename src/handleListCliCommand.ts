@@ -5,9 +5,18 @@ import { mkdir, readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import * as v from 'valibot';
-import type { PrinterBlueprint } from './printer.js';
+import type { Printer } from './printer.js';
+import { FileDownloadService } from './fileDownloadService.js';
+import { syncRegistryOperation } from './executeMainThread.js'
+import { TarService } from './services/tarService.js';
 
-export const handleListNamesCommand = async (printer: PrinterBlueprint) => {
+export const handleListNamesCommand = async (
+	argv: any,
+	printer: Printer,
+	fileDownloadService: FileDownloadService,
+	tarService: TarService,
+	syncRegistry: boolean,
+) => {
 	const configurationDirectoryPath = join(homedir(), '.intuita');
 
 	await mkdir(configurationDirectoryPath, { recursive: true });
@@ -37,6 +46,14 @@ export const handleListNamesCommand = async (printer: PrinterBlueprint) => {
 		.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 
 	const names = v.parse(v.array(v.string()), onlyValid);
+
+	// Sync with registry if there are no codemods available
+	if (syncRegistry && Object.keys(names).length === 0) {
+		printer.printOperationMessage({ kind: 'status', message: "There were no codemod synced, hence syncing it with registry" });
+		await syncRegistryOperation(argv, printer, fileDownloadService, tarService)
+
+		await handleListNamesCommand(argv, printer, fileDownloadService, tarService, false)
+	}
 
 	printer.printOperationMessage({ kind: 'names', names });
 };
