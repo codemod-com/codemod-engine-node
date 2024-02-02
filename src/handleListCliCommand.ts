@@ -49,7 +49,6 @@ export const handleListNamesAfterSyncing = async (
 	printer: Printer,
 	fileDownloadService: FileDownloadService,
 	tarService: TarService,
-	syncRegistry: boolean,
 ) => {
 	await syncRegistryOperation(useCache, printer, fileDownloadService, tarService)
 	await handleListNamesCommand(printer)
