@@ -5,9 +5,12 @@ import { mkdir, readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import * as v from 'valibot';
-import type { PrinterBlueprint } from './printer.js';
+import type { Printer } from './printer.js';
+import { FileDownloadService } from './fileDownloadService.js';
+import { syncRegistryOperation } from './executeMainThread.js'
+import { TarService } from './services/tarService.js';
 
-export const handleListNamesCommand = async (printer: PrinterBlueprint) => {
+export const handleListNamesCommand = async (printer: Printer) => {
 	const configurationDirectoryPath = join(homedir(), '.intuita');
 
 	await mkdir(configurationDirectoryPath, { recursive: true });
@@ -40,3 +43,13 @@ export const handleListNamesCommand = async (printer: PrinterBlueprint) => {
 
 	printer.printOperationMessage({ kind: 'names', names });
 };
+
+export const handleListNamesAfterSyncing = async (
+	useCache: boolean,
+	printer: Printer,
+	fileDownloadService: FileDownloadService,
+	tarService: TarService,
+) => {
+	await syncRegistryOperation(useCache, printer, fileDownloadService, tarService)
+	await handleListNamesCommand(printer)
+}

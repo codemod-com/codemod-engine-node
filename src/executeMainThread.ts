@@ -1,7 +1,7 @@
 import * as readline from 'node:readline';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { handleListNamesCommand } from './handleListCliCommand.js';
+import { handleListNamesAfterSyncing } from './handleListCliCommand.js';
 import { CodemodDownloader } from './downloadCodemod.js';
 import { Printer } from './printer.js';
 import { handleLearnCliCommand } from './handleLearnCliCommand.js';
@@ -110,7 +110,6 @@ export const executeMainThread = async () => {
 	}
 
 	const argv = await Promise.resolve(argvObject.argv);
-
 	const fetchBuffer = async (url: string) => {
 		const { data } = await Axios.get(url, {
 			responseType: 'arraybuffer',
@@ -131,6 +130,8 @@ export const executeMainThread = async () => {
 
 	let telemetryService;
 	let exit = () => {};
+
+	const tarService = new TarService(fs as unknown as IFs);
 
 	if (!argv.telemetryDisable) {
 		// hack to prevent appInsights from trying to read applicationinsights.json
@@ -156,7 +157,7 @@ export const executeMainThread = async () => {
 
 	if (String(argv._) === 'list') {
 		try {
-			await handleListNamesCommand(printer);
+			await handleListNamesAfterSyncing(argv.useCache, printer, fileDownloadService, tarService, true);
 		} catch (error) {
 			if (!(error instanceof Error)) {
 				return;
@@ -173,30 +174,8 @@ export const executeMainThread = async () => {
 		return;
 	}
 
-	const tarService = new TarService(fs as unknown as IFs);
-
 	if (String(argv._) === 'syncRegistry') {
-		const codemodDownloader = new CodemodDownloader(
-			printer,
-			join(homedir(), '.intuita'),
-			argv.useCache,
-			fileDownloadService,
-			tarService,
-		);
-
-		try {
-			await codemodDownloader.syncRegistry();
-		} catch (error) {
-			if (!(error instanceof Error)) {
-				return;
-			}
-
-			printer.printOperationMessage({
-				kind: 'error',
-				message: error.message,
-			});
-		}
-
+		await syncRegistryOperation(argv.useCache, printer, fileDownloadService, tarService)
 		exit();
 
 		return;
@@ -365,3 +344,31 @@ export const executeMainThread = async () => {
 
 	exit();
 };
+
+export async function syncRegistryOperation(
+	useCache: boolean,
+	printer: Printer,
+	fileDownloadService: FileDownloadService,
+	tarService: TarService,
+) {
+	const codemodDownloader = new CodemodDownloader(
+	  printer,
+	  join(homedir(), '.intuita'),
+	  useCache,
+	  fileDownloadService,
+	  tarService,
+	);
+
+	try {
+	  await codemodDownloader.syncRegistry();
+	} catch (error) {
+	  if (!(error instanceof Error)) {
+		return;
+	  }
+
+	  printer.printOperationMessage({
+		kind: 'error',
+		message: error.message,
+	  });
+	}
+}
