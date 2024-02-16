@@ -1,3 +1,7 @@
+**⚠️ This repository is deprecated and no longer maintained.**
+
+**Please Note:** This repository was migrated to a monorepo called [codemod](https://github.com/codemod-com/codemod/tree/main/apps/cli).
+
 # Codemod.com's Codemod Engine Node
 
 Codemod.com gives you multiple ways to discover, run & share supported codemods and code automation recipes.
